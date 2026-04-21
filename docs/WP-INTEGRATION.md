@@ -1,149 +1,147 @@
 # WordPress Integration Plan — Variant B: ACF Blocks + Next.js Headless
 
+## Статус виконання
+
+| Фаза | Статус |
+|------|--------|
+| 0 — Підготовка середовища | ✅ Виконано |
+| 1 — ACF Blocks реєстрація (PHP) | ✅ Файли готові, потрібно залити на WP |
+| 2 — WP сторінки + наповнення | ⏳ Зробити вручну в WP Admin |
+| 3 — GraphQL queries | ✅ Виконано |
+| 4 — BlockRenderer + Block-обгортки | ✅ Виконано |
+| 5 — Оновлення page.tsx | ⏳ Зробити після п.2 |
+| 6 — ISR Webhook | ✅ Виконано |
+| 7 — Тестування | ⏳ Зробити після п.2 і п.5 |
+
 ---
 
-## ФАЗА 0 — Підготовка середовища `~0.5 дня`
-
-### 0.1 WordPress встановлення та плагіни
-Встановити на сервері (або локально через LocalWP / Laragon):
+## Структура проєкту (фактична)
 
 ```
-WordPress 6.x
-├── Advanced Custom Fields PRO       ← реєстрація блоків
-├── WPGraphQL                        ← GraphQL API
-├── WPGraphQL for ACF                ← ACF поля в GraphQL схемі
-├── WP Webhooks (або custom)         ← тригер ISR при збереженні
-└── Classic Editor (ВИМКНУТИ)        ← тільки Gutenberg
+E:\Projects\Leha-main\theme\racqueteer\   ← Next.js проєкт (git root)
+  app/
+  components/
+    blocks/           ← всі Block-обгортки ✅
+  lib/
+    graphql/
+      queries.ts      ✅
+      fragments.ts    ✅
+    api.ts            ← hardcoded fallback (не чіпати)
+    wp-api.ts         ✅ GraphQL клієнт з fallback
+  types/
+    index.ts
+    wp-blocks.ts      ✅
+  public/
+  docs/
+  wp/                 ← WordPress тема (заливати на хостинг)
+    functions.php
+    style.css
+    index.php         ← redirect на racqueteer.vercel.app
+    inc/
+      theme-setup.php
+      cpt-registration.php
+      acf-blocks.php
+      graphql-extensions.php
+      revalidate-webhook.php
+  package.json
+  .env.local          ← НЕ в git (секрети локально і на Vercel)
+  .gitignore
 ```
 
-### 0.2 Налаштувати `.env.local` у Next.js
+---
+
+## ФАЗА 0 — Підготовка середовища ✅
+
+### 0.1 WordPress — плагіни для встановлення
+
+> WP Admin: https://racqueteer.websplash.pro/wp-admin/
+
+```
+[ ] Advanced Custom Fields PRO   ← реєстрація блоків
+[ ] WPGraphQL                    ← GraphQL API
+[ ] WPGraphQL for ACF            ← ACF поля в GraphQL схемі
+```
+
+### 0.2 `.env.local` ✅
+
 ```env
-NEXT_PUBLIC_WP_GRAPHQL_URL=https://cms.racqueteer.com/graphql
-NEXT_PUBLIC_WP_REST_URL=https://cms.racqueteer.com/wp-json
-REVALIDATE_SECRET=your_secret_token
+NEXT_PUBLIC_WP_GRAPHQL_URL=https://racqueteer.websplash.pro/graphql
+NEXT_PUBLIC_WP_REST_URL=https://racqueteer.websplash.pro/wp-json
+REVALIDATE_SECRET=Racqueteer_ISR_2026_ChangeMe!
 ```
 
-### 0.3 Структура нових файлів у Next.js
-```
-lib/
-  graphql/
-    queries.ts        ← всі GraphQL запити
-    fragments.ts      ← фрагменти для повторних полів
-  wp-api.ts           ← нова версія api.ts (поступова заміна)
-components/
-  blocks/
-    BlockRenderer.tsx
-    HeroBlock.tsx
-    AboutBlock.tsx
-    ...
-app/
-  api/
-    revalidate/
-      route.ts        ← ISR webhook
-```
+> Файл не в git. На Vercel — додано в Environment Variables.
+
+### 0.3 Деплой ✅
+
+| Сервіс | URL |
+|--------|-----|
+| GitHub | https://github.com/Slava12212/racqueteer |
+| Vercel (Next.js) | https://racqueteer.vercel.app |
+| WordPress | https://racqueteer.websplash.pro |
+| WP Admin | https://racqueteer.websplash.pro/wp-admin/ |
+| WP Racqueteer Settings | https://racqueteer.websplash.pro/wp-admin/options-general.php?page=racqueteer-settings |
+
+> Vercel автоматично деплоїть при кожному `git push` до гілки `main`.
 
 ---
 
-## ФАЗА 1 — WordPress: реєстрація ACF Blocks `~1.5 дні`
+## ФАЗА 1 — WordPress: ACF Blocks ✅ (файли готові)
 
-### 1.1 Структура теми / плагіна на WordPress
-
-Створити `mu-plugins/racqueteer-blocks/` (або child theme):
+### Що потрібно зробити зараз
 
 ```
-racqueteer-blocks/
-  racqueteer-blocks.php     ← головний файл, реєстрація всіх блоків
-  blocks/
-    hero/
-      block.json            ← метадані блока
-      fields.php            ← ACF field group
-    programs/
-    locations/
-    memberships/
-    testimonials/
-    amenities/
-    events/
-    about-section/
-    careers-hero/
-    private-events-hero/
-    gallery/
-    logo-marquee/
+[ ] 1. Залити папку wp/ → wp-content/themes/racqueteer/ на хостинг
+[ ] 2. Активувати тему: WP Admin → Appearance → Themes → Racqueteer
+[ ] 3. Встановити плагіни з п.0.1
+[ ] 4. WP Admin → Settings → Racqueteer:
+        Next.js URL:        https://racqueteer.vercel.app
+        Revalidate Secret:  Racqueteer_ISR_2026_ChangeMe!
 ```
 
-### 1.2 Маппінг: компонент → ACF Block
+### Маппінг: компонент → ACF Block → файл ✅
 
-| Next.js компонент | Gutenberg блок | ACF поля |
+| Next.js компонент | Gutenberg блок | Block-файл |
 |---|---|---|
-| `HeroSection` | `racqueteer/hero` | title, description, cta_primary_text, cta_primary_url, cta_secondary_text, video_url |
-| `AboutSection` | `racqueteer/about` | label, title, description, stat1_number, stat1_label, stat2_number, stat2_label, left_image, right_image |
-| `LocationsSection` | `racqueteer/locations` | label, title, description + Repeater: locations[] |
-| `ProgramsSection` | `racqueteer/programs` | label, title, description, tabs + Repeater: programs[] |
-| `MembershipSection` | `racqueteer/membership-cta` | label, title, description, cta_text, cta_url, bg_image |
-| `HomeSubscriptionsSection` | `racqueteer/subscriptions` | label, title, description |
-| `TestimonialsSection` | `racqueteer/testimonials` | label, title, description |
-| `EventsSection` | `racqueteer/events` | title, description, cta_text, cta_url, image |
-| `HeroMembership` | `racqueteer/membership-hero` | label, title, description, price, video_url |
-| `SubscriptionsSection` | `racqueteer/subscriptions-detail` | — (дані з CPT) |
-| `PriceCompareSection` | `racqueteer/price-compare` | — (дані з CPT) |
-| `HeroPrivateEvents` | `racqueteer/private-events-hero` | label, title, description, cta_text, video_url |
-| `GallerySection` | `racqueteer/gallery` | label, title, description + images[] |
-| `LogoSection` | `racqueteer/logo-marquee` | label, title + logos[] |
-| `HeroAbout` | `racqueteer/about-hero` | label, title, description, video_url |
-| `MissionSection` | `racqueteer/mission` | label, title, description, image |
-| `ContactSection` | `racqueteer/contact` | label, title, email, phone, cta_text |
-| `HeroCareers` | `racqueteer/careers-hero` | label, title, description, video_url |
-| `JobListingsSection` | `racqueteer/job-listings` | label, title, description |
-| `CareerContactSection` | `racqueteer/career-contact` | label, title, description, cta_text, image |
+| `HeroSection` | `acf/racqueteer-hero` | `components/blocks/HeroBlock.tsx` |
+| `AboutSection` | `acf/racqueteer-about` | `components/blocks/AboutBlock.tsx` |
+| `LocationsSection` | `acf/racqueteer-locations` | `components/blocks/LocationsBlock.tsx` |
+| `ProgramsSection` | `acf/racqueteer-programs` | `components/blocks/ProgramsBlock.tsx` |
+| `MembershipSection` | `acf/racqueteer-membership-cta` | `components/blocks/MembershipCtaBlock.tsx` |
+| `HomeSubscriptionsSection` | `acf/racqueteer-subscriptions` | `components/blocks/SubscriptionsBlock.tsx` |
+| `TestimonialsSection` | `acf/racqueteer-testimonials` | `components/blocks/TestimonialsBlock.tsx` |
+| `EventsSection` | `acf/racqueteer-events` | `components/blocks/EventsBlock.tsx` |
+| `HeroMembership` | `acf/racqueteer-membership-hero` | `components/blocks/MembershipHeroBlock.tsx` |
+| `SubscriptionsSection` | `acf/racqueteer-subscriptions-detail` | `components/blocks/SubscriptionsDetailBlock.tsx` |
+| `PriceCompareSection` | `acf/racqueteer-price-compare` | `components/blocks/PriceCompareBlock.tsx` |
+| `HeroPrivateEvents` | `acf/racqueteer-private-events-hero` | `components/blocks/PrivateEventsHeroBlock.tsx` |
+| `GallerySection` | `acf/racqueteer-gallery` | `components/blocks/GalleryBlock.tsx` |
+| `LogoSection` | `acf/racqueteer-logo-marquee` | `components/blocks/LogoMarqueeBlock.tsx` |
+| `HeroAbout` | `acf/racqueteer-about-hero` | `components/blocks/AboutHeroBlock.tsx` |
+| `MissionSection` | `acf/racqueteer-mission` | `components/blocks/MissionBlock.tsx` |
+| `ContactSection` | `acf/racqueteer-contact` | `components/blocks/ContactBlock.tsx` |
+| `HeroCareers` | `acf/racqueteer-careers-hero` | `components/blocks/CareersHeroBlock.tsx` |
+| `JobListingsSection` | `acf/racqueteer-job-listings` | `components/blocks/JobListingsBlock.tsx` |
+| `CareerContactSection` | `acf/racqueteer-career-contact` | `components/blocks/CareerContactBlock.tsx` |
 
-### 1.3 Приклад реєстрації блока (PHP)
+### Custom Post Types ✅ (`wp/inc/cpt-registration.php`)
 
-```php
-// blocks/hero/fields.php
-add_action('acf/init', function() {
-    acf_register_block_type([
-        'name'            => 'racqueteer-hero',
-        'title'           => 'Hero Section',
-        'description'     => 'Головна hero секція з відео',
-        'category'        => 'racqueteer',
-        'icon'            => 'cover-image',
-        'keywords'        => ['hero', 'banner'],
-        'supports'        => ['jsx' => true],
-        'render_callback' => '__return_empty_string', // headless — рендер на фронті
-    ]);
-
-    acf_add_local_field_group([
-        'key'    => 'group_hero',
-        'title'  => 'Hero Block Fields',
-        'fields' => [
-            ['key' => 'field_hero_title',        'label' => 'Title',       'name' => 'title',       'type' => 'text'],
-            ['key' => 'field_hero_description',  'label' => 'Description', 'name' => 'description', 'type' => 'textarea'],
-            ['key' => 'field_hero_cta_primary',  'label' => 'CTA Primary', 'name' => 'cta_primary', 'type' => 'link'],
-            ['key' => 'field_hero_video',        'label' => 'Video URL',   'name' => 'video_url',   'type' => 'url'],
-        ],
-        'location' => [[ ['param' => 'block', 'operator' => '==', 'value' => 'acf/racqueteer-hero'] ]],
-    ]);
-});
-```
-
-### 1.4 Custom Post Types для динамічних даних
-
-```php
-// CPTs які реєструємо окремо (не як блоки — дані, не layout)
-register_post_type('job',          [...]);   // Вакансії
-register_post_type('testimonial',  [...]);   // Відгуки
-register_post_type('membership',   [...]);   // Плани членства
-register_post_type('amenity',      [...]);   // Зручності
-register_post_type('location',     [...]);   // Локації
-register_post_type('program',      [...]);   // Програми/кліники
-```
+| CPT | Призначення |
+|-----|-------------|
+| `job` | Вакансії (Careers) |
+| `testimonial` | Відгуки |
+| `membership` | Плани членства |
+| `amenity` | Зручності |
+| `location` | Локації |
+| `program` | Програми/кліники |
 
 ---
 
-## ФАЗА 2 — WordPress: сторінки з блоками `~0.5 дня`
+## ФАЗА 2 — WordPress: сторінки з блоками ⏳
 
-### 2.1 Створити сторінки в WordPress
+Після заливки теми і активації плагінів — створити сторінки:
 
-| WordPress сторінка | slug | Блоки які додаємо |
+| Сторінка | Slug | Блоки |
 |---|---|---|
 | Home | `/` | hero, about, locations, programs, membership-cta, subscriptions, testimonials, events |
 | Memberships | `/memberships` | membership-hero, subscriptions-detail, price-compare |
@@ -151,225 +149,58 @@ register_post_type('program',      [...]);   // Програми/кліники
 | About | `/about` | about-hero, mission, contact |
 | Careers | `/careers` | careers-hero, job-listings, career-contact |
 
-### 2.2 Наповнити контентом через Gutenberg
-
-Редактор відкриває сторінку → додає блоки через `+` → вводить контент у поля ACF у sidebar — зберігає. Порядок блоків на сторінці = порядок рендерингу на фронті.
-
----
-
-## ФАЗА 3 — GraphQL Queries у Next.js `~1 день`
-
-### 3.1 Встановити залежності
-
-```bash
-pnpm add graphql-request graphql
-```
-
-### 3.2 `lib/graphql/fragments.ts`
-
-```typescript
-export const HERO_FIELDS = `
-  fragment HeroFields on AcfRacqueteerHeroBlock {
-    title
-    description
-    ctaPrimaryText: cta_primary_text
-    ctaPrimaryUrl: cta_primary_url
-    ctaSecondaryText: cta_secondary_text
-    videoUrl: video_url
-  }
-`;
-// ... аналогічно для кожного блока
-```
-
-### 3.3 `lib/graphql/queries.ts`
-
-```typescript
-export const GET_PAGE_BY_SLUG = `
-  query GetPage($slug: String!) {
-    pageBy(uri: $slug) {
-      title
-      blocks {
-        name
-        ... on AcfRacqueteerHeroBlock {
-          attributes { title description ctaPrimaryText videoUrl }
-        }
-        ... on AcfRacqueteerProgramsBlock {
-          attributes {
-            label title description
-            programs { title color price unit description }
-          }
-        }
-        ... on AcfRacqueteerLocationsBlock {
-          attributes {
-            label title description
-            locations { id name status address description image }
-          }
-        }
-        # ... решта блоків
-      }
-    }
-  }
-`;
-
-export const GET_JOBS = `
-  query GetJobs {
-    jobs(first: 100) {
-      nodes {
-        id
-        title
-        acf { description category }
-        date
-      }
-    }
-  }
-`;
-
-export const GET_MEMBERSHIP_PLANS = `
-  query GetMembershipPlans {
-    memberships(first: 10) {
-      nodes {
-        title
-        acf { price description buttonVariant features }
-      }
-    }
-  }
-`;
-// GET_TESTIMONIALS, GET_AMENITIES, GET_LOCATIONS, GET_PROGRAMS...
-```
-
-### 3.4 `lib/wp-api.ts` — оновлена версія api.ts
-
-```typescript
-import { GraphQLClient } from 'graphql-request';
-import { GET_PAGE_BY_SLUG, GET_JOBS, GET_MEMBERSHIP_PLANS } from './graphql/queries';
-
-const client = new GraphQLClient(process.env.NEXT_PUBLIC_WP_GRAPHQL_URL!);
-
-// Отримати блоки сторінки
-export async function getPageBlocks(slug: string): Promise<WPBlock[]> {
-  const data = await client.request(GET_PAGE_BY_SLUG, { slug });
-  return data.pageBy?.blocks ?? [];
-}
-
-// Динамічні CPT дані
-export async function getJobs(): Promise<Job[]> {
-  const data = await client.request(GET_JOBS);
-  return data.jobs.nodes.map((node: any) => ({
-    id: node.id,
-    title: node.title,
-    description: node.acf.description,
-    category: node.acf.category,
-    date: new Date(node.date).toLocaleDateString('en-AU', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    }),
-  }));
-}
-// getMembershipPlans(), getTestimonials(), getAmenities()...
-```
+**Як додати блок:**
+1. WP Admin → Pages → Edit сторінку
+2. Натиснути `+` в Gutenberg редакторі
+3. Категорія **Racqueteer** → вибрати блок
+4. Заповнити поля в sidebar → Save
 
 ---
 
-## ФАЗА 4 — Block Renderer у Next.js `~2 дні`
+## ФАЗА 3 — GraphQL Queries ✅
 
-### 4.1 `components/blocks/BlockRenderer.tsx`
+| Файл | Статус |
+|------|--------|
+| `lib/graphql/queries.ts` | ✅ |
+| `lib/graphql/fragments.ts` | ✅ |
+| `lib/wp-api.ts` | ✅ з автоматичним fallback на `lib/api.ts` |
 
-```typescript
-// Server Component — приймає масив блоків, рендерить відповідні компоненти
-import dynamic from 'next/dynamic';
-
-const BLOCK_MAP: Record<string, React.ComponentType<any>> = {
-  'acf/racqueteer-hero':            dynamic(() => import('./HeroBlock')),
-  'acf/racqueteer-about':           dynamic(() => import('./AboutBlock')),
-  'acf/racqueteer-programs':        dynamic(() => import('./ProgramsBlock')),
-  'acf/racqueteer-locations':       dynamic(() => import('./LocationsBlock')),
-  'acf/racqueteer-membership-cta':  dynamic(() => import('./MembershipBlock')),
-  'acf/racqueteer-subscriptions':   dynamic(() => import('./SubscriptionsBlock')),
-  'acf/racqueteer-testimonials':    dynamic(() => import('./TestimonialsBlock')),
-  'acf/racqueteer-events':          dynamic(() => import('./EventsBlock')),
-  // ... решта
-};
-
-export default function BlockRenderer({ blocks }: { blocks: WPBlock[] }) {
-  return (
-    <>
-      {blocks.map((block, i) => {
-        const Component = BLOCK_MAP[block.name];
-        if (!Component) return null;
-        return <Component key={i} {...block.attributes} />;
-      })}
-    </>
-  );
-}
-```
-
-### 4.2 Кожен Block = тонка обгортка над існуючим компонентом
-
-```typescript
-// components/blocks/HeroBlock.tsx
-// НЕ переписуємо HeroSection — просто маппимо props
-import HeroSection from '@/components/HeroSection';
-import type { WPHeroAttributes } from '@/types/wp-blocks';
-
-export default function HeroBlock(attrs: WPHeroAttributes) {
-  return (
-    <HeroSection
-      title={attrs.title}
-      description={attrs.description}
-      ctaPrimaryText={attrs.ctaPrimaryText}
-      ctaPrimaryUrl={attrs.ctaPrimaryUrl}
-      ctaSecondaryText={attrs.ctaSecondaryText}
-      ctaSecondaryUrl={attrs.ctaSecondaryUrl}
-      videoUrl={attrs.videoUrl}
-    />
-  );
-}
-```
-
-> ⚡ **Ключова ідея:** всі існуючі компоненти (`HeroSection`, `ProgramsSection` тощо) **не чіпаємо**. Block-обгортки тільки перекладають WP-дані у вже відомі props.
-
-### 4.3 Новий тип `types/wp-blocks.ts`
-
-```typescript
-export interface WPBlock {
-  name: string;
-  attributes: Record<string, any>;
-}
-
-export interface WPHeroAttributes {
-  title: string;
-  description: string;
-  ctaPrimaryText: string;
-  ctaPrimaryUrl: string;
-  ctaSecondaryText: string;
-  ctaSecondaryUrl: string;
-  videoUrl: string;
-}
-// ... WPProgramsAttributes, WPLocationsAttributes, etc.
-```
+> Fallback: якщо WP GraphQL недоступний — повертаються hardcoded дані. Сайт не ламається.
 
 ---
 
-## ФАЗА 5 — Оновлення app/*/page.tsx `~0.5 дня`
+## ФАЗА 4 — Block Renderer ✅
 
-### До (hardcoded):
+| Файл | Статус |
+|------|--------|
+| `components/blocks/BlockRenderer.tsx` | ✅ |
+| 20 × `components/blocks/*Block.tsx` | ✅ |
+
+---
+
+## ФАЗА 5 — Оновлення app/*/page.tsx ⏳
+
+Зробити **після** Фази 2 (WP сторінки наповнені).
+
 ```typescript
-// app/page.tsx
+// БУЛО (наприклад app/page.tsx):
 import { getHomepageContent } from "@/lib/api";
 export default async function HomePage() {
   const content = await getHomepageContent();
-  return <HeroSection title={content.hero.title} ... />
+  return (
+    <>
+      <HeroSection content={content.hero} />
+      <AboutSection content={content.about} />
+      {/* ... */}
+    </>
+  );
 }
-```
 
-### Після (blocks):
-```typescript
-// app/page.tsx
+// СТАНЕ:
 import { getPageBlocks } from "@/lib/wp-api";
 import BlockRenderer from "@/components/blocks/BlockRenderer";
 
-export const revalidate = 3600; // ISR — оновлення кожну годину
+export const revalidate = 3600; // ISR — кеш на 1 годину
 
 export default async function HomePage() {
   const blocks = await getPageBlocks('/');
@@ -377,86 +208,80 @@ export default async function HomePage() {
 }
 ```
 
-> Зміна **мінімальна** — тільки `page.tsx` файли. Всі компоненти залишаються незмінними.
-
----
-
-## ФАЗА 6 — ISR Webhook `~0.5 дня`
-
-### `app/api/revalidate/route.ts`
-
-```typescript
-import { revalidatePath } from 'next/cache';
-import { NextRequest } from 'next/server';
-
-export async function POST(req: NextRequest) {
-  const secret = req.nextUrl.searchParams.get('secret');
-  if (secret !== process.env.REVALIDATE_SECRET) {
-    return Response.json({ error: 'Invalid token' }, { status: 401 });
-  }
-
-  const { slug } = await req.json();
-  revalidatePath(slug || '/');
-
-  return Response.json({ revalidated: true, slug });
-}
+Файли для оновлення:
 ```
-
-### WordPress side:
-- Плагін **WP Webhooks** → при `post_updated` → POST `https://racqueteer.com/api/revalidate?secret=TOKEN`
-- Body: `{ "slug": "/memberships" }`
-
----
-
-## ФАЗА 7 — Тестування `~1 день`
-
-### Чеклист:
-```
-□ Кожна сторінка рендериться через блоки (не hardcoded)
-□ Редактор WP може змінити текст → зберегти → Next.js оновлюється (ISR)
-□ Редактор може змінити порядок блоків → зберегти → фронт відображає новий порядок
-□ GraphQL запити повертають правильні дані
-□ Lighthouse: Performance ≥ 95, SEO 100
-□ console.log — немає помилок
-□ TypeScript — немає помилок (pnpm build)
-□ Fallback до hardcoded даних якщо WP недоступний
+[ ] app/page.tsx
+[ ] app/memberships/page.tsx
+[ ] app/private-events/page.tsx
+[ ] app/about/page.tsx
+[ ] app/careers/page.tsx
 ```
 
 ---
 
-## 📊 Загальний чеклист файлів для створення/змін
+## ФАЗА 6 — ISR Webhook ✅
 
-| Файл | Дія |
-|------|-----|
-| `lib/graphql/queries.ts` | **Створити** |
-| `lib/graphql/fragments.ts` | **Створити** |
-| `lib/wp-api.ts` | **Створити** |
-| `types/wp-blocks.ts` | **Створити** |
-| `components/blocks/BlockRenderer.tsx` | **Створити** |
-| `components/blocks/HeroBlock.tsx` | **Створити** |
-| `components/blocks/*Block.tsx` (×18) | **Створити** |
-| `app/api/revalidate/route.ts` | **Створити** |
-| `app/page.tsx` | **Оновити** (5 рядків) |
-| `app/memberships/page.tsx` | **Оновити** (5 рядків) |
-| `app/private-events/page.tsx` | **Оновити** (5 рядків) |
-| `app/about/page.tsx` | **Оновити** (5 рядків) |
-| `app/careers/page.tsx` | **Оновити** (5 рядків) |
-| `lib/api.ts` | **Залишити** як fallback |
-| `components/*` (всі існуючі) | **НЕ ЧІПАТИ** ✅ |
+### Next.js side ✅
+`app/api/revalidate/route.ts` — готово
+
+Endpoint: `POST https://racqueteer.vercel.app/api/revalidate?secret=TOKEN`
+
+### WordPress side ✅
+`wp/inc/revalidate-webhook.php` — при збереженні сторінки автоматично надсилає запит на Vercel.
+
+Налаштування: WP Admin → Settings → Racqueteer:
+```
+Next.js URL:        https://racqueteer.vercel.app
+Revalidate Secret:  Racqueteer_ISR_2026_ChangeMe!
+```
 
 ---
 
-## ⏱️ Підсумок по часу
+## ФАЗА 7 — Тестування ⏳
 
-| Фаза | Що | Час |
-|------|-----|-----|
-| 0 | WP setup + .env | 0.5 дня |
-| 1 | ACF Blocks реєстрація (PHP) | 1.5 дні |
-| 2 | WP сторінки + наповнення | 0.5 дня |
-| 3 | GraphQL queries | 1 день |
-| 4 | BlockRenderer + 18 Block-обгорток | 2 дні |
-| 5 | Оновлення page.tsx (5 файлів) | 0.5 дня |
-| 6 | ISR webhook | 0.5 дня |
-| 7 | Тестування | 1 день |
-| **ВСЬОГО** | | **~7.5 робочих днів** |
+```
+[ ] Залити wp/ на хостинг і активувати тему
+[ ] Встановити плагіни (ACF PRO, WPGraphQL, WPGraphQL for ACF)
+[ ] Налаштувати WP Admin → Settings → Racqueteer
+[ ] Створити сторінки в WP з блоками (Фаза 2)
+[ ] Оновити page.tsx файли (Фаза 5)
+[ ] git push → Vercel задеплоїть автоматично
+[ ] Перевірити GraphQL: https://racqueteer.websplash.pro/graphql
+[ ] Перевірити що сторінки рендеряться через блоки
+[ ] Змінити текст в WP → зберегти → перевірити оновлення на фронті (ISR)
+[ ] Lighthouse: Performance ≥ 95, SEO 100
+[ ] Немає помилок в консолі браузера
+[ ] npm run build — без помилок TypeScript
+```
+
+---
+
+## Workflow для розробки
+
+```bash
+# Запустити локально
+cd E:\Projects\Leha-main\theme\racqueteer
+npm run dev        # → http://localhost:3042
+
+# Запушити зміни (Vercel деплоїть автоматично)
+git add .
+git commit -m "опис змін"
+git push
+```
+
+---
+
+## ⏱️ Підсумок
+
+| Фаза | Що | Час | Статус |
+|------|-----|-----|--------|
+| 0 | WP setup + .env + Vercel + GitHub | 0.5 дня | ✅ |
+| 1 | ACF Blocks PHP + CPT | 1.5 дні | ✅ файли готові |
+| 2 | WP сторінки + наповнення | 0.5 дня | ⏳ |
+| 3 | GraphQL queries | 1 день | ✅ |
+| 4 | BlockRenderer + 20 Block-обгорток | 2 дні | ✅ |
+| 5 | Оновлення page.tsx (5 файлів) | 0.5 дня | ⏳ після п.2 |
+| 6 | ISR webhook | 0.5 дня | ✅ |
+| 7 | Тестування | 1 день | ⏳ |
+| **ВСЬОГО** | | **~7.5 днів** | **~65% готово** |
 
