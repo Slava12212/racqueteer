@@ -25,6 +25,7 @@ require_once RACQUETEER_DIR . '/inc/cpt-registration.php';
 require_once RACQUETEER_DIR . '/inc/acf-blocks.php';
 require_once RACQUETEER_DIR . '/inc/graphql-extensions.php';
 require_once RACQUETEER_DIR . '/inc/revalidate-webhook.php';
+require_once RACQUETEER_DIR . '/inc/demo-content.php';
 
 // ─── Disable Grammarly browser extension in the editor ──────────────────────
 add_action( 'admin_head', function () {
