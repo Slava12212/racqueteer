@@ -63,6 +63,22 @@ function rq_demo_admin_page(): void {
                         <li><?php echo esc_html( $line ); ?></li>
                     <?php endforeach; ?>
                 </ul>
+                <p style="margin-top:12px;"><strong>Перевірте блоки в Gutenberg:</strong></p>
+                <ul style="list-style:none;margin-left:0;">
+                    <?php
+                    $check_pages = [ 'home' => 'Home', 'memberships' => 'Memberships', 'private-events' => 'Private Events', 'about' => 'About', 'careers' => 'Careers' ];
+                    foreach ( $check_pages as $slug => $label ) :
+                        $p = get_page_by_path( $slug );
+                        if ( $p ) :
+                    ?>
+                        <li>
+                            <a href="<?php echo esc_url( get_edit_post_link( $p->ID ) ); ?>" target="_blank">
+                                🗒️ Edit <?php echo esc_html( $label ); ?> (ID <?php echo (int) $p->ID; ?>)
+                            </a>
+                            — перевірте, що блоки відображаються з полями
+                        </li>
+                    <?php endif; endforeach; ?>
+                </ul>
             </div>
         <?php endif; ?>
 
@@ -80,6 +96,29 @@ function rq_demo_admin_page(): void {
                 <li><strong>Navbar &amp; Footer ACF Options</strong> — посилання, CTA, контакти</li>
                 <li><strong>Reading Settings</strong> — Home встановлюється як front page</li>
             </ul>
+
+            <details style="margin-top:16px;">
+                <summary style="cursor:pointer;font-weight:600;color:#2271b1;">🔍 Як саме зберігаються ACF блоки?</summary>
+                <div style="margin-top:10px;background:#f6f7f7;padding:12px;border-radius:4px;font-family:monospace;font-size:11px;overflow-x:auto;">
+                    <pre style="margin:0;white-space:pre-wrap;"><?php
+                    // Live preview of what the Hero block will look like in the DB
+                    $preview = rq_acf_block( 'acf/racqueteer-hero', [
+                        'title'             => 'Where Elite Competition Meets a Refined Social Atmosphere',
+                        '_title'            => 'field_hero_title',
+                        'cta_primary_text'  => 'Book a Court',
+                        '_cta_primary_text' => 'field_hero_cta_primary_text',
+                        'video_url'         => 'https://racqueteer.vercel.app/hero-video.mp4',
+                        '_video_url'        => 'field_hero_video',
+                    ] );
+                    echo esc_html( rtrim( $preview ) );
+                    ?></pre>
+                </div>
+                <p style="margin:8px 0 0;font-size:12px;color:#50575e;">
+                    Кожен блок зберігається як Gutenberg block comment з inline даними (<code>"data":{...}</code>)
+                    та унікальним <code>"id":"block_..."</code>. ACF читає дані через <code>acf_setup_meta()</code>,
+                    WPGraphQL for ACF — через GraphQL resolver.
+                </p>
+            </details>
 
             <?php if ( empty( $nextjs ) ) : ?>
                 <div class="notice notice-warning inline" style="margin:12px 0;">
@@ -168,9 +207,16 @@ function rq_run_import(): array {
 
 /**
  * Serialize a single ACF Gutenberg block (stores data inline in block comment).
+ *
+ * Includes a unique block ID — required by ACF so that acf_setup_meta()
+ * can correctly set up the field context when WPGraphQL resolves block fields.
  */
 function rq_acf_block( string $block_name, array $data ): string {
+    // Generate a stable, unique block ID (same format as ACF uses internally)
+    $block_id = 'block_' . substr( md5( $block_name . wp_json_encode( array_filter( $data, fn( $v, $k ) => strpos( $k, '_' ) !== 0, ARRAY_FILTER_USE_BOTH ) ) ), 0, 13 );
+
     $attrs = [
+        'id'   => $block_id,
         'name' => $block_name,
         'data' => $data,
         'mode' => 'preview',
@@ -180,6 +226,9 @@ function rq_acf_block( string $block_name, array $data ): string {
 
 /**
  * Find or create a page by slug. Returns post ID.
+ *
+ * Uses wp_slash() on content so WordPress does NOT strip or escape
+ * the Gutenberg block comment markup (<!-- wp:acf/... -->).
  */
 function rq_upsert_page( string $title, string $slug, string $content ): int {
     $existing = get_page_by_path( $slug );
@@ -187,7 +236,7 @@ function rq_upsert_page( string $title, string $slug, string $content ): int {
     $args = [
         'post_title'   => $title,
         'post_name'    => $slug,
-        'post_content' => $content,
+        'post_content' => wp_slash( $content ),  // ← prevents WP from mangling block comments
         'post_status'  => 'publish',
         'post_type'    => 'page',
     ];
