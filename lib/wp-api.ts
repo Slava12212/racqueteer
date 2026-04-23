@@ -17,6 +17,7 @@ import {
   GET_LOCATIONS,
   GET_PROGRAMS,
   GET_PRICE_COMPARE,
+  GET_SITE_OPTIONS,
 } from './graphql/queries';
 
 import type {
@@ -26,6 +27,8 @@ import type {
   Location,
   Program,
   PriceCompareFeature,
+  WPNavbarOptions,
+  WPFooterOptions,
 } from '@/types';
 
 import type { WPBlock } from '@/types/wp-blocks';
@@ -75,6 +78,74 @@ export async function getPageBlocks(slug: string): Promise<WPBlock[]> {
     return data.pageBy?.blocks ?? [];
   } catch (err) {
     console.error(`getPageBlocks("${slug}") failed:`, err);
+    return [];
+  }
+}
+
+// ========================================
+// PAGE BY SLUG — for dynamic [slug] route (Phase 7)
+// ========================================
+
+export interface WPPageData {
+  title: string;
+  status: string;
+  seoDescription: string;
+  blocks: WPBlock[];
+}
+
+/**
+ * Отримати сторінку за slug з її статусом і блоками.
+ * Draft або відсутня → повертає null.
+ */
+export async function getPageBySlug(slug: string): Promise<WPPageData | null> {
+  try {
+    const data = await wpGraphQL<{
+      pageBy: {
+        title: string;
+        status: string;
+        seo?: { metaDesc?: string };
+        blocks: WPBlock[];
+      } | null;
+    }>(GET_PAGE_BY_SLUG, { slug });
+
+    const page = data.pageBy;
+    if (!page) return null;
+
+    return {
+      title: page.title,
+      status: page.status,
+      seoDescription: page.seo?.metaDesc ?? '',
+      blocks: page.blocks ?? [],
+    };
+  } catch (err) {
+    console.error(`getPageBySlug("${slug}") failed:`, err);
+    return null;
+  }
+}
+
+/**
+ * Отримати всі опубліковані slugs (для generateStaticParams у [slug]/page.tsx).
+ * Використовує WP REST API (не GraphQL) — простіше і надійніше.
+ */
+export async function getAllPageSlugs(): Promise<string[]> {
+  try {
+    const url = process.env.NEXT_PUBLIC_WP_REST_URL;
+    if (!url) return [];
+
+    const res = await fetch(
+      `${url}/wp/v2/pages?status=publish&per_page=100&_fields=slug`,
+      { next: { revalidate: 3600 } }
+    );
+    if (!res.ok) return [];
+
+    const pages: Array<{ slug: string }> = await res.json();
+    // Виключити slugи, які вже мають статичні маршрути в Next.js
+    const staticSlugs = new Set(['', 'memberships', 'private-events', 'about', 'careers']);
+    return pages
+      .map((p) => p.slug)
+      .filter((s) => !staticSlugs.has(s));
+  } catch (err) {
+    console.error('getAllPageSlugs() failed:', err);
     return [];
   }
 }
@@ -230,3 +301,23 @@ export async function getPriceCompareData(): Promise<{
   }
 }
 
+// ========================================
+// SITE OPTIONS — Navbar + Footer (Phase 8)
+// ========================================
+
+export async function getSiteOptions(): Promise<{ navbar: WPNavbarOptions | null; footer: WPFooterOptions | null }> {
+  try {
+    const data = await wpGraphQL<{
+      acfOptionsNavbar?: { navbar?: WPNavbarOptions | null } | null;
+      acfOptionsFooter?: { footer?: WPFooterOptions | null } | null;
+    }>(GET_SITE_OPTIONS);
+
+    return {
+      navbar: data?.acfOptionsNavbar?.navbar ?? null,
+      footer: data?.acfOptionsFooter?.footer ?? null,
+    };
+  } catch (err) {
+    console.error('getSiteOptions() failed, using hardcoded fallback:', err);
+    return { navbar: null, footer: null };
+  }
+}

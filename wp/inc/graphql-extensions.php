@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * GraphQL Extensions
  * Додаткові налаштування WPGraphQL для розширення схеми.

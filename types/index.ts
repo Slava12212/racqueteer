@@ -293,6 +293,35 @@ export interface CareersPageContent {
 }
 
 // ========================================
+// WP OPTIONS PAGE TYPES (Phase 8)
+// ========================================
+
+export interface WPNavbarOptions {
+  navLogo?: { sourceUrl: string; altText: string } | null;
+  navLogoIcon?: { sourceUrl: string; altText: string } | null;
+  navLinks?: Array<{ label: string; url: string }> | null;
+  navCtaText?: string | null;
+  navCtaUrl?: string | null;
+}
+
+export interface WPFooterOptions {
+  footerLogo?: { sourceUrl: string; altText: string } | null;
+  footerEmail?: string | null;
+  footerPhone?: string | null;
+  footerCtaText?: string | null;
+  footerCtaUrl?: string | null;
+  footerMenuLinks?: Array<{ label: string; url: string }> | null;
+  footerLocations?: Array<{ name: string; address: string }> | null;
+  footerCopyright?: string | null;
+  footerLegalLinks?: Array<{ label: string; url: string }> | null;
+}
+
+export interface WPSiteOptions {
+  navbar: WPNavbarOptions | null;
+  footer: WPFooterOptions | null;
+}
+
+// ========================================
 // SHARED COMPONENTS CONTENT INTERFACES
 // ========================================
 

@@ -1,11 +1,13 @@
 import { Metadata } from "next";
-import Navbar from "@/components/Navbar";
 import HeroAbout from "@/components/about/HeroAbout";
 import MissionSection from "@/components/about/MissionSection";
 import LocationsSection from "@/components/LocationsSection";
 import ContactSection from "@/components/about/ContactSection";
-import Footer from "@/components/Footer";
-import { getNavbarContent, getFooterContent, getAboutPageContent, getHomepageContent } from "@/lib/api";
+import BlockRenderer from "@/components/blocks/BlockRenderer";
+import { getPageBlocks } from "@/lib/wp-api";
+import { getAboutPageContent, getHomepageContent } from "@/lib/api";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "About Us - Racqueteer",
@@ -13,19 +15,25 @@ export const metadata: Metadata = {
 };
 
 export default async function AboutPage() {
-  const navbarContent = await getNavbarContent();
-  const footerContent = await getFooterContent();
+  const blocks = await getPageBlocks("/about");
+
+  if (blocks.length > 0) {
+    return (
+      <div className="overflow-x-hidden">
+        <BlockRenderer blocks={blocks} />
+      </div>
+    );
+  }
+
+  // Fallback — hardcoded content
   const pageContent = await getAboutPageContent();
   const homepageContent = await getHomepageContent();
-
   return (
     <div className="overflow-x-hidden">
-      <Navbar content={navbarContent} />
       <HeroAbout content={pageContent.hero} />
       <MissionSection content={pageContent.mission} />
       <LocationsSection content={homepageContent.locations} />
       <ContactSection content={pageContent.contact} />
-      <Footer content={footerContent} />
     </div>
   );
 }

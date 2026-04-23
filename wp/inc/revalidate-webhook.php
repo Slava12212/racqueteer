@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ISR Revalidation Webhook (WordPress side)
  *
@@ -14,6 +14,7 @@ add_action( 'rest_api_init', function () {
         'permission_callback' => '__return_true',
     ] );
 } );
+
 function racqueteer_trigger_revalidate( WP_REST_Request $request ) {
     $secret = get_option( 'racqueteer_revalidate_secret', '' );
     if ( empty( $secret ) ) {
@@ -32,25 +33,62 @@ function racqueteer_trigger_revalidate( WP_REST_Request $request ) {
     }
     return rest_ensure_response( [ 'revalidated' => true, 'slug' => $slug ] );
 }
+
+/**
+ * Допоміжна функція для надсилання revalidate запиту на Next.js.
+ */
+function racqueteer_send_revalidate( string $slug ): void {
+    $secret = get_option( 'racqueteer_revalidate_secret', '' );
+    $nextjs = get_option( 'racqueteer_nextjs_url', '' );
+    if ( empty( $secret ) || empty( $nextjs ) ) {
+        return;
+    }
+    $url = trailingslashit( $nextjs ) . 'api/revalidate?secret=' . rawurlencode( $secret );
+    wp_remote_post( $url, [
+        'body'     => wp_json_encode( [ 'slug' => $slug ] ),
+        'headers'  => [ 'Content-Type' => 'application/json' ],
+        'timeout'  => 5,
+        'blocking' => false, // fire and forget
+    ] );
+}
+
 // Автоматично тригерити revalidate при збереженні сторінки
 add_action( 'save_post_page', function ( $post_id ) {
     if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
         return;
     }
     $slug = '/' . ltrim( get_page_uri( $post_id ), '/' );
-    $secret = get_option( 'racqueteer_revalidate_secret', '' );
-    $nextjs  = get_option( 'racqueteer_nextjs_url', '' );
-    if ( empty( $secret ) || empty( $nextjs ) ) {
+    racqueteer_send_revalidate( $slug );
+}, 10, 1 );
+
+// Phase 7 — Тригер при зміні статусу сторінки (publish ↔ draft)
+// Це дозволяє: Draft → сторінка стає 404, Publish → сторінка знову live
+add_action( 'transition_post_status', function ( $new_status, $old_status, $post ) {
+    if ( $post->post_type !== 'page' ) {
         return;
     }
-    $url = trailingslashit( $nextjs ) . 'api/revalidate?secret=' . rawurlencode( $secret );
-    wp_remote_post( $url, [
-        'body'    => wp_json_encode( [ 'slug' => $slug ] ),
-        'headers' => [ 'Content-Type' => 'application/json' ],
-        'timeout' => 5,
-        'blocking' => false, // fire and forget
-    ] );
-}, 10, 1 );
+    if ( $new_status === $old_status ) {
+        return;
+    }
+    $slug = '/' . ltrim( get_page_uri( $post->ID ), '/' );
+    racqueteer_send_revalidate( $slug );
+}, 10, 3 );
+
+// Phase 8 — Revalidate layout (Navbar/Footer) при зміні ACF Options
+add_action( 'acf/save_post', function ( $post_id ) {
+    // Options pages мають string post_id типу 'options' або 'acf-options-navbar' тощо
+    if ( ! is_string( $post_id ) && ! str_contains( (string) $post_id, 'options' ) ) {
+        return;
+    }
+    if ( str_contains( (string) $post_id, 'option' ) ) {
+        // Оновлюємо всі основні сторінки, де є Navbar/Footer (через layout)
+        $pages = [ '/', '/memberships', '/private-events', '/about', '/careers' ];
+        foreach ( $pages as $slug ) {
+            racqueteer_send_revalidate( $slug );
+        }
+    }
+}, 20 );
+
 // Сторінка налаштувань у WP Admin
 add_action( 'admin_menu', function () {
     add_options_page(
@@ -61,6 +99,7 @@ add_action( 'admin_menu', function () {
         'racqueteer_settings_page'
     );
 } );
+
 function racqueteer_settings_page() {
     if ( isset( $_POST['racqueteer_save'] ) ) {
         check_admin_referer( 'racqueteer_settings' );
@@ -87,6 +126,16 @@ function racqueteer_settings_page() {
             </table>
             <p class="submit"><button type="submit" name="racqueteer_save" class="button button-primary">Save Settings</button></p>
         </form>
+        <hr>
+        <h2>How to Use</h2>
+        <ol>
+            <li>Set <strong>Next.js URL</strong> to your Vercel deployment URL (e.g. <code>https://racqueteer.vercel.app</code>).</li>
+            <li>Set <strong>Revalidate Secret</strong> — must match <code>REVALIDATE_SECRET</code> in your Vercel environment variables.</li>
+            <li>Go to <strong>Site Settings → Navbar</strong> to edit navigation links, logo and CTA button.</li>
+            <li>Go to <strong>Site Settings → Footer</strong> to edit footer content, locations and legal links.</li>
+        </ol>
     </div>
     <?php
 }
+
+

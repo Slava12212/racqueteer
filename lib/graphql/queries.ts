@@ -4,6 +4,8 @@ export const GET_PAGE_BY_SLUG = `
   query GetPage($slug: String!) {
     pageBy(uri: $slug) {
       title
+      status
+      seo { metaDesc }
       blocks {
         name
         ... on AcfRacqueteerHeroBlock {
@@ -292,3 +294,30 @@ export const GET_PRICE_COMPARE = `
   }
 `;
 
+// Phase 8 — Site Options (Navbar + Footer from ACF Options Pages)
+export const GET_SITE_OPTIONS = `
+  query GetSiteOptions {
+    acfOptionsNavbar {
+      navbar {
+        navLogo { sourceUrl altText }
+        navLogoIcon { sourceUrl altText }
+        navLinks { label url }
+        navCtaText
+        navCtaUrl
+      }
+    }
+    acfOptionsFooter {
+      footer {
+        footerLogo { sourceUrl altText }
+        footerEmail
+        footerPhone
+        footerCtaText
+        footerCtaUrl
+        footerMenuLinks { label url }
+        footerLocations { name address }
+        footerCopyright
+        footerLegalLinks { label url }
+      }
+    }
+  }
+`;

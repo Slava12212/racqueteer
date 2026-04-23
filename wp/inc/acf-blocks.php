@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ACF Blocks Registration
  * Реєстрація всіх Gutenberg блоків через ACF PRO (headless — render_callback повертає порожній рядок).
@@ -6,6 +6,56 @@
 if ( ! function_exists( 'acf_register_block_type' ) ) {
     return;
 }
+
+/**
+ * Headless render callback — outputs a minimal editor placeholder so ACF
+ * can correctly initialise and persist field values. Returns empty string
+ * on the front-end (used only as a CMS/API backend).
+ */
+function racqueteer_block_render_callback( array $block ): void {
+    // На фронтенді (headless) нічого не виводимо.
+    if ( ! is_admin() && ! ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+        return;
+    }
+
+    $title  = esc_html( $block['title'] ?? $block['name'] );
+    $name   = esc_attr( $block['name'] );
+    $fields = get_fields();
+    $has_data = ! empty( $fields ) && is_array( $fields );
+    ?>
+    <div data-block="<?php echo $name; ?>" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;border:2px solid #2271b1;border-radius:4px;overflow:hidden;background:#fff;">
+
+        <div style="background:#2271b1;padding:8px 14px;display:flex;align-items:center;gap:8px;">
+            <span style="color:#fff;font-weight:600;font-size:13px;">⚙ <?php echo $title; ?></span>
+            <span style="margin-left:auto;color:rgba(255,255,255,0.6);font-size:11px;">Racqueteer Block</span>
+        </div>
+
+        <?php if ( $has_data ) : ?>
+            <table style="width:100%;border-collapse:collapse;">
+                <?php foreach ( $fields as $key => $val ) :
+                    if ( ! is_scalar( $val ) || $val === '' ) continue;
+                    $display = mb_strlen( (string) $val ) > 140
+                        ? esc_html( mb_substr( (string) $val, 0, 140 ) ) . '…'
+                        : esc_html( (string) $val );
+                ?>
+                <tr style="border-top:1px solid #f0f0f0;">
+                    <td style="padding:6px 14px;color:#50575e;font-size:11px;white-space:nowrap;width:160px;background:#f9f9f9;vertical-align:top;">
+                        <?php echo esc_html( ucwords( str_replace( '_', ' ', $key ) ) ); ?>
+                    </td>
+                    <td style="padding:6px 14px;font-size:12px;color:#1e1e1e;"><?php echo $display; ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </table>
+        <?php else : ?>
+            <p style="margin:0;padding:16px 14px;color:#8c8f94;font-size:12px;text-align:center;">
+                Поля порожні
+            </p>
+        <?php endif; ?>
+
+    </div>
+    <?php
+}
+
 add_action( 'acf/init', function () {
     $blocks = [
         // Home
@@ -152,9 +202,10 @@ add_action( 'acf/init', function () {
         $fields = $block['fields'];
         unset( $block['fields'] );
         acf_register_block_type( array_merge( $block, [
+            'api_version'     => 3,
             'category'        => 'racqueteer',
-            'supports'        => [ 'jsx' => true ],
-            'render_callback' => '__return_empty_string',
+            'mode'            => 'edit',   // завжди показувати поля в центрі
+            'render_callback' => 'racqueteer_block_render_callback',
         ] ) );
         acf_add_local_field_group( [
             'key'      => 'group_' . $block['name'],
@@ -163,4 +214,136 @@ add_action( 'acf/init', function () {
             'location' => [ [ [ 'param' => 'block', 'operator' => '==', 'value' => 'acf/' . $block['name'] ] ] ],
         ] );
     }
+
+    // ======================================================
+    // Phase 8 — Navbar Options Fields
+    // ======================================================
+    acf_add_local_field_group( [
+        'key'    => 'group_navbar_options',
+        'title'  => 'Navbar Settings',
+        'fields' => [
+            [
+                'key'           => 'field_nav_logo',
+                'label'         => 'Logo (desktop)',
+                'name'          => 'nav_logo',
+                'type'          => 'image',
+                'return_format' => 'array',
+                'instructions'  => 'Full logo shown on desktop (e.g. logo2.svg). Leave empty to use default.',
+            ],
+            [
+                'key'           => 'field_nav_logo_icon',
+                'label'         => 'Logo Icon (mobile)',
+                'name'          => 'nav_logo_icon',
+                'type'          => 'image',
+                'return_format' => 'array',
+                'instructions'  => 'Icon-only logo for mobile (e.g. logo-icon.png).',
+            ],
+            [
+                'key'        => 'field_nav_links',
+                'label'      => 'Navigation Links',
+                'name'       => 'nav_links',
+                'type'       => 'repeater',
+                'min'        => 1,
+                'layout'     => 'table',
+                'sub_fields' => [
+                    [ 'key' => 'field_nav_link_label', 'label' => 'Label', 'name' => 'label', 'type' => 'text', 'column_width' => '40' ],
+                    [ 'key' => 'field_nav_link_url',   'label' => 'URL',   'name' => 'url',   'type' => 'url',  'column_width' => '60' ],
+                ],
+            ],
+            [
+                'key'   => 'field_nav_cta_text',
+                'label' => 'CTA Button Text',
+                'name'  => 'nav_cta_text',
+                'type'  => 'text',
+            ],
+            [
+                'key'   => 'field_nav_cta_url',
+                'label' => 'CTA Button URL',
+                'name'  => 'nav_cta_url',
+                'type'  => 'url',
+            ],
+        ],
+        'location' => [ [ [ 'param' => 'options_page', 'operator' => '==', 'value' => 'acf-options-navbar' ] ] ],
+    ] );
+
+    // ======================================================
+    // Phase 8 — Footer Options Fields
+    // ======================================================
+    acf_add_local_field_group( [
+        'key'    => 'group_footer_options',
+        'title'  => 'Footer Settings',
+        'fields' => [
+            [
+                'key'           => 'field_footer_logo',
+                'label'         => 'Footer Logo',
+                'name'          => 'footer_logo',
+                'type'          => 'image',
+                'return_format' => 'array',
+            ],
+            [
+                'key'   => 'field_footer_email',
+                'label' => 'Contact Email',
+                'name'  => 'footer_email',
+                'type'  => 'email',
+            ],
+            [
+                'key'   => 'field_footer_phone',
+                'label' => 'Contact Phone',
+                'name'  => 'footer_phone',
+                'type'  => 'text',
+            ],
+            [
+                'key'   => 'field_footer_cta_text',
+                'label' => 'CTA Button Text',
+                'name'  => 'footer_cta_text',
+                'type'  => 'text',
+            ],
+            [
+                'key'   => 'field_footer_cta_url',
+                'label' => 'CTA Button URL',
+                'name'  => 'footer_cta_url',
+                'type'  => 'url',
+            ],
+            [
+                'key'        => 'field_footer_menu_links',
+                'label'      => 'Menu Links',
+                'name'       => 'footer_menu_links',
+                'type'       => 'repeater',
+                'layout'     => 'table',
+                'sub_fields' => [
+                    [ 'key' => 'field_footer_menu_label', 'label' => 'Label', 'name' => 'label', 'type' => 'text' ],
+                    [ 'key' => 'field_footer_menu_url',   'label' => 'URL',   'name' => 'url',   'type' => 'url'  ],
+                ],
+            ],
+            [
+                'key'        => 'field_footer_locations',
+                'label'      => 'Locations',
+                'name'       => 'footer_locations',
+                'type'       => 'repeater',
+                'layout'     => 'block',
+                'sub_fields' => [
+                    [ 'key' => 'field_footer_loc_name',    'label' => 'Location Name',    'name' => 'name',    'type' => 'text'     ],
+                    [ 'key' => 'field_footer_loc_address', 'label' => 'Location Address', 'name' => 'address', 'type' => 'textarea' ],
+                ],
+            ],
+            [
+                'key'   => 'field_footer_copyright',
+                'label' => 'Copyright Text',
+                'name'  => 'footer_copyright',
+                'type'  => 'text',
+            ],
+            [
+                'key'        => 'field_footer_legal_links',
+                'label'      => 'Legal Links (Privacy Policy, Terms, etc.)',
+                'name'       => 'footer_legal_links',
+                'type'       => 'repeater',
+                'layout'     => 'table',
+                'sub_fields' => [
+                    [ 'key' => 'field_footer_legal_label', 'label' => 'Label', 'name' => 'label', 'type' => 'text' ],
+                    [ 'key' => 'field_footer_legal_url',   'label' => 'URL',   'name' => 'url',   'type' => 'url'  ],
+                ],
+            ],
+        ],
+        'location' => [ [ [ 'param' => 'options_page', 'operator' => '==', 'value' => 'acf-options-footer' ] ] ],
+    ] );
 } );

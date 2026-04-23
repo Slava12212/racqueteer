@@ -1,10 +1,12 @@
 import { Metadata } from "next";
-import Navbar from "@/components/Navbar";
 import HeroPrivateEvents from "@/components/private-events/HeroPrivateEvents";
 import GallerySection from "@/components/private-events/GallerySection";
 import LogoSection from "@/components/private-events/LogoSection";
-import Footer from "@/components/Footer";
-import { getNavbarContent, getFooterContent, getPrivateEventsPageContent } from "@/lib/api";
+import BlockRenderer from "@/components/blocks/BlockRenderer";
+import { getPageBlocks } from "@/lib/wp-api";
+import { getPrivateEventsPageContent } from "@/lib/api";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Private Events - Racqueteer",
@@ -12,17 +14,23 @@ export const metadata: Metadata = {
 };
 
 export default async function PrivateEventsPage() {
-  const navbarContent = await getNavbarContent();
-  const footerContent = await getFooterContent();
-  const pageContent = await getPrivateEventsPageContent();
+  const blocks = await getPageBlocks("/private-events");
 
+  if (blocks.length > 0) {
+    return (
+      <div className="overflow-x-hidden">
+        <BlockRenderer blocks={blocks} />
+      </div>
+    );
+  }
+
+  // Fallback — hardcoded content
+  const pageContent = await getPrivateEventsPageContent();
   return (
     <div className="overflow-x-hidden">
-      <Navbar content={navbarContent} />
       <HeroPrivateEvents content={pageContent.hero} />
       <GallerySection content={pageContent.gallery} />
       <LogoSection content={pageContent.logos} />
-      <Footer content={footerContent} />
     </div>
   );
 }

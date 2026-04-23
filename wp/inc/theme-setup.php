@@ -39,3 +39,29 @@ add_filter( 'block_categories_all', function ( $categories ) {
     );
 } );
 
+// ======================================================
+// Phase 8 — ACF Options Pages (Navbar + Footer)
+// ======================================================
+add_action( 'acf/init', function () {
+    if ( ! function_exists( 'acf_add_options_page' ) ) {
+        return;
+    }
+
+    // Головна сторінка налаштувань (вже є як Racqueteer Settings у плагіні)
+    // Додаємо підсторінки Navbar і Footer
+    acf_add_options_sub_page( [
+        'page_title'  => 'Navbar Settings',
+        'menu_title'  => 'Navbar',
+        'parent_slug' => 'racqueteer-settings',
+        'menu_slug'   => 'acf-options-navbar',
+        'capability'  => 'manage_options',
+    ] );
+
+    acf_add_options_sub_page( [
+        'page_title'  => 'Footer Settings',
+        'menu_title'  => 'Footer',
+        'parent_slug' => 'racqueteer-settings',
+        'menu_slug'   => 'acf-options-footer',
+        'capability'  => 'manage_options',
+    ] );
+} );

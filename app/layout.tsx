@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { getSiteOptions } from "@/lib/wp-api";
+import { getNavbarContent, getFooterContent } from "@/lib/api";
+import type { NavbarContent, FooterContent } from "@/types";
 
 export const metadata: Metadata = {
   title: "Racqueteer - Premier Pickleball & Padel Club",
@@ -41,15 +46,57 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Fetch WP Options (navbar/footer). Falls back to null on error.
+  const { navbar, footer } = await getSiteOptions();
+
+  // Convert WP data → NavbarContent, OR use hardcoded fallback
+  let navbarContent: NavbarContent;
+  if (navbar && navbar.navLinks && navbar.navLinks.length > 0) {
+    navbarContent = {
+      logoUrl: navbar.navLogo?.sourceUrl ?? "/logo2.svg",
+      logoAlt: navbar.navLogo?.altText ?? "Racqueteer",
+      logoIconUrl: navbar.navLogoIcon?.sourceUrl ?? "/logo-icon.png",
+      ctaText: navbar.navCtaText ?? "Book a Court",
+      ctaUrl: navbar.navCtaUrl ?? "#",
+      menuLinks: navbar.navLinks,
+    };
+  } else {
+    navbarContent = await getNavbarContent();
+  }
+
+  // Convert WP data → FooterContent, OR use hardcoded fallback
+  let footerContent: FooterContent;
+  if (footer && footer.footerEmail) {
+    footerContent = {
+      logoUrl: footer.footerLogo?.sourceUrl ?? "/logo2.svg",
+      logoAlt: footer.footerLogo?.altText ?? "Racqueteer",
+      contactLabel: "Contact Us",
+      email: footer.footerEmail ?? "",
+      phone: footer.footerPhone ?? "",
+      ctaText: footer.footerCtaText ?? "Book a Court",
+      ctaUrl: footer.footerCtaUrl ?? "#",
+      menuLabel: "Menu",
+      menuLinks: footer.footerMenuLinks ?? [],
+      locationsLabel: "Locations",
+      locations: footer.footerLocations ?? [],
+      copyrightText: footer.footerCopyright ?? `© ${new Date().getFullYear()} Racqueteer. All rights reserved.`,
+      legalLinks: footer.footerLegalLinks ?? [],
+    };
+  } else {
+    footerContent = await getFooterContent();
+  }
+
   return (
     <html lang="en">
       <body className="font-mona-sans antialiased">
+        <Navbar content={navbarContent} />
         {children}
+        <Footer content={footerContent} />
       </body>
     </html>
   );

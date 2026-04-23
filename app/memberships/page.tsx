@@ -1,9 +1,11 @@
 import { Metadata } from "next";
-import Navbar from "@/components/Navbar";
 import HeroMembership from "@/components/membership/HeroMembership";
 import SubscriptionsSection from "@/components/membership/SubscriptionsSection";
-import Footer from "@/components/Footer";
-import { getNavbarContent, getFooterContent, getMembershipsPageContent } from "@/lib/api";
+import BlockRenderer from "@/components/blocks/BlockRenderer";
+import { getPageBlocks } from "@/lib/wp-api";
+import { getMembershipsPageContent } from "@/lib/api";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Memberships - Racqueteer",
@@ -11,20 +13,26 @@ export const metadata: Metadata = {
 };
 
 export default async function MembershipsPage() {
-  const navbarContent = await getNavbarContent();
-  const footerContent = await getFooterContent();
-  const pageContent = await getMembershipsPageContent();
+  const blocks = await getPageBlocks("/memberships");
 
+  if (blocks.length > 0) {
+    return (
+      <div className="overflow-x-hidden">
+        <BlockRenderer blocks={blocks} />
+      </div>
+    );
+  }
+
+  // Fallback — hardcoded content
+  const pageContent = await getMembershipsPageContent();
   return (
     <div className="overflow-x-hidden">
-      <Navbar content={navbarContent} />
       <HeroMembership content={pageContent.hero} />
       {/* Hidden per Alex's request — don't delete yet */}
       {/* <MembershipSection className="pt-16 sm:pt-[120px]" /> */}
       <SubscriptionsSection content={pageContent.subscriptionsHeader} />
       {/* Hidden per Alex's request — don't delete yet */}
       {/* <PriceCompareSection /> */}
-      <Footer content={footerContent} />
     </div>
   );
 }
