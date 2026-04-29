@@ -94,30 +94,30 @@ function ProgramRow({
 
   return (
     <div
-      className={`flex px-5 md:px-10 lg:px-[80px] py-8 md:py-9 items-center gap-6 md:gap-10 border-t border-brand-border transition-colors duration-300 cursor-pointer ${bgClass}`}
+      className={`flex flex-col lg:flex-row px-5 md:px-10 lg:px-[80px] py-8 md:py-9 items-start lg:items-center gap-4 lg:gap-6 md:gap-10 border-t border-brand-border transition-colors duration-300 cursor-pointer ${bgClass}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {/* Title */}
       <div
-        className={`flex-1 min-w-0 font-bold text-base md:text-2xl lg:text-[32px] uppercase leading-tight tracking-wide transition-colors duration-300 ${titleColorClass}`}
+        className={`lg:flex-1 lg:min-w-0 font-bold text-base md:text-2xl lg:text-[32px] uppercase leading-tight tracking-wide transition-colors duration-300 ${titleColorClass}`}
         style={{ fontFamily: '"Mona Sans", sans-serif' }}
       >
         {program.title}
       </div>
 
-      {/* Details: description + price + arrow */}
-      <div className="flex items-center justify-between gap-6 md:gap-10 lg:w-[870px] flex-shrink-0">
-        {/* Description */}
+      {/* Details: description + price + arrow - below title on mobile, right on desktop */}
+      <div className="flex flex-col lg:flex-row items-start justify-between gap-4 lg:gap-10 lg:w-[870px] flex-shrink-0 w-full">
+        {/* Description - shown below title on mobile/tablet, right on desktop */}
         <div
-          className={`hidden md:block w-0 md:w-auto md:flex-1 lg:w-[500px] lg:flex-none text-sm font-medium leading-6 line-clamp-3 transition-colors duration-300 ${descColor}`}
+          className={`md:block w-full text-sm font-medium leading-6 line-clamp-3 transition-colors duration-300 ${descColor}`}
           style={{ fontFamily: '"Mona Sans", sans-serif' }}
         >
           {program.description}
         </div>
 
-        {/* Price */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Price - always visible on right */}
+        <div className="flex items-center gap-2 flex-shrink-0 lg:ml-auto">
           <span
             className={`text-xl md:text-3xl lg:text-4xl font-semibold leading-tight transition-colors duration-300 ${priceColor}`}
             style={{ fontFamily: '"Mona Sans", sans-serif' }}
