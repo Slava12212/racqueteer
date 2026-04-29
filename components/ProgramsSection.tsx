@@ -200,7 +200,7 @@ export default function ProgramsSection({ content }: ProgramsSectionProps) {
         {/* Title */}
         <div className="lg:w-1/2 flex flex-col gap-8 lg:gap-10">
           <h2
-            className="text-brand-blue text-[20px] md:text-4xl lg:text-[40px] uppercase leading-tight"
+            className="text-brand-blue text-[20px] md:text-3xl lg:text-[32px] xl:text-[40px] uppercase leading-tight"
             style={{
               fontFamily: '"Mona Sans", sans-serif',
               fontWeight: 800,
