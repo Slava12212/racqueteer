@@ -343,3 +343,10 @@
 .animate-marquee {
   animation: marquee 30s linear infinite;
 }
+
+/* Responsive: Remove min-h-screen below 1024px (lg breakpoint) */
+@media (max-width: 1023px) {
+  .min-h-screen {
+    min-height: auto !important;
+  }
+}
