@@ -162,8 +162,8 @@ export default function Navbar({ content }: NavbarProps) {
             />
           </Link>
 
-          {/* Desktop: Center logo */}
-          <Link href="/" className="hidden md:block md:absolute md:left-1/2 md:-translate-x-1/2">
+          {/* Desktop: Center logo only on 3xl+ (1920px+) to prevent overlap at <1600px */}
+          <Link href="/" className="hidden md:block 2xl:absolute 2xl:left-1/2 2xl:-translate-x-1/2">
             <img
               src={content.logoUrl}
               alt={content.logoAlt}
