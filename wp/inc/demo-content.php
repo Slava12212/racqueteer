@@ -34,8 +34,9 @@ function rq_demo_admin_page(): void {
         return;
     }
 
-    $results = [];
-    $error   = '';
+    $results  = [];
+    $gql_logs = [];
+    $error    = '';
 
     if ( isset( $_POST['rq_import'] ) && check_admin_referer( 'rq_demo_import' ) ) {
         try {
@@ -43,6 +44,10 @@ function rq_demo_admin_page(): void {
         } catch ( \Throwable $e ) {
             $error = $e->getMessage();
         }
+    }
+
+    if ( isset( $_POST['rq_verify_gql'] ) && check_admin_referer( 'rq_demo_import' ) ) {
+        $gql_logs = rq_verify_graphql();
     }
 
     $already = get_option( 'rq_demo_imported', false );
@@ -82,20 +87,68 @@ function rq_demo_admin_page(): void {
             </div>
         <?php endif; ?>
 
-        <div style="background:#fff;padding:24px;border:1px solid #ccd0d4;max-width:720px;margin-top:16px;">
+        <?php if ( $gql_logs ) :
+            $has_errors = ! empty( array_filter( $gql_logs, fn( $l ) => str_contains( $l, '❌' ) ) );
+        ?>
+            <div class="notice <?php echo $has_errors ? 'notice-warning' : 'notice-success'; ?> is-dismissible">
+                <p><strong><?php echo $has_errors ? '⚠️ GraphQL Verification — є проблеми' : '✅ GraphQL Verification — все OK!'; ?></strong></p>
+                <ul style="list-style:none;margin:8px 0 0;padding:0;font-family:monospace;font-size:12px;line-height:1.8;">
+                    <?php foreach ( $gql_logs as $line ) :
+                        $color = str_contains( $line, '✅' ) ? '#00a32a' : ( str_contains( $line, '❌' ) ? '#d63638' : ( str_contains( $line, '⚠' ) ? '#dba617' : '#50575e' ) );
+                    ?>
+                        <li style="color:<?php echo $color; ?>"><?php echo esc_html( $line ); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endif; ?>
 
-            <h2 style="margin-top:0;">Що буде створено</h2>
-            <ul style="list-style:disc;margin-left:20px;line-height:1.8;">
-                <li><strong>Сторінки (5):</strong> Home, Memberships, Private Events, About, Careers</li>
-                <li><strong>Кожна сторінка</strong> вже матиме правильні ACF Gutenberg блоки з контентом</li>
-                <li><strong>Jobs (8)</strong> — вакансії для сторінки Careers</li>
-                <li><strong>Testimonials (6)</strong> — відгуки</li>
-                <li><strong>Locations (2)</strong> — Homebush &amp; Alexandria</li>
-                <li><strong>Programs (4)</strong> — програми тренувань</li>
-                <li><strong>Membership Plans (4)</strong> — Starter, Light, Pro, Pro+</li>
-                <li><strong>Navbar &amp; Footer ACF Options</strong> — посилання, CTA, контакти</li>
-                <li><strong>Reading Settings</strong> — Home встановлюється як front page</li>
-            </ul>
+    <div style="background:#fff;padding:24px;border:1px solid #ccd0d4;max-width:720px;margin-top:16px;">
+
+        <h2 style="margin-top:0;">🔍 Перевірка системи</h2>
+        <?php
+        $checks = [
+            'ACF Pro'                   => class_exists( 'ACF' ),
+            'WPGraphQL'                 => defined( 'WPGRAPHQL_VERSION' ) || function_exists( 'graphql' ),
+            'WPGraphQL for ACF'         => function_exists( 'wpgraphql_acf' ) || defined( 'WPGRAPHQL_FOR_ACF_VERSION' ),
+            'WPGraphQL Content Blocks'  => rq_detect_content_blocks_plugin(),
+            'Permalinks /%postname%/'   => get_option( 'permalink_structure' ) === '/%postname%/',
+            'WPGraphQL Introspection'   => ( function() {
+                $s = get_option( 'graphql_general_settings', [] );
+                return is_array( $s ) && ( $s['public_introspection_enabled'] ?? '' ) === 'on';
+            } )(),
+        ];
+        $all_ok = ! in_array( false, $checks, true );
+        ?>
+        <table style="border-collapse:collapse;width:100%;margin-bottom:16px;">
+            <?php foreach ( $checks as $label => $ok ) : ?>
+            <tr style="border-bottom:1px solid #f0f0f0;">
+                <td style="padding:6px 10px;font-size:13px;"><?php echo $ok ? '✅' : '❌'; ?></td>
+                <td style="padding:6px 10px;font-size:13px;"><?php echo esc_html( $label ); ?></td>
+                <td style="padding:6px 10px;font-size:12px;color:#8c8f94;"><?php echo $ok ? 'OK' : '<strong style="color:#d63638">Потрібно встановити/налаштувати</strong>'; ?></td>
+            </tr>
+            <?php endforeach; ?>
+        </table>
+        <?php if ( ! $all_ok ) : ?>
+        <div class="notice notice-warning inline" style="margin:0 0 16px;">
+            <p>❗ <strong>Є незаповнені умови.</strong> Натисніть Import — він автоматично налаштує те що може (permalinks, WPGraphQL settings).
+            ACF Pro, WPGraphQL та WPGraphQL for ACF потрібно встановити вручну в <a href="<?php echo esc_url( admin_url( 'plugins.php' ) ); ?>">Plugins</a>.</p>
+        </div>
+        <?php endif; ?>
+
+        <h2>Що буде створено / налаштовано</h2>
+        <ul style="list-style:disc;margin-left:20px;line-height:1.8;">
+            <li><strong>⚙️ WordPress Settings:</strong> Permalinks → /%postname%/, Timezone → Sydney, коментарі вимкнено</li>
+            <li><strong>⚙️ WPGraphQL Settings:</strong> public introspection ON, batch queries ON</li>
+            <li><strong>Сторінки (5):</strong> Home, Memberships, Private Events, About, Careers</li>
+            <li><strong>Кожна сторінка</strong> вже матиме правильні ACF Gutenberg блоки з контентом</li>
+            <li><strong>Jobs (8)</strong> — вакансії для сторінки Careers</li>
+            <li><strong>Testimonials (6)</strong> — відгуки</li>
+            <li><strong>Locations (2)</strong> — Homebush &amp; Alexandria</li>
+            <li><strong>Programs (4)</strong> — програми тренувань</li>
+            <li><strong>Membership Plans (4)</strong> — Starter, Light, Pro, Pro+</li>
+            <li><strong>Navbar &amp; Footer ACF Options</strong> — посилання, CTA, контакти</li>
+            <li><strong>Reading Settings</strong> — Home встановлюється як front page</li>
+        </ul>
 
             <details style="margin-top:16px;">
                 <summary style="cursor:pointer;font-weight:600;color:#2271b1;">🔍 Як саме зберігаються ACF блоки?</summary>
@@ -136,12 +189,25 @@ function rq_demo_admin_page(): void {
                 </div>
             <?php endif; ?>
 
-            <form method="post" style="margin-top:16px;">
+            <form method="post" style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                 <?php wp_nonce_field( 'rq_demo_import' ); ?>
                 <button type="submit" name="rq_import" class="button button-primary" style="font-size:15px;height:40px;padding:0 24px;">
                     🚀 <?php echo $already ? 'Re-import Demo Content' : 'Import Demo Content'; ?>
                 </button>
+                <button type="submit" name="rq_verify_gql" class="button button-secondary" style="font-size:14px;height:40px;padding:0 20px;">
+                    🔍 Verify GraphQL
+                </button>
             </form>
+
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid #f0f0f0;">
+                <p style="margin:0 0 8px;font-weight:600;font-size:13px;">🔗 Корисні посилання після імпорту:</p>
+                <ul style="list-style:none;margin:0;padding:0;font-size:13px;line-height:2;">
+                    <li>📡 <a href="<?php echo esc_url( home_url( '/graphql' ) ); ?>" target="_blank"><?php echo esc_html( home_url( '/graphql' ) ); ?></a> — GraphQL endpoint (має відповідати JSON)</li>
+                    <li>📋 <a href="<?php echo esc_url( admin_url( 'admin.php?page=graphiql-ide' ) ); ?>" target="_blank">GraphiQL IDE</a> — тестувати GraphQL запити прямо в браузері</li>
+                    <li>⚙️ <a href="<?php echo esc_url( admin_url( 'admin.php?page=graphql-settings' ) ); ?>" target="_blank">WPGraphQL Settings</a> — налаштування плагіну</li>
+                    <li>🔧 <a href="<?php echo esc_url( admin_url( 'options-permalink.php' ) ); ?>" target="_blank">Permalinks Settings</a> — перевірити структуру</li>
+                </ul>
+            </div>
         </div>
     </div>
     <?php
@@ -158,6 +224,9 @@ function rq_run_import(): array {
     require_once ABSPATH . 'wp-admin/includes/image.php';
     require_once ABSPATH . 'wp-admin/includes/file.php';
     require_once ABSPATH . 'wp-admin/includes/media.php';
+
+    $log[] = '— Configuring WordPress & WPGraphQL settings…';
+    rq_configure_wp_settings( $log );
 
     $log[] = '— Importing media assets…';
     $media = rq_import_media( $nextjs, $log );
@@ -199,6 +268,423 @@ function rq_run_import(): array {
     $log[] = '✅ All done!';
 
     return $log;
+}
+
+// ─────────────────────────────────────────────
+// GRAPHQL VERIFICATION
+// ─────────────────────────────────────────────
+
+/**
+ * Runs a series of GraphQL queries against the local /graphql endpoint
+ * and returns a detailed log of what works and what doesn't.
+ */
+/**
+ * Detect WPGraphQL Content Blocks plugin regardless of slug/folder name.
+ */
+function rq_detect_content_blocks_plugin(): bool {
+    // 1. Constants / classes set by the plugin at runtime
+    if ( defined( 'WPGRAPHQL_CONTENT_BLOCKS_VERSION' ) ) {
+        return true;
+    }
+    if ( class_exists( 'WPGraphQL\ContentBlocks\Plugin' ) ) {
+        return true;
+    }
+    // 2. Check via is_plugin_active() — covers all common folder/slug variants
+    if ( function_exists( 'is_plugin_active' ) ) {
+        $slugs = [
+            'wp-graphql-content-blocks/wp-graphql-content-blocks.php',
+            'wpgraphql-content-blocks/wp-graphql-content-blocks.php',
+            'wpgraphql-content-blocks/wpgraphql-content-blocks.php',
+        ];
+        foreach ( $slugs as $slug ) {
+            if ( is_plugin_active( $slug ) ) {
+                return true;
+            }
+        }
+    }
+    // 3. Fallback: scan active_plugins option directly
+    $active = (array) get_option( 'active_plugins', [] );
+    foreach ( $active as $plugin ) {
+        if ( str_contains( strtolower( $plugin ), 'content-blocks' ) ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function rq_verify_graphql(): array {
+    $log = [];
+    $url = home_url( '/graphql' );
+    $log[] = "GraphQL endpoint: {$url}";
+    $log[] = str_repeat( '─', 50 );
+
+    // Helper: POST a query, return [ok, data|error_message]
+    $query = function ( string $gql ) use ( $url ): array {
+        $resp = wp_remote_post( $url, [
+            'headers' => [ 'Content-Type' => 'application/json' ],
+            'body'    => wp_json_encode( [ 'query' => $gql ] ),
+            'timeout' => 15,
+            'sslverify' => false,
+        ] );
+        if ( is_wp_error( $resp ) ) {
+            return [ false, $resp->get_error_message() ];
+        }
+        $body = json_decode( wp_remote_retrieve_body( $resp ), true );
+        if ( ! empty( $body['errors'] ) ) {
+            return [ false, $body['errors'][0]['message'] ?? 'Unknown GraphQL error' ];
+        }
+        return [ true, $body['data'] ?? [] ];
+    };
+
+    // ── 1. Endpoint reachable ────────────────────────────────────────────────
+    $log[] = '';
+    $log[] = '1. Endpoint & Introspection';
+    [ $ok, $data ] = $query( '{ __typename }' );
+    if ( $ok ) {
+        $log[] = "  ✅ Endpoint reachable — {$url}";
+    } else {
+        $log[] = "  ❌ Endpoint NOT reachable: {$data}";
+        $log[] = '  ⚠ Зупиняємо перевірку — WPGraphQL недоступний';
+        return $log;
+    }
+
+    // ── 1b. Schema check: Page.blocks field & ACF block types ────────────────
+    $log[] = '';
+    $log[] = '1b. Schema — поля та типи';
+
+    // Check if Page has blocks field
+    [ $ok, $data ] = $query( '{ __type(name:"Page") { fields { name } } }' );
+    if ( $ok ) {
+        $fields     = array_column( $data['__type']['fields'] ?? [], 'name' );
+        $has_blocks = in_array( 'blocks', $fields, true );
+        if ( $has_blocks ) {
+            $log[] = '  ✅ Page.blocks — поле є в схемі (WPGraphQL Content Blocks активний)';
+        } else {
+            $log[] = '  ❌ Page.blocks — поля НЕМАЄ у схемі! Переконайся що WPGraphQL Content Blocks активний і сумісний';
+            $log[] = '     Доступні поля Page: ' . implode( ', ', array_slice( $fields, 0, 15 ) );
+        }
+    } else {
+        $log[] = "  ⚠ Schema introspection failed: {$data}";
+    }
+
+    // Introspect Block interface to see what fields it has (diagnose Block.name missing issue)
+    [ $ok, $data ] = $query( '{ __type(name:"Block") { name kind fields { name } } }' );
+    if ( $ok && ! empty( $data['__type'] ) ) {
+        $block_iface_fields = array_column( $data['__type']['fields'] ?? [], 'name' );
+        $has_name     = in_array( 'name',      $block_iface_fields, true );
+        $has_typename = true; // __typename always works
+        $log[] = '  ℹ Block interface fields: ' . implode( ', ', $block_iface_fields );
+        $log[] = '  ' . ( $has_name ? '✅' : '⚠' ) . ' Block.name ' . ( $has_name ? 'available' : 'NOT in interface — use __typename instead' );
+    } else {
+        $log[] = '  ℹ Block type not found in schema (WPGraphQL Content Blocks uses a different interface name)';
+    }
+
+    // Check if AcfRacqueteerHeroBlock type exists (registered by WPGraphQL for ACF)
+    [ $ok, $data ] = $query( '{ __type(name:"AcfRacqueteerHeroBlock") { name kind fields { name } } }' );
+    if ( $ok && ! empty( $data['__type'] ) ) {
+        $block_fields = array_column( $data['__type']['fields'] ?? [], 'name' );
+        $log[] = '  ✅ AcfRacqueteerHeroBlock — тип є в схемі (WPGraphQL for ACF працює)';
+        $log[] = '     Fields: ' . implode( ', ', $block_fields );
+    } else {
+        $log[] = '  ❌ AcfRacqueteerHeroBlock — типу НЕМАЄ у схемі!';
+        $log[] = '     Потрібно: block field groups мають мати show_in_graphql=true у acf-blocks.php';
+        // List available Acf* types in schema
+        [ $ok2, $data2 ] = $query( '{ __schema { types { name } } }' );
+        if ( $ok2 ) {
+            $all_types = array_column( $data2['__schema']['types'] ?? [], 'name' );
+            $acf_types = array_filter( $all_types, fn($t) => str_starts_with( $t, 'Acf' ) );
+            $rq_types  = array_filter( $all_types, fn($t) => str_starts_with( $t, 'Rq' ) );
+            if ( $acf_types ) {
+                $log[] = '     Знайдені Acf* типи: ' . implode( ', ', array_slice( array_values( $acf_types ), 0, 10 ) );
+            }
+            if ( $rq_types ) {
+                $log[] = '     ✅ Rq* (manual fallback) типи: ' . implode( ', ', array_values( $rq_types ) );
+            }
+        }
+    }
+
+    // ── 2. Pages & Blocks ───────────────────────────────────────────────────
+    $log[] = '';
+    $log[] = '2. Pages + ACF Blocks';
+    $pages = [
+        '/'              => 'Home',
+        '/memberships'   => 'Memberships',
+        '/private-events'=> 'Private Events',
+        '/about'         => 'About',
+        '/careers'       => 'Careers',
+    ];
+    foreach ( $pages as $uri => $label ) {
+        // Use __typename (always available) instead of name (not on Block interface in all versions)
+        [ $ok, $data ] = $query( '{ pageBy(uri:"' . $uri . '") { title blocks { __typename } } }' );
+        if ( ! $ok ) {
+            $log[] = "  ❌ {$label} ({$uri}): {$data}";
+            continue;
+        }
+        $page = $data['pageBy'] ?? null;
+        if ( ! $page ) {
+            $log[] = "  ❌ {$label} ({$uri}): page not found (null)";
+            continue;
+        }
+        $blocks   = $page['blocks'] ?? [];
+        $n_blocks = count( $blocks );
+        if ( $n_blocks === 0 ) {
+            $log[] = "  ⚠ {$label} ({$uri}): page found but 0 blocks — WPGraphQL Content Blocks може не бачити блоки";
+        } else {
+            $type_names = implode( ', ', array_column( $blocks, '__typename' ) );
+            $log[]      = "  ✅ {$label} ({$uri}): {$n_blocks} blocks → {$type_names}";
+        }
+    }
+
+    // ── 3. CPT: Jobs ────────────────────────────────────────────────────────
+    $log[] = '';
+    $log[] = '3. CPT Queries';
+    [ $ok, $data ] = $query( '{ jobs(first:3) { nodes { title jobFields { description category } } } }' );
+    if ( ! $ok ) {
+        $log[] = "  ❌ Jobs: {$data}";
+    } else {
+        $nodes = $data['jobs']['nodes'] ?? [];
+        $count = count( $nodes );
+        if ( $count === 0 ) {
+            $log[] = '  ⚠ Jobs: query OK but 0 results — check CPT data';
+        } else {
+            $first_acf = $nodes[0]['jobFields'] ?? null;
+            if ( $first_acf && ! empty( $first_acf['description'] ) ) {
+                $log[] = "  ✅ Jobs: {$count} results — ACF fields OK (description: \"" . mb_substr( $first_acf['description'], 0, 40 ) . '…")';
+            } else {
+                $log[] = "  ⚠ Jobs: {$count} results but jobFields empty — check show_in_graphql + graphql_field_name";
+            }
+        }
+    }
+
+    // ── 4. CPT: Testimonials ────────────────────────────────────────────────
+    [ $ok, $data ] = $query( '{ testimonials(first:3) { nodes { testimonialFields { authorName quote rating } } } }' );
+    if ( ! $ok ) {
+        $log[] = "  ❌ Testimonials: {$data}";
+    } else {
+        $nodes = $data['testimonials']['nodes'] ?? [];
+        $count = count( $nodes );
+        if ( $count === 0 ) {
+            $log[] = '  ⚠ Testimonials: 0 results';
+        } else {
+            $first_acf = $nodes[0]['testimonialFields'] ?? null;
+            $has_data  = $first_acf && ! empty( $first_acf['authorName'] );
+            $log[]     = $has_data
+                ? "  ✅ Testimonials: {$count} results — ACF OK (authorName: \"{$first_acf['authorName']}\")"
+                : "  ⚠ Testimonials: {$count} results but testimonialFields empty";
+        }
+    }
+
+    // ── 5. CPT: Locations ───────────────────────────────────────────────────
+    [ $ok, $data ] = $query( '{ locations(first:3) { nodes { locationFields { name status locationId } } } }' );
+    if ( ! $ok ) {
+        $log[] = "  ❌ Locations: {$data}";
+    } else {
+        $nodes = $data['locations']['nodes'] ?? [];
+        $count = count( $nodes );
+        if ( $count === 0 ) {
+            $log[] = '  ⚠ Locations: 0 results';
+        } else {
+            $first_acf = $nodes[0]['locationFields'] ?? null;
+            $has_data  = $first_acf && ! empty( $first_acf['name'] );
+            $log[]     = $has_data
+                ? "  ✅ Locations: {$count} results — ACF OK (name: \"{$first_acf['name']}\")"
+                : "  ⚠ Locations: {$count} results but locationFields empty";
+        }
+    }
+
+    // ── 6. CPT: Programs ────────────────────────────────────────────────────
+    [ $ok, $data ] = $query( '{ programs(first:3) { nodes { programFields { title price color } } } }' );
+    if ( ! $ok ) {
+        $log[] = "  ❌ Programs: {$data}";
+    } else {
+        $nodes = $data['programs']['nodes'] ?? [];
+        $count = count( $nodes );
+        if ( $count === 0 ) {
+            $log[] = '  ⚠ Programs: 0 results';
+        } else {
+            $first_acf = $nodes[0]['programFields'] ?? null;
+            $has_data  = $first_acf && ! empty( $first_acf['title'] );
+            $log[]     = $has_data
+                ? "  ✅ Programs: {$count} results — ACF OK (title: \"{$first_acf['title']}\")"
+                : "  ⚠ Programs: {$count} results but programFields empty";
+        }
+    }
+
+    // ── 7. CPT: Membership Plans ────────────────────────────────────────────
+    [ $ok, $data ] = $query( '{ memberships(first:5) { nodes { title acf { price description buttonVariant } } } }' );
+    if ( ! $ok ) {
+        $log[] = "  ❌ Memberships: {$data}";
+    } else {
+        $nodes = $data['memberships']['nodes'] ?? [];
+        $count = count( $nodes );
+        if ( $count === 0 ) {
+            $log[] = '  ⚠ Memberships: 0 results';
+        } else {
+            $first_acf = $nodes[0]['acf'] ?? null;
+            $has_data  = $first_acf && ! empty( $first_acf['price'] );
+            $log[]     = $has_data
+                ? "  ✅ Memberships: {$count} results — ACF OK (price: \"{$first_acf['price']}\")"
+                : "  ⚠ Memberships: {$count} results but ACF fields empty";
+        }
+    }
+
+    // ── 8. Navbar Options ───────────────────────────────────────────────────
+    $log[] = '';
+    $log[] = '4. Site Options (Navbar + Footer)';
+    [ $ok, $data ] = $query( '{ acfOptionsNavbar { navbar { navCtaText navLinks { label url } } } }' );
+    if ( ! $ok ) {
+        $log[] = "  ❌ Navbar options: {$data}";
+    } else {
+        $navbar = $data['acfOptionsNavbar']['navbar'] ?? null;
+        if ( ! $navbar ) {
+            $log[] = '  ⚠ Navbar: acfOptionsNavbar is null — перевір show_in_graphql на options sub-page';
+        } else {
+            $cta   = $navbar['navCtaText'] ?? '(empty)';
+            $links = count( $navbar['navLinks'] ?? [] );
+            $log[] = "  ✅ Navbar options OK — CTA: \"{$cta}\", links: {$links}";
+        }
+    }
+
+    // ── 9. Footer Options ───────────────────────────────────────────────────
+    [ $ok, $data ] = $query( '{ acfOptionsFooter { footer { footerEmail footerCopyright footerMenuLinks { label } } } }' );
+    if ( ! $ok ) {
+        $log[] = "  ❌ Footer options: {$data}";
+    } else {
+        $footer = $data['acfOptionsFooter']['footer'] ?? null;
+        if ( ! $footer ) {
+            $log[] = '  ⚠ Footer: acfOptionsFooter is null — перевір show_in_graphql на options sub-page';
+        } else {
+            $email = $footer['footerEmail'] ?? '(empty)';
+            $links = count( $footer['footerMenuLinks'] ?? [] );
+            $log[] = "  ✅ Footer options OK — email: \"{$email}\", menu links: {$links}";
+        }
+    }
+
+    // ── 10. Block Attributes (Hero block) ───────────────────────────────────
+    $log[] = '';
+    $log[] = '5. Block Attributes (Hero on Home)';
+    // Use __typename to identify blocks (Block.name not available in all WPGraphQL Content Blocks versions)
+    [ $ok, $data ] = $query( '{ pageBy(uri:"/") { blocks { __typename ... on AcfRacqueteerHeroBlock { attributes { racqueteerHero { title ctaPrimaryText videoUrl } } } } } }' );
+    if ( ! $ok ) {
+        // Fallback: try flat attributes (older WPGraphQL for ACF attribute structure)
+        [ $ok, $data ] = $query( '{ pageBy(uri:"/") { blocks { __typename ... on AcfRacqueteerHeroBlock { attributes { title ctaPrimaryText videoUrl } } } } }' );
+        if ( ! $ok ) {
+            $log[] = "  ❌ Hero block query failed: {$data}";
+        } else {
+            $log[] = '  ℹ Using flat attributes structure (older WPGraphQL for ACF)';
+        }
+    }
+    if ( $ok ) {
+        $blocks = $data['pageBy']['blocks'] ?? [];
+        $hero   = null;
+        foreach ( $blocks as $b ) {
+            if ( ( $b['__typename'] ?? '' ) === 'AcfRacqueteerHeroBlock' ) {
+                $hero = $b;
+                break;
+            }
+        }
+        if ( ! $hero ) {
+            $block_types = array_column( $blocks, '__typename' );
+            $log[] = '  ⚠ AcfRacqueteerHeroBlock not found on Home page';
+            $log[] = '     Found block types: ' . ( $block_types ? implode( ', ', $block_types ) : '(none)' );
+        } else {
+            // Check nested (new) or flat (old) attribute structure
+            $attrs = $hero['attributes']['racqueteerHero'] ?? $hero['attributes'] ?? [];
+            if ( empty( $attrs['title'] ) ) {
+                $log[] = '  ⚠ Hero block found but attributes.title is empty — WPGraphQL for ACF може не читати inline block data';
+                $log[] = '     Attributes keys: ' . implode( ', ', array_keys( $attrs ) );
+            } else {
+                $log[] = "  ✅ Hero attributes OK — title: \"" . mb_substr( $attrs['title'], 0, 50 ) . '"';
+                $log[] = "  ✅ CTA: \"{$attrs['ctaPrimaryText']}\"";
+                $log[] = "  ✅ Video: \"{$attrs['videoUrl']}\"";
+            }
+        }
+    }
+
+    $log[] = '';
+    $log[] = str_repeat( '─', 50 );
+    $errors = count( array_filter( $log, fn( $l ) => str_contains( $l, '❌' ) ) );
+    $warns  = count( array_filter( $log, fn( $l ) => str_contains( $l, '⚠' ) ) );
+    $log[]  = $errors === 0 && $warns === 0
+        ? '🎉 All checks passed!'
+        : "Summary: {$errors} errors, {$warns} warnings — перевір деталі вище";
+
+    return $log;
+}
+
+// ─────────────────────────────────────────────
+// WP + WPGraphQL SETTINGS AUTO-CONFIGURATION
+// ─────────────────────────────────────────────
+
+function rq_configure_wp_settings( array &$log ): void {
+
+    // 1. Permalink structure → /%postname%/
+    //    КРИТИЧНО: без цього pageBy(uri:"/") у WPGraphQL не працює
+    $permalink = get_option( 'permalink_structure' );
+    if ( $permalink !== '/%postname%/' ) {
+        update_option( 'permalink_structure', '/%postname%/' );
+        flush_rewrite_rules( true );
+        $log[] = "  ✔ Permalinks → /%postname%/ (rewrite rules flushed)";
+    } else {
+        $log[] = "  ✔ Permalinks already /%postname%/";
+    }
+
+    // 2. WPGraphQL — увімкнути introspection та batch queries
+    if ( defined( 'WPGRAPHQL_VERSION' ) || function_exists( 'graphql' ) ) {
+        $gql = get_option( 'graphql_general_settings', [] );
+        // get_option може повернути false або рядок — нормалізуємо до масиву
+        if ( ! is_array( $gql ) ) {
+            $gql = [];
+        }
+        $gql['public_introspection_enabled'] = 'on';
+        $gql['batch_queries_enabled']        = 'on';
+        $gql['query_depth_enabled']          = 'off';
+        $gql['tracing_enabled']              = 'off';
+        update_option( 'graphql_general_settings', $gql );
+        $log[] = "  ✔ WPGraphQL: introspection=on, batch=on, depth-limit=off";
+    } else {
+        $log[] = "  ⚠ WPGraphQL not detected — install & activate the plugin!";
+    }
+
+    // 3. ACF Pro — перевірка
+    if ( class_exists( 'ACF' ) ) {
+        $log[] = "  ✔ ACF Pro detected (version " . ( defined( 'ACF_VERSION' ) ? ACF_VERSION : '?' ) . ")";
+    } else {
+        $log[] = "  ⚠ ACF Pro not detected — install & activate ACF Pro!";
+    }
+
+    // 4. WPGraphQL for ACF — перевірка
+    if ( function_exists( 'wpgraphql_acf' ) || defined( 'WPGRAPHQL_FOR_ACF_VERSION' ) ) {
+        $log[] = "  ✔ WPGraphQL for ACF detected";
+    } else {
+        $log[] = "  ⚠ WPGraphQL for ACF not detected — install & activate it!";
+    }
+
+    // 5. WPGraphQL Content Blocks — потрібен для поля blocks на сторінках
+    if ( rq_detect_content_blocks_plugin() ) {
+        $ver   = defined( 'WPGRAPHQL_CONTENT_BLOCKS_VERSION' ) ? WPGRAPHQL_CONTENT_BLOCKS_VERSION : 'active';
+        $log[] = "  ✔ WPGraphQL Content Blocks detected (v{$ver})";
+    } else {
+        $log[] = "  ⚠ WPGraphQL Content Blocks NOT detected — потрібен для блоків у GraphQL! Встанови плагін: WPGraphQL Content Blocks";
+    }
+
+    // 5. Timezone та формат дати (Sydney)
+    update_option( 'timezone_string', 'Australia/Sydney' );
+    update_option( 'date_format',     'M j, Y'           );
+    update_option( 'time_format',     'g:i a'            );
+    $log[] = "  ✔ Timezone → Australia/Sydney, date format → M j, Y";
+
+    // 6. Вимкнути коментарі (headless — не потрібно)
+    update_option( 'default_comment_status', 'closed' );
+    update_option( 'default_ping_status',    'closed' );
+    $log[] = "  ✔ Comments disabled (headless mode)";
+
+    // 7. Налаштування блогу — назва сайту
+    if ( get_option( 'blogname' ) === 'My WordPress Website' || get_option( 'blogname' ) === '' ) {
+        update_option( 'blogname',        'Racqueteer' );
+        update_option( 'blogdescription', 'Premier Pickleball & Padel Club in Sydney' );
+        $log[] = "  ✔ Site title → Racqueteer";
+    }
 }
 
 // ─────────────────────────────────────────────
@@ -287,6 +773,44 @@ function rq_upsert_cpt( string $post_type, string $title, array $acf_data = [] )
 }
 
 /**
+ * Sideload an image from a LOCAL file path → WP Media Library.
+ * Copies file to a temp location so WP can safely "move" it.
+ * Caches by absolute path.
+ */
+function rq_sideload_local_image( string $local_path, string $title = '' ): int {
+    $cache_key = 'rq_media_local_' . md5( $local_path );
+    $cached    = (int) get_option( $cache_key, 0 );
+    if ( $cached && get_post( $cached ) ) {
+        return $cached;
+    }
+
+    if ( ! file_exists( $local_path ) ) {
+        return 0;
+    }
+
+    // Copy to a real temp file (WP will move/rename it — we don't want to lose the original)
+    $tmp = wp_tempnam( basename( $local_path ) );
+    if ( ! @copy( $local_path, $tmp ) ) {
+        return 0;
+    }
+
+    $file_array = [
+        'name'     => $title ? ( $title . '.' . pathinfo( $local_path, PATHINFO_EXTENSION ) ) : basename( $local_path ),
+        'tmp_name' => $tmp,
+    ];
+
+    $id = media_handle_sideload( $file_array, 0, $title ?: basename( $local_path ) );
+    @unlink( $tmp );
+
+    if ( is_wp_error( $id ) ) {
+        return 0;
+    }
+
+    update_option( $cache_key, (int) $id );
+    return (int) $id;
+}
+
+/**
  * Sideload an image from URL → WP Media Library. Caches by URL.
  */
 function rq_sideload_image( string $url, string $title = '' ): int {
@@ -317,33 +841,49 @@ function rq_sideload_image( string $url, string $title = '' ): int {
     return (int) $id;
 }
 
+/**
+ * Try local theme asset first, fall back to remote URL.
+ * Local assets live in: wp/assets/images/
+ */
+function rq_sideload_asset( string $filename, string $remote_url, string $title = '' ): int {
+    $local_path = RACQUETEER_DIR . '/assets/images/' . $filename;
+    if ( file_exists( $local_path ) ) {
+        return rq_sideload_local_image( $local_path, $title );
+    }
+    return rq_sideload_image( $remote_url, $title );
+}
+
 // ─────────────────────────────────────────────
 // MEDIA
 // ─────────────────────────────────────────────
 
 function rq_import_media( string $nextjs, array &$log ): array {
+    // [ key => [ filename_in_assets_images, remote_fallback_url ] ]
     $assets = [
-        'logo'                  => $nextjs . 'logo2.svg',
-        'logo_icon'             => $nextjs . 'logo-icon.png',
-        'racket_pickleball'     => $nextjs . 'racket-pickleball.png',
-        'racket_padel'          => $nextjs . 'racket-padel.png',
-        'rackets_mobile'        => $nextjs . 'rackets-mobile.png',
-        'membership_bg'         => $nextjs . 'membership-bg.png',
-        'membership_pickleball' => $nextjs . 'membership-racket-pickleball.png',
-        'membership_padel'      => $nextjs . 'membership-racket-padel.png',
-        'about_hero'            => $nextjs . 'about-hero.png',
-        'contact_bg'            => $nextjs . 'contact-bg.png',
+        'logo'                  => [ 'logo2.svg',                       $nextjs . 'logo2.svg'                       ],
+        'logo_icon'             => [ 'logo-icon.png',                   $nextjs . 'logo-icon.png'                   ],
+        'racket_pickleball'     => [ 'racket-pickleball.png',           $nextjs . 'racket-pickleball.png'           ],
+        'racket_padel'          => [ 'racket-padel.png',                $nextjs . 'racket-padel.png'                ],
+        'rackets_mobile'        => [ 'rackets-mobile.png',              $nextjs . 'rackets-mobile.png'              ],
+        'membership_bg'         => [ 'membership-bg.png',               $nextjs . 'membership-bg.png'               ],
+        'membership_pickleball' => [ 'membership-racket-pickleball.png',$nextjs . 'membership-racket-pickleball.png'],
+        'membership_padel'      => [ 'membership-racket-padel.png',     $nextjs . 'membership-racket-padel.png'     ],
+        'about_hero'            => [ 'about-hero.png',                  $nextjs . 'about-hero.png'                  ],
+        'contact_bg'            => [ 'contact-bg.png',                  $nextjs . 'contact-bg.png'                  ],
     ];
 
     $media = [];
-    foreach ( $assets as $key => $url ) {
-        $id = rq_sideload_image( $url, $key );
+    foreach ( $assets as $key => [ $filename, $remote_url ] ) {
+        $local_path = RACQUETEER_DIR . '/assets/images/' . $filename;
+        $source     = file_exists( $local_path ) ? "local:{$filename}" : $remote_url;
+
+        $id = rq_sideload_asset( $filename, $remote_url, $key );
         if ( $id ) {
             $media[ $key ] = $id;
-            $log[] = "  ✔ Media: {$key} (ID {$id})";
+            $log[] = "  ✔ Media: {$key} (ID {$id}) [{$source}]";
         } else {
             $media[ $key ] = 0;
-            $log[] = "  ⚠ Media skipped: {$url}";
+            $log[] = "  ⚠ Media skipped: {$filename} (no local file & remote unreachable)";
         }
     }
     return $media;
@@ -421,11 +961,13 @@ function rq_create_locations( array $media, array &$log ): void {
 
     foreach ( $locations as [ $title, $status, $address, $desc ] ) {
         $acf = [
-            'field_loc_location_id' => sanitize_title( $title ),
-            'field_loc_name'        => $title,
-            'field_loc_status'      => $status,
-            'field_loc_address'     => $address,
-            'field_loc_description' => $desc,
+            'field_loc_location_id'     => sanitize_title( $title ),
+            'field_loc_name'            => $title,
+            'field_loc_status'          => $status,
+            // address: textarea — one line per row, frontend splits on "\n"
+            'field_loc_address'         => implode( "\n", $address ),
+            // field_cpt_loc_description avoids key conflict with racqueteer-locations block
+            'field_cpt_loc_description' => $desc,
         ];
         if ( ! empty( $media['about_hero'] ) ) {
             $acf['field_loc_image'] = $media['about_hero'];
@@ -449,11 +991,13 @@ function rq_create_programs( array &$log ): void {
 
     foreach ( $programs as [ $title, $color, $price, $unit, $desc ] ) {
         $id = rq_upsert_cpt( 'program', $title, [
-            'field_prog_title'       => $title,
-            'field_prog_color'       => $color,
-            'field_prog_price'       => $price,
-            'field_prog_unit'        => $unit,
-            'field_prog_description' => $desc,
+            // field_cpt_prog_title / field_cpt_prog_description avoid key conflicts
+            // with the racqueteer-programs BLOCK fields (field_prog_title / field_prog_description).
+            'field_cpt_prog_title'       => $title,
+            'field_prog_color'           => $color,
+            'field_prog_price'           => $price,
+            'field_prog_unit'            => $unit,
+            'field_cpt_prog_description' => $desc,
         ] );
         $log[] = "  ✔ Program: {$title} (ID {$id})";
     }
@@ -654,7 +1198,8 @@ function rq_create_page_private_events( string $nextjs, array $media, array &$lo
 
     $logo_ids = [];
     for ( $i = 1; $i <= 8; $i++ ) {
-        $logo_id = rq_sideload_image( $nextjs . "logo{$i}.svg", "Partner Logo {$i}" );
+        $filename = "logo{$i}.svg";
+        $logo_id  = rq_sideload_asset( $filename, $nextjs . $filename, "Partner Logo {$i}" );
         if ( $logo_id ) {
             $logo_ids[] = $logo_id;
         }

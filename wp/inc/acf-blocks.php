@@ -201,17 +201,24 @@ add_action( 'acf/init', function () {
     foreach ( $blocks as $block ) {
         $fields = $block['fields'];
         unset( $block['fields'] );
+        // graphql_field_name: camelCase name used by WPGraphQL for ACF to expose block attributes
+        // e.g. 'racqueteer-hero' → 'racqueteerHero' → type AcfRacqueteerHeroBlock
+        $graphql_name = lcfirst( str_replace( '-', '', ucwords( $block['name'], '-' ) ) );
         acf_register_block_type( array_merge( $block, [
-            'api_version'     => 3,
-            'category'        => 'racqueteer',
-            'mode'            => 'edit',   // завжди показувати поля в центрі
-            'render_callback' => 'racqueteer_block_render_callback',
+            'api_version'        => 3,
+            'category'           => 'racqueteer',
+            'mode'               => 'edit',
+            'render_callback'    => 'racqueteer_block_render_callback',
+            'supports'           => [ 'jsx' => false ],
+            'graphql_field_name' => $graphql_name, // WPGraphQL for ACF: block type name
         ] ) );
         acf_add_local_field_group( [
-            'key'      => 'group_' . $block['name'],
-            'title'    => $block['title'] . ' Fields',
-            'fields'   => $fields,
-            'location' => [ [ [ 'param' => 'block', 'operator' => '==', 'value' => 'acf/' . $block['name'] ] ] ],
+            'key'                => 'group_' . $block['name'],
+            'title'              => $block['title'] . ' Fields',
+            'show_in_graphql'    => true,   // ← REQUIRED for AcfXxxBlock types in schema
+            'graphql_field_name' => $graphql_name, // ← field group data under attributes.{graphql_field_name}
+            'fields'             => $fields,
+            'location'           => [ [ [ 'param' => 'block', 'operator' => '==', 'value' => 'acf/' . $block['name'] ] ] ],
         ] );
     }
 
@@ -219,8 +226,10 @@ add_action( 'acf/init', function () {
     // Phase 8 — Navbar Options Fields
     // ======================================================
     acf_add_local_field_group( [
-        'key'    => 'group_navbar_options',
-        'title'  => 'Navbar Settings',
+        'key'                => 'group_navbar_options',
+        'title'              => 'Navbar Settings',
+        'show_in_graphql'    => true,
+        'graphql_field_name' => 'navbar',
         'fields' => [
             [
                 'key'           => 'field_nav_logo',
@@ -270,8 +279,10 @@ add_action( 'acf/init', function () {
     // Phase 8 — Footer Options Fields
     // ======================================================
     acf_add_local_field_group( [
-        'key'    => 'group_footer_options',
-        'title'  => 'Footer Settings',
+        'key'                => 'group_footer_options',
+        'title'              => 'Footer Settings',
+        'show_in_graphql'    => true,
+        'graphql_field_name' => 'footer',
         'fields' => [
             [
                 'key'           => 'field_footer_logo',
@@ -346,4 +357,121 @@ add_action( 'acf/init', function () {
         ],
         'location' => [ [ [ 'param' => 'options_page', 'operator' => '==', 'value' => 'acf-options-footer' ] ] ],
     ] );
+
+    // ======================================================
+    // CPT Field Groups (Jobs, Testimonials, Locations, Programs, Membership Plans)
+    // ======================================================
+
+    // Jobs CPT
+    acf_add_local_field_group( [
+        'key'                => 'group_cpt_job',
+        'title'              => 'Job Details',
+        'show_in_graphql'    => true,
+        'graphql_field_name' => 'jobFields', // → jobs { nodes { jobFields { description category } } }
+        'fields' => [
+            [ 'key' => 'field_job_description', 'label' => 'Description', 'name' => 'description', 'type' => 'textarea' ],
+            [ 'key' => 'field_job_category',    'label' => 'Category',    'name' => 'category',    'type' => 'text' ],
+        ],
+        'location' => [ [ [ 'param' => 'post_type', 'operator' => '==', 'value' => 'job' ] ] ],
+    ] );
+
+    // Testimonials CPT
+    // Note: field_test_label / field_test_title / field_test_description are taken by the testimonials BLOCK —
+    // CPT-specific keys (category, rating, quote, author_*) do NOT conflict.
+    acf_add_local_field_group( [
+        'key'                => 'group_cpt_testimonial',
+        'title'              => 'Testimonial Details',
+        'show_in_graphql'    => true,
+        'graphql_field_name' => 'testimonialFields', // → testimonials { nodes { testimonialFields { authorName } } }
+        'fields' => [
+            [ 'key' => 'field_test_category',        'label' => 'Category',        'name' => 'category',        'type' => 'text' ],
+            [ 'key' => 'field_test_rating',          'label' => 'Rating',          'name' => 'rating',          'type' => 'number' ],
+            [ 'key' => 'field_test_max_rating',      'label' => 'Max Rating',      'name' => 'max_rating',      'type' => 'number' ],
+            [ 'key' => 'field_test_quote',           'label' => 'Quote',           'name' => 'quote',           'type' => 'textarea' ],
+            [ 'key' => 'field_test_author_name',     'label' => 'Author Name',     'name' => 'author_name',     'type' => 'text' ],
+            [ 'key' => 'field_test_author_subtitle', 'label' => 'Author Subtitle', 'name' => 'author_subtitle', 'type' => 'text' ],
+        ],
+        'location' => [ [ [ 'param' => 'post_type', 'operator' => '==', 'value' => 'testimonial' ] ] ],
+    ] );
+
+    // Locations CPT
+    // Note: field_loc_description conflicts with the racqueteer-locations BLOCK field —
+    // CPT description uses the unique key field_cpt_loc_description (same ACF name = 'description').
+    acf_add_local_field_group( [
+        'key'                => 'group_cpt_location',
+        'title'              => 'Location Details',
+        'show_in_graphql'    => true,
+        'graphql_field_name' => 'locationFields', // → locations { nodes { locationFields { name status } } }
+        'fields' => [
+            [ 'key' => 'field_loc_location_id',     'label' => 'Location ID',  'name' => 'location_id',  'type' => 'text' ],
+            [ 'key' => 'field_loc_name',            'label' => 'Name',         'name' => 'name',         'type' => 'text' ],
+            [
+                'key'     => 'field_loc_status',
+                'label'   => 'Status',
+                'name'    => 'status',
+                'type'    => 'select',
+                'choices' => [ 'available' => 'Available', 'coming_soon' => 'Coming Soon' ],
+            ],
+            [
+                'key'          => 'field_loc_address',
+                'label'        => 'Address (one line per row)',
+                'name'         => 'address',
+                'type'         => 'textarea',
+                'rows'         => 2,
+                'instructions' => 'Enter each address line on a new line. The frontend splits on newline.',
+            ],
+            [ 'key' => 'field_cpt_loc_description', 'label' => 'Description', 'name' => 'description', 'type' => 'textarea' ],
+            [ 'key' => 'field_loc_image',           'label' => 'Image',       'name' => 'image',       'type' => 'image', 'return_format' => 'array' ],
+        ],
+        'location' => [ [ [ 'param' => 'post_type', 'operator' => '==', 'value' => 'location' ] ] ],
+    ] );
+
+    // Programs CPT
+    // Uses 'programFields' (NOT 'acf') to avoid type conflict with the Membership 'acf' field group.
+    // The shared generic 'Acf' type built by memberships would not include 'title', causing schema errors.
+    acf_add_local_field_group( [
+        'key'                => 'group_cpt_program',
+        'title'              => 'Program Details',
+        'show_in_graphql'    => true,
+        'graphql_field_name' => 'programFields', // → programs { nodes { programFields { title color price } } }
+        'fields' => [
+            [ 'key' => 'field_cpt_prog_title',       'label' => 'Title',       'name' => 'title',       'type' => 'text'     ],
+            [
+                'key'     => 'field_prog_color',
+                'label'   => 'Color',
+                'name'    => 'color',
+                'type'    => 'select',
+                'choices' => [ 'red' => 'Red', 'blue' => 'Blue' ],
+            ],
+            [ 'key' => 'field_prog_price',           'label' => 'Price',       'name' => 'price',       'type' => 'text'     ],
+            [ 'key' => 'field_prog_unit',            'label' => 'Unit',        'name' => 'unit',        'type' => 'text'     ],
+            [ 'key' => 'field_cpt_prog_description', 'label' => 'Description', 'name' => 'description', 'type' => 'textarea' ],
+        ],
+        'location' => [ [ [ 'param' => 'post_type', 'operator' => '==', 'value' => 'program' ] ] ],
+    ] );
+
+    // Membership Plans CPT
+    acf_add_local_field_group( [
+        'key'                => 'group_cpt_membership',
+        'title'              => 'Membership Plan Details',
+        'show_in_graphql'    => true,
+        'graphql_field_name' => 'acf', // ← intentionally 'acf'; confirmed working in schema
+        'fields' => [
+            [ 'key' => 'field_mem_description',  'label' => 'Description',  'name' => 'description',   'type' => 'text'      ],
+            [ 'key' => 'field_mem_price',         'label' => 'Price',        'name' => 'price',         'type' => 'text'      ],
+            [
+                'key'     => 'field_mem_button_variant',
+                'label'   => 'Button Variant',
+                'name'    => 'button_variant',
+                'type'    => 'select',
+                'choices' => [ 'blue' => 'Blue', 'red' => 'Red' ],
+            ],
+            [ 'key' => 'field_mem_bg_class',     'label' => 'BG Class',     'name' => 'bg_class',      'type' => 'text'       ],
+            [ 'key' => 'field_mem_border_class', 'label' => 'Border Class', 'name' => 'border_class',  'type' => 'text'       ],
+            [ 'key' => 'field_mem_has_image',    'label' => 'Has Image',    'name' => 'has_image',     'type' => 'true_false' ],
+            [ 'key' => 'field_mem_values',       'label' => 'Values (comma-separated)', 'name' => 'values', 'type' => 'text'  ],
+        ],
+        'location' => [ [ [ 'param' => 'post_type', 'operator' => '==', 'value' => 'membership' ] ] ],
+    ] );
+
 } );

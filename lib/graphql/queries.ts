@@ -7,165 +7,219 @@ export const GET_PAGE_BY_SLUG = `
       status
       seo { metaDesc }
       blocks {
-        name
+        __typename
         ... on AcfRacqueteerHeroBlock {
           attributes {
-            title
-            description
-            ctaPrimaryText: cta_primary_text
-            ctaPrimaryUrl: cta_primary_url
-            ctaSecondaryText: cta_secondary_text
-            ctaSecondaryUrl: cta_secondary_url
-            videoUrl: video_url
+            racqueteerHero {
+              title
+              description
+              ctaPrimaryText
+              ctaPrimaryUrl
+              ctaSecondaryText
+              ctaSecondaryUrl
+              videoUrl
+            }
           }
         }
         ... on AcfRacqueteerAboutBlock {
           attributes {
-            label
-            title
-            description
-            stat1Number: stat1_number
-            stat1Label: stat1_label
-            stat2Number: stat2_number
-            stat2Label: stat2_label
-            leftImage: left_image
-            rightImage: right_image
+            racqueteerAbout {
+              label
+              title
+              description
+              stat1Number
+              stat1Label
+              stat2Number
+              stat2Label
+              leftImage
+              rightImage
+            }
           }
         }
         ... on AcfRacqueteerLocationsBlock {
           attributes {
-            label
-            title
-            description
+            racqueteerLocations {
+              label
+              title
+              description
+            }
           }
         }
         ... on AcfRacqueteerProgramsBlock {
           attributes {
-            label
-            title
-            description
-            tabs
+            racqueteerPrograms {
+              label
+              title
+              description
+              tabs
+            }
           }
         }
         ... on AcfRacqueteerMembershipCtaBlock {
           attributes {
-            label
-            title
-            description
-            ctaText: cta_text
-            ctaUrl: cta_url
-            bgImage: bg_image
+            racqueteerMembershipCta {
+              label
+              title
+              description
+              ctaText
+              ctaUrl
+              bgImage
+            }
           }
         }
         ... on AcfRacqueteerSubscriptionsBlock {
           attributes {
-            label
-            title
-            description
+            racqueteerSubscriptions {
+              label
+              title
+              description
+            }
           }
         }
         ... on AcfRacqueteerTestimonialsBlock {
           attributes {
-            label
-            title
-            description
+            racqueteerTestimonials {
+              label
+              title
+              description
+            }
           }
         }
         ... on AcfRacqueteerEventsBlock {
           attributes {
-            title
-            description
-            ctaText: cta_text
-            ctaUrl: cta_url
-            image
+            racqueteerEvents {
+              title
+              description
+              ctaText
+              ctaUrl
+              image
+            }
           }
         }
         ... on AcfRacqueteerMembershipHeroBlock {
           attributes {
-            label
-            title
-            description
-            priceStarting: price_starting
-            priceUnit: price_unit
-            ctaText: cta_text
-            videoUrl: video_url
+            racqueteerMembershipHero {
+              label
+              title
+              description
+              priceStarting
+              priceUnit
+              ctaText
+              videoUrl
+            }
+          }
+        }
+        ... on AcfRacqueteerSubscriptionsDetailBlock {
+          attributes {
+            racqueteerSubscriptionsDetail {
+              label
+              title
+              description
+            }
+          }
+        }
+        ... on AcfRacqueteerPriceCompareBlock {
+          attributes {
+            racqueteerPriceCompare {
+              label
+              title
+              description
+            }
           }
         }
         ... on AcfRacqueteerPrivateEventsHeroBlock {
           attributes {
-            label
-            title
-            description
-            ctaText: cta_text
-            ctaUrl: cta_url
-            videoUrl: video_url
+            racqueteerPrivateEventsHero {
+              label
+              title
+              description
+              ctaText
+              ctaUrl
+              videoUrl
+            }
           }
         }
         ... on AcfRacqueteerGalleryBlock {
           attributes {
-            label
-            title
-            description
-            images
+            racqueteerGallery {
+              label
+              title
+              description
+              images
+            }
           }
         }
         ... on AcfRacqueteerLogoMarqueeBlock {
           attributes {
-            label
-            title
-            logos
+            racqueteerLogoMarquee {
+              label
+              title
+              logos
+            }
           }
         }
         ... on AcfRacqueteerAboutHeroBlock {
           attributes {
-            label
-            title
-            description
-            videoUrl: video_url
+            racqueteerAboutHero {
+              label
+              title
+              description
+              videoUrl
+            }
           }
         }
         ... on AcfRacqueteerMissionBlock {
           attributes {
-            label
-            title
-            description
-            image
+            racqueteerMission {
+              label
+              title
+              description
+              image
+            }
           }
         }
         ... on AcfRacqueteerContactBlock {
           attributes {
-            label
-            title
-            description
-            email
-            phone
-            ctaText: cta_text
-            ctaUrl: cta_url
+            racqueteerContact {
+              label
+              title
+              description
+              email
+              phone
+              ctaText
+              ctaUrl
+            }
           }
         }
         ... on AcfRacqueteerCareersHeroBlock {
           attributes {
-            label
-            title
-            description
-            videoUrl: video_url
+            racqueteerCareersHero {
+              label
+              title
+              description
+              videoUrl
+            }
           }
         }
         ... on AcfRacqueteerJobListingsBlock {
           attributes {
-            label
-            title
-            description
+            racqueteerJobListings {
+              label
+              title
+              description
+            }
           }
         }
         ... on AcfRacqueteerCareerContactBlock {
           attributes {
-            label
-            title
-            description
-            ctaText: cta_text
-            ctaUrl: cta_url
-            image
+            racqueteerCareerContact {
+              label
+              title
+              description
+              ctaText
+              ctaUrl
+              image
+            }
           }
         }
       }
@@ -179,7 +233,7 @@ export const GET_JOBS = `
       nodes {
         databaseId
         title
-        acf {
+        jobFields {
           description
           category
         }
@@ -197,10 +251,10 @@ export const GET_MEMBERSHIP_PLANS = `
         acf {
           price
           description
-          buttonVariant: button_variant
-          bgClass: bg_class
-          borderClass: border_class
-          hasImage: has_image
+          buttonVariant
+          bgClass
+          borderClass
+          hasImage
           values
         }
       }
@@ -213,13 +267,13 @@ export const GET_TESTIMONIALS = `
     testimonials(first: 100) {
       nodes {
         databaseId
-        acf {
+        testimonialFields {
           category
           rating
-          maxRating: max_rating
+          maxRating
           quote
-          authorName: author_name
-          authorSubtitle: author_subtitle
+          authorName
+          authorSubtitle
         }
       }
     }
@@ -234,7 +288,7 @@ export const GET_AMENITIES = `
         title
         acf {
           number
-          imageLayout: image_layout
+          imageLayout
           images { sourceUrl }
           features {
             text
@@ -250,8 +304,8 @@ export const GET_LOCATIONS = `
     locations(first: 100) {
       nodes {
         databaseId
-        acf {
-          locationId: location_id
+        locationFields {
+          locationId
           name
           status
           address
@@ -267,7 +321,7 @@ export const GET_PROGRAMS = `
   query GetPrograms {
     programs(first: 100) {
       nodes {
-        acf {
+        programFields {
           title
           color
           price

@@ -67,15 +67,57 @@ async function wpGraphQL<T>(query: string, variables?: Record<string, unknown>):
 // ========================================
 
 /**
+ * Raw block shape returned by WPGraphQL Content Blocks.
+ * __typename is used instead of name (name not available on Block interface in all versions).
+ */
+interface RawBlock {
+  __typename: string;
+  attributes?: {
+    // Nested (new WPGraphQL for ACF): attributes.{fieldGroupName}.{field}
+    [key: string]: Record<string, unknown> | null | undefined;
+  } | null;
+}
+
+/**
+ * Flatten block attributes — supports both nested (attributes.racqueteerHero.title)
+ * and flat (attributes.title) structures depending on WPGraphQL for ACF version.
+ */
+function flattenBlockAttributes(raw: RawBlock): Record<string, unknown> {
+  const attrs = raw.attributes;
+  if (!attrs) return {};
+
+  // Try to find the first nested object value (field group data)
+  const nestedKey = Object.keys(attrs).find(
+    (k) => k !== '__typename' && attrs[k] !== null && typeof attrs[k] === 'object'
+  );
+  if (nestedKey && attrs[nestedKey]) {
+    return attrs[nestedKey] as Record<string, unknown>;
+  }
+  // Fallback: flat attributes
+  return attrs as Record<string, unknown>;
+}
+
+/**
+ * Convert __typename (e.g. "AcfRacqueteerHeroBlock") to BLOCK_MAP key
+ * (e.g. "AcfRacqueteerHeroBlock") — BlockRenderer now uses __typename keys directly.
+ */
+function rawBlockToWPBlock(raw: RawBlock): WPBlock {
+  return {
+    name: raw.__typename, // BlockRenderer uses __typename as the key
+    attributes: flattenBlockAttributes(raw),
+  };
+}
+
+/**
  * Отримати блоки сторінки за slug (наприклад: '/', '/memberships')
  */
 export async function getPageBlocks(slug: string): Promise<WPBlock[]> {
   try {
-    const data = await wpGraphQL<{ pageBy: { blocks: WPBlock[] } | null }>(
+    const data = await wpGraphQL<{ pageBy: { blocks: RawBlock[] } | null }>(
       GET_PAGE_BY_SLUG,
       { slug }
     );
-    return data.pageBy?.blocks ?? [];
+    return (data.pageBy?.blocks ?? []).map(rawBlockToWPBlock);
   } catch (err) {
     console.error(`getPageBlocks("${slug}") failed:`, err);
     return [];
@@ -104,7 +146,7 @@ export async function getPageBySlug(slug: string): Promise<WPPageData | null> {
         title: string;
         status: string;
         seo?: { metaDesc?: string };
-        blocks: WPBlock[];
+        blocks: RawBlock[];
       } | null;
     }>(GET_PAGE_BY_SLUG, { slug });
 
@@ -115,7 +157,7 @@ export async function getPageBySlug(slug: string): Promise<WPPageData | null> {
       title: page.title,
       status: page.status,
       seoDescription: page.seo?.metaDesc ?? '',
-      blocks: page.blocks ?? [],
+      blocks: (page.blocks ?? []).map(rawBlockToWPBlock),
     };
   } catch (err) {
     console.error(`getPageBySlug("${slug}") failed:`, err);
@@ -157,14 +199,14 @@ export async function getAllPageSlugs(): Promise<string[]> {
 export async function getJobs(): Promise<Job[]> {
   try {
     const data = await wpGraphQL<{
-      jobs: { nodes: Array<{ databaseId: number; title: string; acf: { description: string; category: string }; date: string }> };
+      jobs: { nodes: Array<{ databaseId: number; title: string; jobFields: { description: string; category: string }; date: string }> };
     }>(GET_JOBS);
 
     return data.jobs.nodes.map((node) => ({
       id: node.databaseId,
       title: node.title,
-      description: node.acf.description,
-      category: node.acf.category,
+      description: node.jobFields?.description ?? '',
+      category: node.jobFields?.category ?? '',
       date: new Date(node.date).toLocaleDateString('en-AU', {
         month: 'short',
         day: 'numeric',
@@ -206,12 +248,27 @@ export async function getMembershipPlans(): Promise<MembershipPlan[]> {
 export async function getTestimonials(): Promise<Testimonial[]> {
   try {
     const data = await wpGraphQL<{
-      testimonials: { nodes: Array<{ databaseId: number; acf: Omit<Testimonial, 'id'> }> };
+      testimonials: { nodes: Array<{
+        databaseId: number;
+        testimonialFields: {
+          category: string;
+          rating: number;
+          maxRating: number;
+          quote: string;
+          authorName: string;
+          authorSubtitle: string;
+        };
+      }> };
     }>(GET_TESTIMONIALS);
 
     return data.testimonials.nodes.map((node) => ({
       id: node.databaseId,
-      ...node.acf,
+      category:       node.testimonialFields?.category       ?? '',
+      rating:         node.testimonialFields?.rating         ?? 0,
+      maxRating:      node.testimonialFields?.maxRating      ?? 5,
+      quote:          node.testimonialFields?.quote          ?? '',
+      authorName:     node.testimonialFields?.authorName     ?? '',
+      authorSubtitle: node.testimonialFields?.authorSubtitle ?? '',
     }));
   } catch (err) {
     console.error('getTestimonials() failed, falling back to hardcoded data:', err);
@@ -230,11 +287,11 @@ export async function getLocations(): Promise<Location[]> {
       locations: {
         nodes: Array<{
           databaseId: number;
-          acf: {
+          locationFields: {
             locationId: string;
             name: string;
             status: 'available' | 'coming_soon';
-            address: string[];
+            address: string; // textarea: lines joined by "\n", split below
             description: string;
             image: { sourceUrl: string };
           };
@@ -243,13 +300,13 @@ export async function getLocations(): Promise<Location[]> {
     }>(GET_LOCATIONS);
 
     return data.locations.nodes.map((node) => ({
-      id: node.acf.locationId,
-      name: node.acf.name,
-      status: node.acf.status,
-      address: node.acf.address,
-      description: node.acf.description,
-      amenities: [], // іконки додаються в компоненті
-      image: node.acf.image?.sourceUrl ?? '',
+      id:          node.locationFields?.locationId ?? String(node.databaseId),
+      name:        node.locationFields?.name        ?? '',
+      status:      node.locationFields?.status      ?? 'available',
+      address:     (node.locationFields?.address ?? '').split('\n').filter(Boolean),
+      description: node.locationFields?.description ?? '',
+      amenities:   [], // іконки додаються в компоненті
+      image:       node.locationFields?.image?.sourceUrl ?? '',
     }));
   } catch (err) {
     console.error('getLocations() failed, falling back to hardcoded data:', err);
@@ -265,10 +322,12 @@ export async function getLocations(): Promise<Location[]> {
 export async function getPrograms(): Promise<Program[]> {
   try {
     const data = await wpGraphQL<{
-      programs: { nodes: Array<{ acf: Program }> };
+      programs: { nodes: Array<{ programFields: Program }> };
     }>(GET_PROGRAMS);
 
-    return data.programs.nodes.map((node) => node.acf);
+    return data.programs.nodes
+      .map((node) => node.programFields)
+      .filter(Boolean) as Program[];
   } catch (err) {
     console.error('getPrograms() failed, falling back to hardcoded data:', err);
     const { getPrograms: getFallback } = await import('./api');
