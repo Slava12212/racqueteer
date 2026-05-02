@@ -269,7 +269,7 @@ export const GET_LOCATIONS = `
           status
           address
           description
-          image { sourceUrl }
+          image { node { sourceUrl } }
         }
       }
     }

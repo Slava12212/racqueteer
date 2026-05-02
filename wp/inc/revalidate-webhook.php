@@ -61,17 +61,75 @@ add_action( 'save_post_page', function ( $post_id ) {
     racqueteer_send_revalidate( $slug );
 }, 10, 1 );
 
+// CPT job → revalidate /careers
+add_action( 'save_post_job', function ( $post_id ) {
+    if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
+        return;
+    }
+    racqueteer_send_revalidate( '/careers' );
+}, 10, 1 );
+
+// CPT location → revalidate /
+add_action( 'save_post_location', function ( $post_id ) {
+    if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
+        return;
+    }
+    racqueteer_send_revalidate( '/' );
+}, 10, 1 );
+
+// CPT testimonial → revalidate /
+add_action( 'save_post_testimonial', function ( $post_id ) {
+    if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
+        return;
+    }
+    racqueteer_send_revalidate( '/' );
+}, 10, 1 );
+
+// CPT membership → revalidate / та /memberships
+add_action( 'save_post_membership', function ( $post_id ) {
+    if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
+        return;
+    }
+    racqueteer_send_revalidate( '/' );
+    racqueteer_send_revalidate( '/memberships' );
+}, 10, 1 );
+
+// CPT program → revalidate /
+add_action( 'save_post_program', function ( $post_id ) {
+    if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
+        return;
+    }
+    racqueteer_send_revalidate( '/' );
+}, 10, 1 );
+
 // Phase 7 — Тригер при зміні статусу сторінки (publish ↔ draft)
 // Це дозволяє: Draft → сторінка стає 404, Publish → сторінка знову live
 add_action( 'transition_post_status', function ( $new_status, $old_status, $post ) {
-    if ( $post->post_type !== 'page' ) {
-        return;
-    }
     if ( $new_status === $old_status ) {
         return;
     }
-    $slug = '/' . ltrim( get_page_uri( $post->ID ), '/' );
-    racqueteer_send_revalidate( $slug );
+
+    // Map CPT → сторінки для revalidate
+    $cpt_to_slugs = [
+        'page'        => null, // обробляється через save_post_page
+        'job'         => [ '/careers' ],
+        'location'    => [ '/' ],
+        'testimonial' => [ '/' ],
+        'membership'  => [ '/', '/memberships' ],
+        'program'     => [ '/' ],
+    ];
+
+    if ( $post->post_type === 'page' ) {
+        $slug = '/' . ltrim( get_page_uri( $post->ID ), '/' );
+        racqueteer_send_revalidate( $slug );
+        return;
+    }
+
+    if ( isset( $cpt_to_slugs[ $post->post_type ] ) && is_array( $cpt_to_slugs[ $post->post_type ] ) ) {
+        foreach ( $cpt_to_slugs[ $post->post_type ] as $slug ) {
+            racqueteer_send_revalidate( $slug );
+        }
+    }
 }, 10, 3 );
 
 // Phase 8 — Revalidate layout (Navbar/Footer) при зміні ACF Options

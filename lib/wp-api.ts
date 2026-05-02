@@ -307,7 +307,7 @@ export async function getLocations(): Promise<Location[]> {
             status: 'available' | 'coming_soon';
             address: string; // textarea: lines joined by "\n", split below
             description: string;
-            image: { sourceUrl: string };
+            image: { node: { sourceUrl: string } };
           };
         }>;
       };
@@ -320,7 +320,7 @@ export async function getLocations(): Promise<Location[]> {
       address:     (node.locationFields?.address ?? '').split('\n').filter(Boolean),
       description: node.locationFields?.description ?? '',
       amenities:   [], // іконки додаються в компоненті
-      image:       node.locationFields?.image?.sourceUrl ?? '',
+      image:       node.locationFields?.image?.node?.sourceUrl ?? '',
     }));
   } catch (err) {
     console.error('getLocations() failed, falling back to hardcoded data:', err);

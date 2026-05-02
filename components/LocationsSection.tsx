@@ -2,10 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import ScrollReveal from "./ScrollReveal";
-import type { LocationsContent } from "@/types";
+import type { LocationsContent, Location } from "@/types";
 
 interface LocationsSectionProps {
   content: LocationsContent;
+  /** Locations from WordPress. Falls back to hardcoded data if omitted or empty. */
+  locations?: Location[];
 }
 
 const amenities = [
@@ -62,7 +64,7 @@ const amenities = [
   },
 ];
 
-const locations = [
+const FALLBACK_LOCATIONS: Location[] = [
   {
     id: "homebush",
     name: "Homebush Club",
@@ -87,8 +89,16 @@ const locations = [
   },
 ];
 
-export default function LocationsSection({ content }: LocationsSectionProps) {
-  const [selectedId, setSelectedId] = useState("homebush");
+export default function LocationsSection({ content, locations: locationsProp }: LocationsSectionProps) {
+  // Use WP locations if provided; fall back to hardcoded; add UI amenities if WP data has none
+  const locations: Location[] = (locationsProp && locationsProp.length > 0)
+    ? locationsProp.map((loc) => ({
+        ...loc,
+        amenities: loc.amenities.length > 0 ? loc.amenities : amenities,
+      }))
+    : FALLBACK_LOCATIONS;
+
+  const [selectedId, setSelectedId] = useState(() => locations[0]?.id ?? "homebush");
   const selected = locations.find((l) => l.id === selectedId)!;
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -105,7 +115,7 @@ export default function LocationsSection({ content }: LocationsSectionProps) {
         height: elRect.height,
       });
     }
-  }, [selectedId]);
+  }, [selectedId, locations]);
 
   return (
     <section data-header-theme="dark" className="relative w-full h-auto lg:h-screen overflow-hidden font-['Mona_Sans',_-apple-system,_Roboto,_Helvetica,_sans-serif]">
