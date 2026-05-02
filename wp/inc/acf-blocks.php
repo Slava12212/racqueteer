@@ -210,6 +210,7 @@ add_action( 'acf/init', function () {
             'mode'               => 'edit',
             'render_callback'    => 'racqueteer_block_render_callback',
             'supports'           => [ 'jsx' => false ],
+            'show_in_graphql'    => true, // ← REQUIRED for WPGraphQL Content Blocks
             'graphql_field_name' => $graphql_name, // WPGraphQL for ACF: block type name
         ] ) );
         acf_add_local_field_group( [

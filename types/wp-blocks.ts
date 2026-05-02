@@ -41,7 +41,7 @@ export interface WPProgramsAttributes {
   label: string;
   title: string;
   description: string;
-  tabs: string[];
+  tabs: unknown; // JSON string or string[] from WP
 }
 
 export interface WPMembershipCtaAttributes {
@@ -108,13 +108,13 @@ export interface WPGalleryAttributes {
   label: string;
   title: string;
   description: string;
-  images: Array<{ sourceUrl: string }>;
+  images: unknown; // JSON string or Array<{sourceUrl:string}|string> from WP
 }
 
 export interface WPLogoMarqueeAttributes {
   label: string;
   title: string;
-  logos: Array<{ sourceUrl: string; altText: string }>;
+  logos: unknown; // JSON string or Array<{sourceUrl:string}|string> from WP
 }
 
 export interface WPAboutHeroAttributes {

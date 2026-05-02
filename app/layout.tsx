@@ -7,6 +7,7 @@ import { getNavbarContent, getFooterContent } from "@/lib/api";
 import type { NavbarContent, FooterContent } from "@/types";
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://racqueteer.vercel.app'),
   title: "Racqueteer - Premier Pickleball & Padel Club",
   description: "Experience world-class pickleball and padel at Racqueteer. Premium courts, expert coaching, luxury amenities, and vibrant community in Sydney, Australia.",
   keywords: ["pickleball", "padel", "sports club", "Sydney", "fitness", "membership"],

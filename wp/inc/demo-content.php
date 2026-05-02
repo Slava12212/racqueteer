@@ -321,15 +321,30 @@ function rq_verify_graphql(): array {
     // Helper: POST a query, return [ok, data|error_message]
     $query = function ( string $gql ) use ( $url ): array {
         $resp = wp_remote_post( $url, [
-            'headers' => [ 'Content-Type' => 'application/json' ],
-            'body'    => wp_json_encode( [ 'query' => $gql ] ),
-            'timeout' => 15,
+            'headers'   => [ 'Content-Type' => 'application/json' ],
+            'body'      => wp_json_encode( [ 'query' => $gql ] ),
+            'timeout'   => 15,
             'sslverify' => false,
         ] );
         if ( is_wp_error( $resp ) ) {
             return [ false, $resp->get_error_message() ];
         }
-        $body = json_decode( wp_remote_retrieve_body( $resp ), true );
+        $http_code = (int) wp_remote_retrieve_response_code( $resp );
+        $raw_body  = wp_remote_retrieve_body( $resp );
+        if ( $http_code >= 500 ) {
+            // Server-level error — extract a short hint from the body if possible
+            $hint = '';
+            if ( preg_match( '/<b>Fatal error<\/b>:\s*(.*?)(?:\s+in\s+|<\/b>)/i', $raw_body, $m ) ) {
+                $hint = ': ' . strip_tags( $m[1] );
+            } elseif ( preg_match( '/(?:Fatal error|Parse error|Warning)[:\s]+(.{0,120})/i', $raw_body, $m ) ) {
+                $hint = ': ' . strip_tags( $m[1] );
+            }
+            return [ false, "HTTP {$http_code}{$hint} — check server PHP error log or wp-debug.log" ];
+        }
+        $body = json_decode( $raw_body, true );
+        if ( ! is_array( $body ) ) {
+            return [ false, "HTTP {$http_code} — endpoint did not return JSON. WPGraphQL may not be active." ];
+        }
         if ( ! empty( $body['errors'] ) ) {
             return [ false, $body['errors'][0]['message'] ?? 'Unknown GraphQL error' ];
         }
@@ -339,6 +354,15 @@ function rq_verify_graphql(): array {
     // ── 1. Endpoint reachable ────────────────────────────────────────────────
     $log[] = '';
     $log[] = '1. Endpoint & Introspection';
+
+    // Show any stored PHP fatal error BEFORE testing (helps debug 500 errors)
+    $last_fatal = get_option( 'rq_last_fatal', '' );
+    if ( $last_fatal ) {
+        $log[] = '  ❌ Last PHP Fatal (from rq_last_fatal): ' . $last_fatal;
+        $log[] = '     → Виправ цю помилку та спробуй знову.';
+        delete_option( 'rq_last_fatal' );
+    }
+
     [ $ok, $data ] = $query( '{ __typename }' );
     if ( $ok ) {
         $log[] = "  ✅ Endpoint reachable — {$url}";
@@ -367,38 +391,266 @@ function rq_verify_graphql(): array {
         $log[] = "  ⚠ Schema introspection failed: {$data}";
     }
 
-    // Introspect Block interface to see what fields it has (diagnose Block.name missing issue)
-    [ $ok, $data ] = $query( '{ __type(name:"Block") { name kind fields { name } } }' );
+    // Introspect Block interface — get field TYPES for accurate diagnostics
+    $type_to_str = function ( $t ) use ( &$type_to_str ) {
+        if ( ! is_array( $t ) ) return '?';
+        $kind = $t['kind'] ?? '';
+        $name = $t['name'] ?? '';
+        if ( $name ) return $name;
+        if ( ! empty( $t['ofType'] ) ) return $kind . '(' . $type_to_str( $t['ofType'] ) . ')';
+        return $kind ?: '?';
+    };
+    [ $ok, $data ] = $query( '{ __type(name:"Block") { name kind fields { name type { kind name ofType { kind name ofType { kind name } } } } } }' );
     if ( $ok && ! empty( $data['__type'] ) ) {
-        $block_iface_fields = array_column( $data['__type']['fields'] ?? [], 'name' );
-        $has_name     = in_array( 'name',      $block_iface_fields, true );
-        $has_typename = true; // __typename always works
-        $log[] = '  ℹ Block interface fields: ' . implode( ', ', $block_iface_fields );
-        $log[] = '  ' . ( $has_name ? '✅' : '⚠' ) . ' Block.name ' . ( $has_name ? 'available' : 'NOT in interface — use __typename instead' );
+        $block_iface_fields = $data['__type']['fields'] ?? [];
+        $field_names  = array_column( $block_iface_fields, 'name' );
+        $has_name     = in_array( 'name', $field_names, true );
+        $log[] = '  ℹ Block interface fields: ' . implode( ', ', $field_names );
+        $log[] = '  ℹ Block.name ' . ( $has_name ? 'available (use name OR __typename)' : 'NOT in interface — use __typename (this is normal)' );
+        // Show connections type for debugging
+        foreach ( $block_iface_fields as $bf ) {
+            if ( $bf['name'] === 'connections' ) {
+                $t = $bf['type'];
+                $t_str = $t['name'] ?? ( ( $t['kind'] ?? '' ) . ':' . ( $t['ofType']['name'] ?? ( $t['ofType']['kind'] ?? '?' ) ) );
+                $log[] = '  ℹ Block.connections type: ' . $t_str;
+            }
+            if ( $bf['name'] === 'attributes' ) {
+                $t = $bf['type'];
+                $t_str = $t['name'] ?? ( $t['ofType']['name'] ?? '?' );
+                $log[] = '  ℹ Block.attributes type: ' . $t_str;
+            }
+        }
     } else {
         $log[] = '  ℹ Block type not found in schema (WPGraphQL Content Blocks uses a different interface name)';
     }
 
-    // Check if AcfRacqueteerHeroBlock type exists (registered by WPGraphQL for ACF)
-    [ $ok, $data ] = $query( '{ __type(name:"AcfRacqueteerHeroBlock") { name kind fields { name } } }' );
+    // Check BlockAttributesInterface
+    [ $ok, $data ] = $query( '{ __type(name:"BlockAttributesInterface") { name kind fields { name } } }' );
     if ( $ok && ! empty( $data['__type'] ) ) {
-        $block_fields = array_column( $data['__type']['fields'] ?? [], 'name' );
-        $log[] = '  ✅ AcfRacqueteerHeroBlock — тип є в схемі (WPGraphQL for ACF працює)';
+        $bai_fields = array_column( $data['__type']['fields'] ?? [], 'name' );
+        $log[] = '  ℹ BlockAttributesInterface fields: ' . implode( ', ', $bai_fields );
+    }
+
+    // Check a known core block to see what implements Block (diagnosis)
+    [ $ok, $data ] = $query( '{ __type(name:"CoreParagraphBlock") { name interfaces { name } fields { name } } }' );
+    if ( $ok && ! empty( $data['__type'] ) ) {
+        $cb_ifaces = array_column( $data['__type']['interfaces'] ?? [], 'name' );
+        $log[] = '  ℹ CoreParagraphBlock interfaces: ' . implode( ', ', $cb_ifaces );
+    }
+
+    // Check block registration errors logged by graphql-extensions.php
+    $reg_errors = get_option( 'rq_block_type_reg_errors', '' );
+    if ( $reg_errors ) {
+        $log[] = '  ❌ Block type registration errors (from graphql-extensions.php):';
+        foreach ( explode( ' | ', $reg_errors ) as $err ) {
+            $log[] = '     ' . $err;
+        }
+    }
+
+    // ── Deployment check: did the server get the updated graphql-extensions.php?
+    $acf_gql_ver = defined( 'WPGRAPHQL_FOR_ACF_VERSION' ) ? WPGRAPHQL_FOR_ACF_VERSION : 'не активний';
+    $log[] = '  ℹ WPGraphQL for ACF version: ' . $acf_gql_ver;
+
+    [ $ok_deploy, $data_deploy ] = $query( '{ __type(name:"LocationStatus") { name } }' );
+    $new_theme_deployed = $ok_deploy && ! empty( $data_deploy['__type'] );
+    if ( $new_theme_deployed ) {
+        $log[] = '  ✅ LocationStatus enum — новий graphql-extensions.php задеплоєний';
+    } else {
+        $log[] = '  ❌ LocationStatus — тип НЕ знайдено → graphql-extensions.php не задеплоєний або PHP error';
+        $log[] = '     → ДІЯ: завантажте wp/inc/graphql-extensions.php на сервер (FTP / SFTP / cPanel)';
+    }
+
+    // Check deployment sentinel
+    [ $ok_v, $data_v ] = $query( '{ __type(name:"RqDeployVersion") { name enumValues { name } } }' );
+    if ( $ok_v && ! empty( $data_v['__type'] ) ) {
+        $enum_vals = array_column( $data_v['__type']['enumValues'] ?? [], 'name' );
+        $ver = implode( ', ', $enum_vals );
+        if ( in_array( 'v18', $enum_vals ) ) {
+            $log[] = '  ✅ RqDeployVersion ' . $ver . ' — graphql-extensions.php v18 (Strategy G+H: АКТИВНИЙ)';
+        } elseif ( in_array( 'v17', $enum_vals ) ) {
+            $log[] = '  ✅ RqDeployVersion ' . $ver . ' — graphql-extensions.php v17 (Strategy G: schema OK, Strategy H: runtime fix)';
+        } elseif ( in_array( 'v16', $enum_vals ) ) {
+            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v16 (schema may lack Block interface). Задеплой v18.';
+        } elseif ( in_array( 'v15', $enum_vals ) ) {
+            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v15 (HTTP 500 ризик). Задеплой v18 graphql-extensions.php.';
+        } elseif ( in_array( 'v14', $enum_vals ) ) {
+            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v14. Задеплой graphql-extensions.php v18.';
+        } else {
+            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — застаріла версія. Задеплой новий graphql-extensions.php (v18).';
+        }
+    } else {
+        $log[] = '  ❌ RqDeployVersion не знайдено → задеплой wp/inc/graphql-extensions.php (v18)';
+    }
+
+    // ── v16 diagnostics: TypeRegistry + Strategy E priority-1 ────────────────
+    $ifaces_in_reg  = get_option( 'rq_diag_ifaces_in_reg', '' );
+    $extra_ifaces   = get_option( 'rq_diag_extra_ifaces', '' );
+    $typemap_p99    = get_option( 'rq_diag_v16_typemap_p99', '' );
+    $strat_e        = get_option( 'rq_diag_strategy_e', '' );
+    $strat_d        = get_option( 'rq_diag_strategy_d', '' );
+
+    $log[] = '';
+    $log[] = '  ── v18 DIAGNOSTICS: TypeRegistry + Strategy G/H ──';
+
+    // Strategy G / H diagnostics
+    $strat_g = get_option( 'rq_diag_strategy_g', '' );
+    if ( $strat_g ) {
+        if ( false !== strpos( $strat_g, 'Block:ok' ) ) {
+            $log[] = '  ✅ Strategy G: ' . $strat_g . ' — Block/EditorBlock pre-registered at priority 1 ✓';
+        } else {
+            $log[] = '  ⚠ Strategy G: ' . $strat_g;
+        }
+    }
+
+    $blocks_resolver = get_option( 'rq_diag_blocks_resolver', '' );
+    if ( $blocks_resolver ) {
+        if ( is_array( $blocks_resolver ) ) {
+            $acf_count = $blocks_resolver['acf_count'] ?? 0;
+            $raw_count = $blocks_resolver['raw_count'] ?? 0;
+            $types     = implode( ', ', (array) ( $blocks_resolver['types'] ?? [] ) );
+            if ( $acf_count > 0 ) {
+                $log[] = '  ✅ Strategy H (blocks resolver): post_id=' . $blocks_resolver['post_id'] . ', raw=' . $raw_count . ', acf=' . $acf_count . ' → ' . $types;
+            } else {
+                $log[] = '  ⚠ Strategy H (blocks resolver): raw=' . $raw_count . ', acf=' . $acf_count . ' (0 ACF blocks found — re-run Import)';
+            }
+        } else {
+            $log[] = '  ℹ Strategy H: ' . $blocks_resolver;
+        }
+    }
+
+    if ( $ifaces_in_reg ) {
+        $log[] = '  TypeRegistry @p99: ' . $ifaces_in_reg;
+    }
+    if ( $typemap_p99 ) {
+        $log[] = '  TypeRegistry map @p99 (first 40 keys): ' . $typemap_p99;
+    }
+
+    // KEY DIAGNOSTIC: extra_type_interfaces shows if Strategy E priority-1 worked
+    if ( $extra_ifaces ) {
+        if ( false !== strpos( $extra_ifaces, '[HeroBlock]=Block' ) || false !== strpos( $extra_ifaces, '[HeroBlock]=EditorBlock' ) || false !== strpos( $extra_ifaces, 'HeroBlock]=Block' ) ) {
+            $log[] = '  ✅ extra_type_interfaces: ' . $extra_ifaces . ' — Strategy E priority-1 WORKED!';
+            $log[] = '     Block/EditorBlock queued for injection into AcfRacqueteer*Block during type build.';
+        } elseif ( false !== strpos( $extra_ifaces, 'HeroBlock=missing' ) ) {
+            $log[] = '  ⚠ extra_type_interfaces: ' . $extra_ifaces . ' — HeroBlock NOT in extra_type_interfaces';
+            $log[] = '     Strategy E priority-1 did NOT queue Block injection. Possible causes:';
+            $log[] = '     1. register_graphql_interfaces_to_types() not found → check Strategy E diagnostic';
+            $log[] = '     2. TypeRegistry uses different property name';
+        } else {
+            $log[] = '  ℹ extra_type_interfaces: ' . $extra_ifaces;
+        }
+    } else {
+        $log[] = '  ⚠ rq_diag_extra_ifaces not set — trigger a GraphQL query to populate';
+    }
+
+    if ( $strat_e ) {
+        if ( false !== strpos( $strat_e, 'fired_priority_1:ok' ) ) {
+            $log[] = '  ✅ Strategy E: ' . $strat_e . ' — called at priority 1, internal action queued at priority 10 ✓';
+        } elseif ( false !== strpos( $strat_e, 'SKIP' ) ) {
+            $log[] = '  ❌ Strategy E: ' . $strat_e . ' — register_graphql_interfaces_to_types() не знайдено!';
+            $log[] = '     → Оновіть WPGraphQL до версії що підтримує цю функцію, або використай fallback.';
+        } else {
+            $log[] = '  ℹ Strategy E: ' . $strat_e;
+        }
+    } else {
+        $log[] = '  ⚠ Strategy E: not triggered yet';
+    }
+
+    if ( $strat_d ) {
+        $log[] = '  ✅ Strategy D (graphql_object_type_config): ' . $strat_d;
+    }
+
+    // ── Strategy A / B ──
+    $strat_a = get_option( 'rq_diag_strategy_a', '' );
+    $strat_b = get_option( 'rq_diag_strategy_b', '' );
+    $type_names_opt = get_option( 'rq_diag_type_names', array() );
+
+    if ( $strat_a ) {
+        $log[] = '  ✅ Strategy A (wpgraphql_acf_block_type_config): ' . $strat_a;
+    } else {
+        $log[] = '  ℹ Strategy A (wpgraphql_acf_block_type_config): не спрацював — WPGraphQL for ACF не використовує цей хук';
+    }
+    if ( $strat_b ) {
+        $log[] = '  ✅ Strategy B (graphql_wp_object_type_config): ' . $strat_b;
+    } else {
+        $log[] = '  ℹ Strategy B (graphql_wp_object_type_config): не спрацював';
+    }
+    if ( ! empty( $type_names_opt ) && is_array( $type_names_opt ) ) {
+        $log[] = '  ℹ Acf* типи в graphql_wp_object_type_config: ' . implode( ', ', array_keys( $type_names_opt ) );
+    }
+    // Clear diagnostics after display so next run is fresh
+    delete_option( 'rq_diag_strategy_a' );
+    delete_option( 'rq_diag_strategy_b' );
+    delete_option( 'rq_diag_strategy_d' );
+    delete_option( 'rq_diag_strategy_e' );
+    delete_option( 'rq_diag_type_names' );
+    delete_option( 'rq_diag_ifaces_in_reg' );
+    delete_option( 'rq_diag_extra_ifaces' );
+    delete_option( 'rq_diag_v16_typemap_p99' );
+    // Legacy options cleanup
+    delete_option( 'rq_diag_strategy_f' );
+    delete_option( 'rq_diag_reg_iface_names' );
+    delete_option( 'rq_diag_v15_reg9999' );
+    delete_option( 'rq_diag_v15_typemap_sample' );
+    delete_option( 'rq_diag_cb_classes' );
+
+    // Manual fallback check (only applies for WPGraphQL for ACF < v2)
+    [ $ok_rq, $data_rq ] = $query( '{ __type(name:"RqRacqueteerHeroFields") { name } }' );
+    if ( $ok_rq && ! empty( $data_rq['__type'] ) ) {
+        $log[] = '  ✅ RqRacqueteerHeroFields — manual block type fallback active (для старих версій)';
+    }
+
+    // Check if AcfRacqueteerHeroBlock type exists and implements Block interface
+    [ $ok, $data ] = $query( '{ __type(name:"AcfRacqueteerHeroBlock") { name kind fields { name type { kind name ofType { kind name ofType { kind name } } } } interfaces { name } } }' );
+    if ( $ok && ! empty( $data['__type'] ) ) {
+        $hero_fields_full = $data['__type']['fields'] ?? [];
+        $block_fields     = array_column( $hero_fields_full, 'name' );
+        $block_interfaces = array_column( $data['__type']['interfaces'] ?? [], 'name' );
+        $implements_block = in_array( 'Block', $block_interfaces, true )
+                         || in_array( 'EditorBlock', $block_interfaces, true )
+                         || in_array( 'ContentBlock', $block_interfaces, true );
+        $log[] = '  ✅ AcfRacqueteerHeroBlock — тип є в схемі';
         $log[] = '     Fields: ' . implode( ', ', $block_fields );
+        $log[] = '     Interfaces: ' . ( $block_interfaces ? implode( ', ', $block_interfaces ) : 'none' );
+
+        // Detailed field signature check vs Block contract
+        $hero_sig = [];
+        foreach ( $hero_fields_full as $f ) {
+            $hero_sig[ $f['name'] ?? '' ] = $type_to_str( $f['type'] ?? [] );
+        }
+        foreach ( [ 'id', 'type', 'tagName', 'innerHtml', 'attributes', 'connections' ] as $req ) {
+            if ( isset( $hero_sig[ $req ] ) ) {
+                $log[] = '     Hero.' . $req . ' type: ' . $hero_sig[ $req ];
+            } else {
+                $log[] = '     Hero.' . $req . ' type: <missing>';
+            }
+        }
+        if ( $implements_block ) {
+            $log[] = '  ✅ AcfRacqueteerHeroBlock implements Block → Page.blocks will work!';
+        } else {
+            $log[] = '  ❌ AcfRacqueteerHeroBlock does NOT implement Block interface → Page.blocks returns 0';
+            $log[] = '     → Deploy graphql-extensions.php v18 (Strategy G: pre-register Block at priority 1)';
+        }
     } else {
         $log[] = '  ❌ AcfRacqueteerHeroBlock — типу НЕМАЄ у схемі!';
-        $log[] = '     Потрібно: block field groups мають мати show_in_graphql=true у acf-blocks.php';
-        // List available Acf* types in schema
+        if ( $new_theme_deployed ) {
+            $log[] = '     graphql-extensions.php задеплоєний, але реєстрація типів не спрацювала.';
+            $log[] = '     Перевір PHP fatal errors у wp-content/debug.log (увімкни WP_DEBUG_LOG=true)';
+        } else {
+            $log[] = '     graphql-extensions.php НЕ задеплоєний — завантаж на сервер (дивись ❌ вище)';
+        }
+        // List available types for reference
         [ $ok2, $data2 ] = $query( '{ __schema { types { name } } }' );
         if ( $ok2 ) {
             $all_types = array_column( $data2['__schema']['types'] ?? [], 'name' );
-            $acf_types = array_filter( $all_types, fn($t) => str_starts_with( $t, 'Acf' ) );
-            $rq_types  = array_filter( $all_types, fn($t) => str_starts_with( $t, 'Rq' ) );
+            $acf_types = array_values( array_filter( $all_types, function( $t ) { return strpos( $t, 'Acf' ) === 0; } ) );
+            $rq_types  = array_values( array_filter( $all_types, function( $t ) { return strpos( $t, 'Rq' ) === 0; } ) );
             if ( $acf_types ) {
-                $log[] = '     Знайдені Acf* типи: ' . implode( ', ', array_slice( array_values( $acf_types ), 0, 10 ) );
+                $log[] = '     Знайдені Acf* типи: ' . implode( ', ', array_slice( $acf_types, 0, 10 ) );
             }
             if ( $rq_types ) {
-                $log[] = '     ✅ Rq* (manual fallback) типи: ' . implode( ', ', array_values( $rq_types ) );
+                $log[] = '     ✅ Rq* (manual fallback) типи: ' . implode( ', ', $rq_types );
+            } else {
+                $log[] = '     Rq* типів немає — graphql-extensions.php з ручною реєстрацією не активний';
             }
         }
     }
@@ -414,21 +666,49 @@ function rq_verify_graphql(): array {
         '/careers'       => 'Careers',
     ];
     foreach ( $pages as $uri => $label ) {
-        // Use __typename (always available) instead of name (not on Block interface in all versions)
+        // ── Direct DB check for raw post_content ─────────────────────────────
+        // IMPORTANT: The GraphQL `content` field returns *rendered* HTML.
+        // Our headless ACF blocks have render_callback that returns '' on frontend,
+        // so rendered content is always empty — it cannot be used to detect stored blocks.
+        // We instead read raw post_content from the WordPress DB directly.
+        $raw_blocks_in_db = 0;
+        if ( '/' === $uri ) {
+            $front_id = (int) get_option( 'page_on_front' );
+            if ( $front_id > 0 ) {
+                $raw_content      = get_post_field( 'post_content', $front_id, 'raw' );
+                $raw_blocks_in_db = substr_count( (string) $raw_content, '<!-- wp:acf/' );
+            }
+        } else {
+            $db_page = get_page_by_path( ltrim( $uri, '/' ) );
+            if ( $db_page ) {
+                $raw_blocks_in_db = substr_count( (string) $db_page->post_content, '<!-- wp:acf/' );
+            }
+        }
+
+        // ── GraphQL check for WPGraphQL Content Blocks integration ────────────
         [ $ok, $data ] = $query( '{ pageBy(uri:"' . $uri . '") { title blocks { __typename } } }' );
         if ( ! $ok ) {
             $log[] = "  ❌ {$label} ({$uri}): {$data}";
             continue;
         }
-        $page = $data['pageBy'] ?? null;
-        if ( ! $page ) {
-            $log[] = "  ❌ {$label} ({$uri}): page not found (null)";
+        $page_gql = $data['pageBy'] ?? null;
+        if ( ! $page_gql ) {
+            $log[] = "  ❌ {$label} ({$uri}): page not found (null) — run Import first!";
             continue;
         }
-        $blocks   = $page['blocks'] ?? [];
+        $blocks   = $page_gql['blocks'] ?? [];
         $n_blocks = count( $blocks );
+
         if ( $n_blocks === 0 ) {
-            $log[] = "  ⚠ {$label} ({$uri}): page found but 0 blocks — WPGraphQL Content Blocks може не бачити блоки";
+            if ( $raw_blocks_in_db > 0 ) {
+                // Blocks ARE in DB but WPGraphQL Content Blocks can't expose them yet
+                $log[] = "  ⚠ {$label} ({$uri}): {$raw_blocks_in_db} ACF blocks stored in DB — but WPGraphQL returns 0";
+                $log[] = "     → Deploy graphql-extensions.php v18 (Strategy G: schema + Strategy H: resolver)";
+                $log[] = "     → Check: WPGraphQL for ACF active + show_in_graphql=true in acf-blocks.php";
+            } else {
+                // Raw content is truly empty — Import didn't save block content
+                $log[] = "  ❌ {$label} ({$uri}): page exists but has NO ACF block content in DB — re-run Import!";
+            }
         } else {
             $type_names = implode( ', ', array_column( $blocks, '__typename' ) );
             $log[]      = "  ✅ {$label} ({$uri}): {$n_blocks} blocks → {$type_names}";
@@ -534,10 +814,11 @@ function rq_verify_graphql(): array {
     [ $ok, $data ] = $query( '{ acfOptionsNavbar { navbar { navCtaText navLinks { label url } } } }' );
     if ( ! $ok ) {
         $log[] = "  ❌ Navbar options: {$data}";
+        $log[] = '     → Перевір: WPGraphQL for ACF активний, Options Pages зареєстровані (theme-setup.php)';
     } else {
         $navbar = $data['acfOptionsNavbar']['navbar'] ?? null;
         if ( ! $navbar ) {
-            $log[] = '  ⚠ Navbar: acfOptionsNavbar is null — перевір show_in_graphql на options sub-page';
+            $log[] = '  ⚠ Navbar: acfOptionsNavbar є в схемі але повертає null — збережіть Navbar options у WP Admin';
         } else {
             $cta   = $navbar['navCtaText'] ?? '(empty)';
             $links = count( $navbar['navLinks'] ?? [] );
@@ -549,10 +830,11 @@ function rq_verify_graphql(): array {
     [ $ok, $data ] = $query( '{ acfOptionsFooter { footer { footerEmail footerCopyright footerMenuLinks { label } } } }' );
     if ( ! $ok ) {
         $log[] = "  ❌ Footer options: {$data}";
+        $log[] = '     → Перевір: WPGraphQL for ACF активний, Options Pages зареєстровані (theme-setup.php)';
     } else {
         $footer = $data['acfOptionsFooter']['footer'] ?? null;
         if ( ! $footer ) {
-            $log[] = '  ⚠ Footer: acfOptionsFooter is null — перевір show_in_graphql на options sub-page';
+            $log[] = '  ⚠ Footer: acfOptionsFooter є в схемі але повертає null — збережіть Footer options у WP Admin';
         } else {
             $email = $footer['footerEmail'] ?? '(empty)';
             $links = count( $footer['footerMenuLinks'] ?? [] );
@@ -563,16 +845,17 @@ function rq_verify_graphql(): array {
     // ── 10. Block Attributes (Hero block) ───────────────────────────────────
     $log[] = '';
     $log[] = '5. Block Attributes (Hero on Home)';
-    // Use __typename to identify blocks (Block.name not available in all WPGraphQL Content Blocks versions)
-    [ $ok, $data ] = $query( '{ pageBy(uri:"/") { blocks { __typename ... on AcfRacqueteerHeroBlock { attributes { racqueteerHero { title ctaPrimaryText videoUrl } } } } } }' );
+    // New flat schema: racqueteerHero { title ... } directly on block (no attributes wrapper)
+    [ $ok, $data ] = $query( '{ pageBy(uri:"/") { blocks { __typename ... on AcfRacqueteerHeroBlock { racqueteerHero { title ctaPrimaryText videoUrl } } } } }' );
     if ( ! $ok ) {
-        // Fallback: try flat attributes (older WPGraphQL for ACF attribute structure)
-        [ $ok, $data ] = $query( '{ pageBy(uri:"/") { blocks { __typename ... on AcfRacqueteerHeroBlock { attributes { title ctaPrimaryText videoUrl } } } } }' );
-        if ( ! $ok ) {
-            $log[] = "  ❌ Hero block query failed: {$data}";
+        $err = (string) $data;
+        if ( strpos( $err, 'cannot be spread' ) !== false || strpos( $err, 'can never be of type' ) !== false ) {
+            $log[] = '  ❌ Hero block query failed: AcfRacqueteerHeroBlock does NOT implement Block interface';
+            $log[] = '     → Deploy graphql-extensions.php v18 (Strategy G: pre-register Block at priority 1)';
         } else {
-            $log[] = '  ℹ Using flat attributes structure (older WPGraphQL for ACF)';
+            $log[] = "  ❌ Hero block query failed: {$data}";
         }
+        $ok = false;
     }
     if ( $ok ) {
         $blocks = $data['pageBy']['blocks'] ?? [];
@@ -586,13 +869,17 @@ function rq_verify_graphql(): array {
         if ( ! $hero ) {
             $block_types = array_column( $blocks, '__typename' );
             $log[] = '  ⚠ AcfRacqueteerHeroBlock not found on Home page';
-            $log[] = '     Found block types: ' . ( $block_types ? implode( ', ', $block_types ) : '(none)' );
+            $log[] = '     Found block types: ' . ( $block_types ? implode( ', ', $block_types ) : '(none — Page.blocks empty)' );
+            if ( empty( $block_types ) ) {
+                $log[] = '     → Block interface implemented (query worked!) but no blocks returned';
+                $log[] = '     → WPGraphQL Content Blocks may not recognize acf/ block names. Run Import again.';
+            }
         } else {
-            // Check nested (new) or flat (old) attribute structure
-            $attrs = $hero['attributes']['racqueteerHero'] ?? $hero['attributes'] ?? [];
+            // New flat schema: racqueteerHero is directly on the block
+            $attrs = $hero['racqueteerHero'] ?? [];
             if ( empty( $attrs['title'] ) ) {
-                $log[] = '  ⚠ Hero block found but attributes.title is empty — WPGraphQL for ACF може не читати inline block data';
-                $log[] = '     Attributes keys: ' . implode( ', ', array_keys( $attrs ) );
+                $log[] = '  ⚠ Hero block found but racqueteerHero.title is empty — ACF inline data not read';
+                $log[] = '     Keys on hero block: ' . implode( ', ', array_keys( $hero ) );
             } else {
                 $log[] = "  ✅ Hero attributes OK — title: \"" . mb_substr( $attrs['title'], 0, 50 ) . '"';
                 $log[] = "  ✅ CTA: \"{$attrs['ctaPrimaryText']}\"";
@@ -713,8 +1000,12 @@ function rq_acf_block( string $block_name, array $data ): string {
 /**
  * Find or create a page by slug. Returns post ID.
  *
- * Uses wp_slash() on content so WordPress does NOT strip or escape
- * the Gutenberg block comment markup (<!-- wp:acf/... -->).
+ * Saves Gutenberg block comment markup (<!-- wp:acf/... -->) correctly:
+ * - Does NOT call wp_slash() — modern WordPress expects unslashed data in
+ *   wp_insert_post/wp_update_post; pre-slashing causes double-escaped JSON
+ *   in block attributes when WPDB applies its own SQL escaping.
+ * - Temporarily removes the KSES content filter to prevent block comments
+ *   from being stripped on sites where the current user lacks unfiltered_html.
  */
 function rq_upsert_page( string $title, string $slug, string $content ): int {
     $existing = get_page_by_path( $slug );
@@ -722,19 +1013,37 @@ function rq_upsert_page( string $title, string $slug, string $content ): int {
     $args = [
         'post_title'   => $title,
         'post_name'    => $slug,
-        'post_content' => wp_slash( $content ),  // ← prevents WP from mangling block comments
+        'post_content' => $content, // raw, no wp_slash — db escaping is handled by WPDB internally
         'post_status'  => 'publish',
         'post_type'    => 'page',
     ];
 
+    // Bypass KSES content filter so Gutenberg block comments are not stripped.
+    // The filter is only active for users without the unfiltered_html capability
+    // (e.g. multisite admins), but we remove / restore it unconditionally for safety.
+    $had_save    = has_filter( 'content_save_pre',          'wp_filter_post_kses' );
+    $had_filtered = has_filter( 'content_filtered_save_pre', 'wp_filter_post_kses' );
+    remove_filter( 'content_save_pre',          'wp_filter_post_kses' );
+    remove_filter( 'content_filtered_save_pre', 'wp_filter_post_kses' );
+
     if ( $existing ) {
         $args['ID'] = $existing->ID;
         wp_update_post( $args );
-        return $existing->ID;
+        $id = $existing->ID;
+    } else {
+        $id = wp_insert_post( $args );
+        $id = is_wp_error( $id ) ? 0 : (int) $id;
     }
 
-    $id = wp_insert_post( $args );
-    return is_wp_error( $id ) ? 0 : $id;
+    // Restore KSES filters
+    if ( $had_save ) {
+        add_filter( 'content_save_pre', 'wp_filter_post_kses' );
+    }
+    if ( $had_filtered ) {
+        add_filter( 'content_filtered_save_pre', 'wp_filter_post_kses' );
+    }
+
+    return (int) $id;
 }
 
 /**

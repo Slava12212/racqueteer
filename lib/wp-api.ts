@@ -68,33 +68,48 @@ async function wpGraphQL<T>(query: string, variables?: Record<string, unknown>):
 
 /**
  * Raw block shape returned by WPGraphQL Content Blocks.
- * __typename is used instead of name (name not available on Block interface in all versions).
+ * With the flat schema, ACF fields live directly on the block object
+ * (e.g. raw.racqueteerHero.title), not under an attributes wrapper.
  */
 interface RawBlock {
   __typename: string;
-  attributes?: {
-    // Nested (new WPGraphQL for ACF): attributes.{fieldGroupName}.{field}
-    [key: string]: Record<string, unknown> | null | undefined;
-  } | null;
+  // Flat schema (new): ACF field group objects are top-level keys
+  [key: string]: unknown;
 }
 
+// Standard Block interface fields that are NOT ACF data
+const BLOCK_INTERFACE_FIELDS = new Set(['__typename', 'id', 'type', 'tagName', 'innerHtml', 'attributes', 'connections']);
+
 /**
- * Flatten block attributes — supports both nested (attributes.racqueteerHero.title)
- * and flat (attributes.title) structures depending on WPGraphQL for ACF version.
+ * Flatten block attributes — new flat schema puts ACF data directly on the block.
+ * E.g. { __typename: "AcfRacqueteerHeroBlock", racqueteerHero: { title, ... } }
+ * Returns the first field-group object found on the raw block.
+ *
+ * Falls back to legacy nested structure (raw.attributes.racqueteerHero) for
+ * backwards compatibility.
  */
 function flattenBlockAttributes(raw: RawBlock): Record<string, unknown> {
-  const attrs = raw.attributes;
-  if (!attrs) return {};
-
-  // Try to find the first nested object value (field group data)
-  const nestedKey = Object.keys(attrs).find(
-    (k) => k !== '__typename' && attrs[k] !== null && typeof attrs[k] === 'object'
+  // New flat schema: look for the first non-standard field that is an object
+  const acfKey = Object.keys(raw).find(
+    (k) => !BLOCK_INTERFACE_FIELDS.has(k) && raw[k] !== null && typeof raw[k] === 'object'
   );
-  if (nestedKey && attrs[nestedKey]) {
-    return attrs[nestedKey] as Record<string, unknown>;
+  if (acfKey && raw[acfKey]) {
+    return raw[acfKey] as Record<string, unknown>;
   }
-  // Fallback: flat attributes
-  return attrs as Record<string, unknown>;
+
+  // Legacy nested schema fallback (attributes.racqueteerHero)
+  const attrs = raw.attributes as Record<string, unknown> | null | undefined;
+  if (attrs && typeof attrs === 'object') {
+    const nestedKey = Object.keys(attrs).find(
+      (k) => k !== '__typename' && attrs[k] !== null && typeof attrs[k] === 'object'
+    );
+    if (nestedKey && attrs[nestedKey]) {
+      return attrs[nestedKey] as Record<string, unknown>;
+    }
+    return attrs as Record<string, unknown>;
+  }
+
+  return {};
 }
 
 /**
@@ -145,7 +160,6 @@ export async function getPageBySlug(slug: string): Promise<WPPageData | null> {
       pageBy: {
         title: string;
         status: string;
-        seo?: { metaDesc?: string };
         blocks: RawBlock[];
       } | null;
     }>(GET_PAGE_BY_SLUG, { slug });
@@ -156,7 +170,7 @@ export async function getPageBySlug(slug: string): Promise<WPPageData | null> {
     return {
       title: page.title,
       status: page.status,
-      seoDescription: page.seo?.metaDesc ?? '',
+      seoDescription: '',
       blocks: (page.blocks ?? []).map(rawBlockToWPBlock),
     };
   } catch (err) {
@@ -182,7 +196,7 @@ export async function getAllPageSlugs(): Promise<string[]> {
 
     const pages: Array<{ slug: string }> = await res.json();
     // Виключити slugи, які вже мають статичні маршрути в Next.js
-    const staticSlugs = new Set(['', 'memberships', 'private-events', 'about', 'careers']);
+    const staticSlugs = new Set(['', 'memberships', 'private-events', 'about', 'careers', 'home', 'sample-page']);
     return pages
       .map((p) => p.slug)
       .filter((s) => !staticSlugs.has(s));
