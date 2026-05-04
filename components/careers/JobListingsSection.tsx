@@ -1,8 +1,6 @@
 "use client";
 
-
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import ScrollReveal from "../ScrollReveal";
 
@@ -22,9 +20,11 @@ interface JobListingsSectionProps {
     title: string;
     description: string;
   };
+  /** Jobs from WordPress. If omitted, falls back to placeholder data. */
+  jobs?: Job[];
 }
 
-const jobs: Job[] = [
+const FALLBACK_JOBS: Job[] = [
   {
     id: 1,
     title: "Club Operations Manager",
@@ -85,7 +85,23 @@ const jobs: Job[] = [
 
 const categories = ["All", "Manager", "Trainer", "Barista"];
 
-export default function JobListingsSection({ content }: JobListingsSectionProps) {
+export default function JobListingsSection({ content, jobs: jobsProp }: JobListingsSectionProps) {
+  const [jobs, setJobs] = useState<Job[]>(jobsProp && jobsProp.length > 0 ? jobsProp : FALLBACK_JOBS);
+
+  // If server didn't pass jobs (old deployment / fallback path), fetch from API
+  useEffect(() => {
+    if (!jobsProp || jobsProp.length === 0) {
+      fetch("/api/debug-jobs")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.jobs && data.jobs.length > 0) {
+            setJobs(data.jobs);
+          }
+        })
+        .catch(() => {/* keep fallback */});
+    }
+  }, [jobsProp]);
+
   const [activeCategory, setActiveCategory] = useState("All");
 
   const filteredJobs = activeCategory === "All" ? jobs : jobs.filter((j) => j.category === activeCategory);
