@@ -1,7 +1,9 @@
 import SubscriptionsSection from '@/components/membership/SubscriptionsSection';
+import { getMembershipPlans } from '@/lib/wp-api';
 import type { WPSubscriptionsDetailAttributes } from '@/types/wp-blocks';
 
-export default function SubscriptionsDetailBlock(attrs: WPSubscriptionsDetailAttributes) {
+export default async function SubscriptionsDetailBlock(attrs: WPSubscriptionsDetailAttributes) {
+  const plans = await getMembershipPlans();
   return (
     <SubscriptionsSection
       content={{
@@ -9,6 +11,7 @@ export default function SubscriptionsDetailBlock(attrs: WPSubscriptionsDetailAtt
         title: attrs.title,
         description: attrs.description,
       }}
+      plans={plans.length > 0 ? plans : undefined}
     />
   );
 }

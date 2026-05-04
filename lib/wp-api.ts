@@ -242,13 +242,43 @@ export async function getJobs(): Promise<Job[]> {
 export async function getMembershipPlans(): Promise<MembershipPlan[]> {
   try {
     const data = await wpGraphQL<{
-      memberships: { nodes: Array<{ title: string; acf: Omit<MembershipPlan, 'name'> }> };
+      memberships: {
+        nodes: Array<{
+          title: string;
+          acf: {
+            price: string;
+            description: string;
+            buttonVariant: string | string[]; // WP returns array e.g. ["red"]
+            bgClass: string;
+            borderClass: string;
+            hasImage: boolean;
+            values: string | string[]; // WP returns comma-separated string
+          };
+        }>;
+      };
     }>(GET_MEMBERSHIP_PLANS, undefined, ['membership-plans']);
 
-    return data.memberships.nodes.map((node) => ({
-      name: node.title,
-      ...node.acf,
-    }));
+    return data.memberships.nodes.map((node) => {
+      const acf = node.acf ?? {};
+      // buttonVariant: WP returns ["red"] array — take first element
+      const buttonVariant = Array.isArray(acf.buttonVariant)
+        ? (acf.buttonVariant[0] as 'blue' | 'red') ?? 'blue'
+        : (acf.buttonVariant as 'blue' | 'red') ?? 'blue';
+      // values: WP returns "check,check,cross" string — split to array
+      const values = Array.isArray(acf.values)
+        ? acf.values
+        : (acf.values ?? '').split(',').map((v: string) => v.trim());
+      return {
+        name: node.title,
+        price: acf.price ?? '',
+        description: acf.description ?? '',
+        buttonVariant,
+        bgClass: acf.bgClass ?? 'bg-white',
+        borderClass: acf.borderClass ?? 'border-[#E5E7EB]',
+        hasImage: acf.hasImage ?? false,
+        values,
+      };
+    });
   } catch (err) {
     console.error('getMembershipPlans() failed, falling back to hardcoded data:', err);
     const { getMembershipPlans: getFallback } = await import('./api');

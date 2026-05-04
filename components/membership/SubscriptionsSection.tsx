@@ -3,10 +3,12 @@
 import React, { useState } from "react";
 import ButtonArrow from "../ButtonArrow";
 import ScrollReveal from "../ScrollReveal";
-import type { SubscriptionsHeaderContent } from "@/types";
+import type { SubscriptionsHeaderContent, MembershipPlan } from "@/types";
 
 interface SubscriptionsSectionProps {
   content: SubscriptionsHeaderContent;
+  /** Plans from WordPress. If omitted, falls back to hardcoded data. */
+  plans?: MembershipPlan[];
 }
 
 const CheckIcon = () => (
@@ -46,7 +48,7 @@ const features = [
   "ACCESS TO GYM & WELLNESS CENTER",
 ];
 
-const plans: Plan[] = [
+const FALLBACK_PLANS: Plan[] = [
   {
     name: "STARTER",
     description: "Perfect for getting started",
@@ -127,7 +129,8 @@ function MobilePlanCard({ plan }: { plan: Plan }) {
   );
 }
 
-export default function SubscriptionsSection({ content }: SubscriptionsSectionProps) {
+export default function SubscriptionsSection({ content, plans: plansProp }: SubscriptionsSectionProps) {
+  const plans = plansProp && plansProp.length > 0 ? plansProp : FALLBACK_PLANS;
   const [mobileIndex, setMobileIndex] = useState(0);
 
   return (
