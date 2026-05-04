@@ -3,15 +3,16 @@
 import { useState } from "react";
 import ScrollReveal from "./ScrollReveal";
 import ButtonArrow from "./ButtonArrow";
-import type { ProgramsContent } from "@/types";
+import type { ProgramsContent, Program } from "@/types";
 
 interface ProgramsSectionProps {
   content: ProgramsContent;
+  /** Programs from WordPress. Falls back to hardcoded if omitted or empty. */
+  programs?: Program[];
 }
 
-const tabs = ["Programming", "Coaching", "Events"];
 
-const programs = [
+const FALLBACK_PROGRAMS: Program[] = [
   {
     title: "Women's Beginnersad",
     color: "red" as const,
@@ -70,7 +71,7 @@ function ArrowIcon({ className }: { className?: string }) {
 function ProgramRow({
   program,
 }: {
-  program: (typeof programs)[number];
+  program: Program;
 }) {
   const [hovered, setHovered] = useState(false);
   const isRed = program.color === "red";
@@ -146,7 +147,8 @@ function ProgramRow({
   );
 }
 
-export default function ProgramsSection({ content }: ProgramsSectionProps) {
+export default function ProgramsSection({ content, programs: programsProp }: ProgramsSectionProps) {
+  const programs = programsProp && programsProp.length > 0 ? programsProp : FALLBACK_PROGRAMS;
   const [activeTab, setActiveTab] = useState(content.tabs[0] || "Programming");
 
   return (

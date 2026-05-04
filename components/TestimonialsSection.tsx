@@ -7,9 +7,11 @@ import type { TestimonialsContent } from "@/types";
 
 interface TestimonialsSectionProps {
   content: TestimonialsContent;
+  /** Testimonials from WordPress. Falls back to hardcoded if omitted or empty. */
+  testimonials?: Testimonial[];
 }
 
-const testimonials: Testimonial[] = [
+const FALLBACK_TESTIMONIALS: Testimonial[] = [
   {
     id: 1,
     category: "Beginner Training",
@@ -104,6 +106,7 @@ const testimonials: Testimonial[] = [
 
 const CARDS_PER_PAGE = 3;
 
+
 const ArrowLeftIcon = () => (
   <svg
     width="80"
@@ -148,7 +151,8 @@ const ArrowRightIcon = () => (
   </svg>
 );
 
-export default function TestimonialsSection({ content }: TestimonialsSectionProps) {
+export default function TestimonialsSection({ content, testimonials: testimonialsProp }: TestimonialsSectionProps) {
+  const testimonials = testimonialsProp && testimonialsProp.length > 0 ? testimonialsProp : FALLBACK_TESTIMONIALS;
   const [page, setPage] = useState(0);
   const [mobileIndex, setMobileIndex] = useState(0);
   const totalPages = Math.ceil(testimonials.length / CARDS_PER_PAGE);

@@ -1,12 +1,18 @@
 "use client";
 
-
-
 import { useState } from "react";
 
 import ButtonArrow from "../ButtonArrow";
 
 import ScrollReveal from "../ScrollReveal";
+import type { PriceCompareFeature, MembershipPlan } from "@/types";
+
+interface PriceCompareSectionProps {
+  /** Feature rows from WordPress (optional). Each feature has a name and values[] per plan. */
+  features?: PriceCompareFeature[];
+  /** Membership plans from WordPress (optional). Used as column headers. */
+  plans?: MembershipPlan[];
+}
 
 const programs = [
   "90-Minute Prime Time Booking",
@@ -32,9 +38,34 @@ const tiers: Record<TierKey, { label: string; prices: string[] }> = {
 
 const tierKeys: TierKey[] = ["STARTER", "LIGHT", "PRO", "PRO+"];
 
-export default function PriceCompareSection() {
-  const [activeTier, setActiveTier] = useState<TierKey>("PRO+");
+export default function PriceCompareSection({ features, plans }: PriceCompareSectionProps) {
+  const [activeTier] = useState<TierKey>("PRO+");
   const currentTier = tiers[activeTier];
+
+  // If WP features provided, build dynamic tier data from WP plans
+  // WP features[i].values[j] = price for feature i, plan j (0=STARTER,1=LIGHT,2=PRO,3=PRO+)
+  const wpTierKeys = plans && plans.length > 0 ? plans.map((p) => p.name as TierKey) : null;
+  const wpTiers: Record<string, { label: string; prices: string[] }> | null =
+    plans && plans.length > 0 && features && features.length > 0
+      ? Object.fromEntries(
+          plans.map((plan, planIdx) => [
+            plan.name,
+            {
+              label: plan.name,
+              prices: features.map((f) => (f.values[planIdx] as string) ?? ""),
+            },
+          ])
+        )
+      : null;
+
+  const activeTierKeys = (wpTierKeys ?? tierKeys) as string[];
+  const activeTiersData = (wpTiers ?? tiers) as Record<string, { label: string; prices: string[] }>;
+  const [activeTierName, setActiveTierName] = useState<string>(activeTierKeys[activeTierKeys.length - 1] ?? "PRO+");
+  const currentActiveTier = activeTiersData[activeTierName] ?? currentTier;
+
+  const displayPrograms = features && features.length > 0 ? features.map((f) => f.name) : programs;
+  // Non-member prices: last column in features if plans.length+1 columns exist, else hardcoded
+  const displayNonMemberPrices = nonMemberPrices;
 
   return (
     <section data-header-theme="dark" className="relative min-h-screen overflow-hidden font-['Mona_Sans',_-apple-system,_Roboto,_Helvetica,_sans-serif]">
@@ -63,9 +94,9 @@ export default function PriceCompareSection() {
           </div>
           <ScrollReveal from="bottom" delay={200}>
             <div className="flex items-center justify-center gap-2 sm:gap-7 lg:gap-9 mb-8 sm:mb-10">
-              {tierKeys.map((key) => (
-                <button key={key} onClick={() => setActiveTier(key)} className={["text-white text-[11px] sm:text-sm lg:text-base font-bold tracking-[1px] sm:tracking-[1.6px] uppercase transition-all py-2 px-3 sm:py-2.5 sm:px-2.5", activeTier === key ? "bg-[rgba(0,0,64,0.50)] backdrop-blur-[50px]" : "bg-transparent"].join(" ")}>
-                  {tiers[key].label}
+              {activeTierKeys.map((key) => (
+                <button key={key} onClick={() => setActiveTierName(key)} className={["text-white text-[11px] sm:text-sm lg:text-base font-bold tracking-[1px] sm:tracking-[1.6px] uppercase transition-all py-2 px-3 sm:py-2.5 sm:px-2.5", activeTierName === key ? "bg-[rgba(0,0,64,0.50)] backdrop-blur-[50px]" : "bg-transparent"].join(" ")}>
+                  {activeTiersData[key]?.label ?? key}
                 </button>
               ))}
             </div>
@@ -83,7 +114,7 @@ export default function PriceCompareSection() {
                     <span className="text-white text-sm lg:text-base font-medium tracking-[1.6px] uppercase">Programs</span>
                   </div>
                   <div className="w-[200px] lg:w-[520px] flex items-center justify-center py-6 bg-[rgba(0,0,64,0.50)] backdrop-blur-[50px]">
-                    <span className="text-white text-xs lg:text-base font-bold tracking-[1.6px] uppercase text-center leading-tight">Racqueteer {currentTier.label}</span>
+                    <span className="text-white text-xs lg:text-base font-bold tracking-[1.6px] uppercase text-center leading-tight">Racqueteer {currentActiveTier.label}</span>
                   </div>
                   <div className="hidden lg:flex w-[520px] items-center justify-center py-6">
                     <span className="text-white/70 text-sm lg:text-base font-medium tracking-[1.6px] uppercase">Non Member</span>
@@ -95,16 +126,16 @@ export default function PriceCompareSection() {
             {/* Table body */}
             <div className="w-full max-w-[1920px] mx-auto px-8 lg:px-[80px]">
               <div className="flex flex-col gap-0">
-                {programs.map((program, i) => (
+                {displayPrograms.map((program, i) => (
                   <div key={i} className="flex items-stretch border-b border-white/20">
                     <div className="flex-1 flex items-center py-6 pr-6">
                       <span className="text-white text-base lg:text-xl font-extrabold tracking-[1px] uppercase leading-[130%]">{program}</span>
                     </div>
                     <div className="w-[200px] lg:w-[520px] flex items-center justify-center py-6 bg-[rgba(0,0,64,0.35)] backdrop-blur-[50px]">
-                      <span className="text-white text-2xl lg:text-[32px] font-semibold leading-[120%]">{currentTier.prices[i]}</span>
+                      <span className="text-white text-2xl lg:text-[32px] font-semibold leading-[120%]">{currentActiveTier.prices[i]}</span>
                     </div>
                     <div className="hidden lg:flex w-[520px] items-center justify-center py-6">
-                      <span className="text-white/70 text-2xl font-semibold leading-[120%]">{nonMemberPrices[i]}</span>
+                      <span className="text-white/70 text-2xl font-semibold leading-[120%]">{displayNonMemberPrices[i]}</span>
                     </div>
                   </div>
                 ))}
@@ -135,7 +166,7 @@ export default function PriceCompareSection() {
                     <span className="text-white text-[11px] font-medium tracking-[1px] uppercase">Programs</span>
                   </div>
                   <div className="py-4 flex items-center justify-center bg-[rgba(0,0,64,0.50)] backdrop-blur-[50px]">
-                    <span className="text-white text-[10px] font-bold tracking-[0.5px] uppercase text-center leading-tight">{currentTier.label}</span>
+                    <span className="text-white text-[10px] font-bold tracking-[0.5px] uppercase text-center leading-tight">{currentActiveTier.label}</span>
                   </div>
                   <div className="py-4 flex items-center justify-center">
                     <span className="text-white/70 text-[10px] font-medium tracking-[0.5px] uppercase text-center leading-tight">Non Member</span>
@@ -145,7 +176,7 @@ export default function PriceCompareSection() {
             </div>
 
             {/* Table rows */}
-            {programs.map((program, i) => (
+            {displayPrograms.map((program, i) => (
               <div key={i} className="w-full border-b border-white/20">
                 <div className="pl-6 pr-0">
                   <div className="grid grid-cols-[1fr_96px_96px]">
@@ -153,10 +184,10 @@ export default function PriceCompareSection() {
                       <span className="text-white text-[11px] font-extrabold tracking-[0.3px] uppercase leading-[150%]">{program}</span>
                     </div>
                     <div className="py-3.5 flex items-center justify-center bg-[rgba(0,0,64,0.35)] backdrop-blur-[50px]">
-                      <span className="text-white text-sm font-semibold leading-[120%]">{currentTier.prices[i]}</span>
+                      <span className="text-white text-sm font-semibold leading-[120%]">{currentActiveTier.prices[i]}</span>
                     </div>
                     <div className="py-3.5 flex items-center justify-center">
-                      <span className="text-white/70 text-sm font-semibold leading-[120%]">{nonMemberPrices[i]}</span>
+                      <span className="text-white/70 text-sm font-semibold leading-[120%]">{displayNonMemberPrices[i]}</span>
                     </div>
                   </div>
                 </div>

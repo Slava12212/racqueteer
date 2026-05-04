@@ -1,7 +1,9 @@
 import TestimonialsSection from '@/components/TestimonialsSection';
+import { getTestimonials } from '@/lib/wp-api';
 import type { WPTestimonialsAttributes } from '@/types/wp-blocks';
 
-export default function TestimonialsBlock(attrs: WPTestimonialsAttributes) {
+export default async function TestimonialsBlock(attrs: WPTestimonialsAttributes) {
+  const testimonials = await getTestimonials();
   return (
     <TestimonialsSection
       content={{
@@ -9,6 +11,7 @@ export default function TestimonialsBlock(attrs: WPTestimonialsAttributes) {
         title: attrs.title,
         description: attrs.description,
       }}
+      testimonials={testimonials.length > 0 ? testimonials : undefined}
     />
   );
 }

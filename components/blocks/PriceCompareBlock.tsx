@@ -1,8 +1,14 @@
 import PriceCompareSection from '@/components/membership/PriceCompareSection';
+import { getPriceCompareData } from '@/lib/wp-api';
 
-// PriceCompareSection has no props — data is fetched internally
-// When WordPress integration is complete, refactor to accept content props
-export default function PriceCompareBlock() {
-  return <PriceCompareSection />;
+// PriceCompareSection will use WP data if available, otherwise falls back to hardcoded data
+export default async function PriceCompareBlock() {
+  const { features, plans } = await getPriceCompareData();
+  return (
+    <PriceCompareSection
+      features={features.length > 0 ? features : undefined}
+      plans={plans.length > 0 ? plans : undefined}
+    />
+  );
 }
 

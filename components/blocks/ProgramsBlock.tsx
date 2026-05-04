@@ -1,4 +1,5 @@
 import ProgramsSection from '@/components/ProgramsSection';
+import { getPrograms } from '@/lib/wp-api';
 import type { WPProgramsAttributes } from '@/types/wp-blocks';
 
 /** Parse a value that may be a JSON string, an array, or undefined */
@@ -10,8 +11,9 @@ function parseJsonArray<T>(value: unknown, fallback: T[]): T[] {
   return fallback;
 }
 
-export default function ProgramsBlock(attrs: WPProgramsAttributes) {
+export default async function ProgramsBlock(attrs: WPProgramsAttributes) {
   const tabs = parseJsonArray<string>(attrs.tabs, ['Programming', 'Coaching', 'Events']);
+  const programs = await getPrograms();
   return (
     <ProgramsSection
       content={{
@@ -20,6 +22,7 @@ export default function ProgramsBlock(attrs: WPProgramsAttributes) {
         description: attrs.description,
         tabs,
       }}
+      programs={programs.length > 0 ? programs : undefined}
     />
   );
 }
