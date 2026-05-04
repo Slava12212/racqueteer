@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import ScrollReveal from "./ScrollReveal";
 import type { LocationsContent, Location } from "@/types";
+import { useCta } from "@/lib/navbar-cta";
 
 interface LocationsSectionProps {
   content: LocationsContent;
@@ -90,6 +91,7 @@ const FALLBACK_LOCATIONS: Location[] = [
 ];
 
 export default function LocationsSection({ content, locations: locationsProp }: LocationsSectionProps) {
+  const { ctaText, ctaUrl } = useCta();
   // Use WP locations if provided; fall back to hardcoded; add UI amenities if WP data has none
   const locations: Location[] = (locationsProp && locationsProp.length > 0)
     ? locationsProp.map((loc) => ({
@@ -248,16 +250,16 @@ export default function LocationsSection({ content, locations: locationsProp }: 
             {/* CTA Button */}
             <div className="mt-auto flex-shrink-0 pt-6">
               <ScrollReveal from="bottom" delay={400}>
-                <button className="btn-cta btn-cta-white flex items-center justify-center gap-3 px-10 py-4 rounded-sm transition-colors">
+                <a href={ctaUrl} className="btn-cta btn-cta-white flex items-center justify-center gap-3 px-10 py-4 rounded-sm transition-colors">
                   <span
                     className="text-[#003E6B] text-sm font-bold uppercase tracking-wider"
                   >
-                    Book a Court
+                    {ctaText}
                   </span>
                   <svg className="btn-arrow shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M7 17L17 7M17 7L16.9993 16.0526M17 7L7 7" stroke="#003E6B" strokeWidth="2" strokeLinejoin="round"/>
                   </svg>
-                </button>
+                </a>
               </ScrollReveal>
             </div>
           </div>
@@ -304,14 +306,14 @@ export default function LocationsSection({ content, locations: locationsProp }: 
           ))}
         </div>
 
-        <button className="btn-cta btn-cta-white w-full flex items-center justify-center gap-3 px-10 py-4 rounded-sm transition-colors">
+        <a href={ctaUrl} className="btn-cta btn-cta-white w-full flex items-center justify-center gap-3 px-10 py-4 rounded-sm transition-colors">
           <span className="text-[#003E6B] text-sm font-bold uppercase tracking-wider">
-            Book a Court
+            {ctaText}
           </span>
           <svg className="btn-arrow shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path d="M7 17L17 7M17 7L16.9993 16.0526M17 7L7 7" stroke="#003E6B" strokeWidth="2" strokeLinejoin="round"/>
           </svg>
-        </button>
+        </a>
       </div>
     </section>
   );

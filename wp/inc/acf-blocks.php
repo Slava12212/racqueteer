@@ -63,10 +63,10 @@ add_action( 'acf/init', function () {
             ['key'=>'field_hero_title','label'=>'Title','name'=>'title','type'=>'text'],
             ['key'=>'field_hero_description','label'=>'Description','name'=>'description','type'=>'textarea'],
             ['key'=>'field_hero_cta_primary_text','label'=>'CTA Primary Text','name'=>'cta_primary_text','type'=>'text'],
-            ['key'=>'field_hero_cta_primary_url','label'=>'CTA Primary URL','name'=>'cta_primary_url','type'=>'url'],
+            ['key'=>'field_hero_cta_primary_url','label'=>'CTA Primary URL','name'=>'cta_primary_url','type'=>'text','instructions'=>'e.g. /memberships or https://...'],
             ['key'=>'field_hero_cta_secondary_text','label'=>'CTA Secondary Text','name'=>'cta_secondary_text','type'=>'text'],
-            ['key'=>'field_hero_cta_secondary_url','label'=>'CTA Secondary URL','name'=>'cta_secondary_url','type'=>'url'],
-            ['key'=>'field_hero_video','label'=>'Video URL','name'=>'video_url','type'=>'url'],
+            ['key'=>'field_hero_cta_secondary_url','label'=>'CTA Secondary URL','name'=>'cta_secondary_url','type'=>'text','instructions'=>'e.g. /about or https://...'],
+            ['key'=>'field_hero_video','label'=>'Video URL','name'=>'video_url','type'=>'text','instructions'=>'Full URL to the video file'],
         ]],
         ['name'=>'racqueteer-about','title'=>'About Section','icon'=>'info','keywords'=>['about'],'fields'=>[
             ['key'=>'field_about_label','label'=>'Label','name'=>'label','type'=>'text'],
@@ -95,7 +95,7 @@ add_action( 'acf/init', function () {
             ['key'=>'field_mship_title','label'=>'Title','name'=>'title','type'=>'text'],
             ['key'=>'field_mship_description','label'=>'Description','name'=>'description','type'=>'textarea'],
             ['key'=>'field_mship_cta_text','label'=>'CTA Text','name'=>'cta_text','type'=>'text'],
-            ['key'=>'field_mship_cta_url','label'=>'CTA URL','name'=>'cta_url','type'=>'url'],
+            ['key'=>'field_mship_cta_url','label'=>'CTA URL','name'=>'cta_url','type'=>'text','instructions'=>'e.g. /memberships'],
             ['key'=>'field_mship_bg_image','label'=>'Background Image','name'=>'bg_image','type'=>'image','return_format'=>'url'],
         ]],
         ['name'=>'racqueteer-subscriptions','title'=>'Subscriptions (Home)','icon'=>'tag','keywords'=>['subscriptions'],'fields'=>[
@@ -112,7 +112,7 @@ add_action( 'acf/init', function () {
             ['key'=>'field_events_title','label'=>'Title','name'=>'title','type'=>'text'],
             ['key'=>'field_events_description','label'=>'Description','name'=>'description','type'=>'textarea'],
             ['key'=>'field_events_cta_text','label'=>'CTA Text','name'=>'cta_text','type'=>'text'],
-            ['key'=>'field_events_cta_url','label'=>'CTA URL','name'=>'cta_url','type'=>'url'],
+            ['key'=>'field_events_cta_url','label'=>'CTA URL','name'=>'cta_url','type'=>'text','instructions'=>'e.g. /events'],
             ['key'=>'field_events_image','label'=>'Image','name'=>'image','type'=>'image','return_format'=>'url'],
         ]],
         // Memberships Page
@@ -123,7 +123,7 @@ add_action( 'acf/init', function () {
             ['key'=>'field_mhero_price_starting','label'=>'Price Starting','name'=>'price_starting','type'=>'text'],
             ['key'=>'field_mhero_price_unit','label'=>'Price Unit','name'=>'price_unit','type'=>'text'],
             ['key'=>'field_mhero_cta_text','label'=>'CTA Text','name'=>'cta_text','type'=>'text'],
-            ['key'=>'field_mhero_video','label'=>'Video URL','name'=>'video_url','type'=>'url'],
+            ['key'=>'field_mhero_video','label'=>'Video URL','name'=>'video_url','type'=>'text','instructions'=>'Full URL to the video file'],
         ]],
         ['name'=>'racqueteer-subscriptions-detail','title'=>'Subscriptions Detail','icon'=>'tag','keywords'=>['subscriptions','plans'],'fields'=>[
             ['key'=>'field_subsd_label','label'=>'Label','name'=>'label','type'=>'text'],
@@ -141,8 +141,8 @@ add_action( 'acf/init', function () {
             ['key'=>'field_pehero_title','label'=>'Title','name'=>'title','type'=>'text'],
             ['key'=>'field_pehero_description','label'=>'Description','name'=>'description','type'=>'textarea'],
             ['key'=>'field_pehero_cta_text','label'=>'CTA Text','name'=>'cta_text','type'=>'text'],
-            ['key'=>'field_pehero_cta_url','label'=>'CTA URL','name'=>'cta_url','type'=>'url'],
-            ['key'=>'field_pehero_video','label'=>'Video URL','name'=>'video_url','type'=>'url'],
+            ['key'=>'field_pehero_cta_url','label'=>'CTA URL','name'=>'cta_url','type'=>'text','instructions'=>'e.g. /private-events'],
+            ['key'=>'field_pehero_video','label'=>'Video URL','name'=>'video_url','type'=>'text','instructions'=>'Full URL to the video file'],
         ]],
         ['name'=>'racqueteer-gallery','title'=>'Gallery Section','icon'=>'format-gallery','keywords'=>['gallery'],'fields'=>[
             ['key'=>'field_gal_label','label'=>'Label','name'=>'label','type'=>'text'],
@@ -160,7 +160,7 @@ add_action( 'acf/init', function () {
             ['key'=>'field_ahero_label','label'=>'Label','name'=>'label','type'=>'text'],
             ['key'=>'field_ahero_title','label'=>'Title','name'=>'title','type'=>'text'],
             ['key'=>'field_ahero_description','label'=>'Description','name'=>'description','type'=>'textarea'],
-            ['key'=>'field_ahero_video','label'=>'Video URL','name'=>'video_url','type'=>'url'],
+            ['key'=>'field_ahero_video','label'=>'Video URL','name'=>'video_url','type'=>'text','instructions'=>'Full URL to the video file'],
         ]],
         ['name'=>'racqueteer-mission','title'=>'Mission Section','icon'=>'heart','keywords'=>['mission'],'fields'=>[
             ['key'=>'field_miss_label','label'=>'Label','name'=>'label','type'=>'text'],
@@ -175,14 +175,14 @@ add_action( 'acf/init', function () {
             ['key'=>'field_cont_email','label'=>'Email','name'=>'email','type'=>'email'],
             ['key'=>'field_cont_phone','label'=>'Phone','name'=>'phone','type'=>'text'],
             ['key'=>'field_cont_cta_text','label'=>'CTA Text','name'=>'cta_text','type'=>'text'],
-            ['key'=>'field_cont_cta_url','label'=>'CTA URL','name'=>'cta_url','type'=>'url'],
+            ['key'=>'field_cont_cta_url','label'=>'CTA URL','name'=>'cta_url','type'=>'text','instructions'=>'e.g. /contact'],
         ]],
         // Careers Page
         ['name'=>'racqueteer-careers-hero','title'=>'Careers Hero','icon'=>'cover-image','keywords'=>['careers'],'fields'=>[
             ['key'=>'field_chero_label','label'=>'Label','name'=>'label','type'=>'text'],
             ['key'=>'field_chero_title','label'=>'Title','name'=>'title','type'=>'text'],
             ['key'=>'field_chero_description','label'=>'Description','name'=>'description','type'=>'textarea'],
-            ['key'=>'field_chero_video','label'=>'Video URL','name'=>'video_url','type'=>'url'],
+            ['key'=>'field_chero_video','label'=>'Video URL','name'=>'video_url','type'=>'text','instructions'=>'Full URL to the video file'],
         ]],
         ['name'=>'racqueteer-job-listings','title'=>'Job Listings','icon'=>'list-view','keywords'=>['jobs'],'fields'=>[
             ['key'=>'field_jobs_label','label'=>'Label','name'=>'label','type'=>'text'],
@@ -194,7 +194,7 @@ add_action( 'acf/init', function () {
             ['key'=>'field_cc_title','label'=>'Title','name'=>'title','type'=>'text'],
             ['key'=>'field_cc_description','label'=>'Description','name'=>'description','type'=>'textarea'],
             ['key'=>'field_cc_cta_text','label'=>'CTA Text','name'=>'cta_text','type'=>'text'],
-            ['key'=>'field_cc_cta_url','label'=>'CTA URL','name'=>'cta_url','type'=>'url'],
+            ['key'=>'field_cc_cta_url','label'=>'CTA URL','name'=>'cta_url','type'=>'text','instructions'=>'e.g. /careers'],
             ['key'=>'field_cc_image','label'=>'Image','name'=>'image','type'=>'image','return_format'=>'url'],
         ]],
     ];
@@ -257,7 +257,7 @@ add_action( 'acf/init', function () {
                 'layout'     => 'table',
                 'sub_fields' => [
                     [ 'key' => 'field_nav_link_label', 'label' => 'Label', 'name' => 'label', 'type' => 'text', 'column_width' => '40' ],
-                    [ 'key' => 'field_nav_link_url',   'label' => 'URL',   'name' => 'url',   'type' => 'url',  'column_width' => '60' ],
+                    [ 'key' => 'field_nav_link_url',   'label' => 'URL',   'name' => 'url',   'type' => 'text', 'column_width' => '60', 'instructions' => 'e.g. /memberships or https://...' ],
                 ],
             ],
             [
@@ -267,10 +267,11 @@ add_action( 'acf/init', function () {
                 'type'  => 'text',
             ],
             [
-                'key'   => 'field_nav_cta_url',
-                'label' => 'CTA Button URL',
-                'name'  => 'nav_cta_url',
-                'type'  => 'url',
+                'key'          => 'field_nav_cta_url',
+                'label'        => 'CTA Button URL',
+                'name'         => 'nav_cta_url',
+                'type'         => 'text',
+                'instructions' => 'e.g. /memberships or https://...',
             ],
         ],
         'location' => [ [ [ 'param' => 'options_page', 'operator' => '==', 'value' => 'acf-options-navbar' ] ] ],
@@ -311,10 +312,11 @@ add_action( 'acf/init', function () {
                 'type'  => 'text',
             ],
             [
-                'key'   => 'field_footer_cta_url',
-                'label' => 'CTA Button URL',
-                'name'  => 'footer_cta_url',
-                'type'  => 'url',
+                'key'          => 'field_footer_cta_url',
+                'label'        => 'CTA Button URL',
+                'name'         => 'footer_cta_url',
+                'type'         => 'text',
+                'instructions' => 'e.g. /memberships or https://...',
             ],
             [
                 'key'        => 'field_footer_menu_links',
@@ -324,7 +326,7 @@ add_action( 'acf/init', function () {
                 'layout'     => 'table',
                 'sub_fields' => [
                     [ 'key' => 'field_footer_menu_label', 'label' => 'Label', 'name' => 'label', 'type' => 'text' ],
-                    [ 'key' => 'field_footer_menu_url',   'label' => 'URL',   'name' => 'url',   'type' => 'url'  ],
+                    [ 'key' => 'field_footer_menu_url',   'label' => 'URL',   'name' => 'url',   'type' => 'text', 'instructions' => 'e.g. /about' ],
                 ],
             ],
             [
@@ -352,7 +354,7 @@ add_action( 'acf/init', function () {
                 'layout'     => 'table',
                 'sub_fields' => [
                     [ 'key' => 'field_footer_legal_label', 'label' => 'Label', 'name' => 'label', 'type' => 'text' ],
-                    [ 'key' => 'field_footer_legal_url',   'label' => 'URL',   'name' => 'url',   'type' => 'url'  ],
+                    [ 'key' => 'field_footer_legal_url',   'label' => 'URL',   'name' => 'url',   'type' => 'text', 'instructions' => 'e.g. /privacy-policy' ],
                 ],
             ],
         ],

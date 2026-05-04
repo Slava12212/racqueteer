@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { getSiteOptions } from "@/lib/wp-api";
 import { getNavbarContent, getFooterContent } from "@/lib/api";
 import type { NavbarContent, FooterContent } from "@/types";
+import { CtaProvider } from "@/lib/navbar-cta";
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://racqueteer.vercel.app'),
@@ -56,25 +57,31 @@ export default async function RootLayout({
   const { navbar, footer } = await getSiteOptions();
 
   // Convert WP data → NavbarContent, OR use hardcoded fallback
+  const hardcodedNavbar = await getNavbarContent();
   let navbarContent: NavbarContent;
   if (navbar && navbar.navLinks && navbar.navLinks.length > 0) {
+    // Prefer WP logo URL; fall back to hardcoded logo (not the sponsor /logo2.svg)
+    const wpLogoUrl = navbar.navLogo?.sourceUrl;
+    const wpLogoIconUrl = navbar.navLogoIcon?.sourceUrl;
     navbarContent = {
-      logoUrl: navbar.navLogo?.sourceUrl ?? "/logo2.svg",
-      logoAlt: navbar.navLogo?.altText ?? "Racqueteer",
-      logoIconUrl: navbar.navLogoIcon?.sourceUrl ?? "/logo-icon.png",
-      ctaText: navbar.navCtaText ?? "Book a Court",
-      ctaUrl: navbar.navCtaUrl ?? "#",
-      menuLinks: navbar.navLinks,
+      logoUrl:     wpLogoUrl     || hardcodedNavbar.logoUrl,
+      logoAlt:     navbar.navLogo?.altText ?? "Racqueteer",
+      logoIconUrl: wpLogoIconUrl || hardcodedNavbar.logoIconUrl,
+      ctaText:     navbar.navCtaText ?? "Book a Court",
+      ctaUrl:      navbar.navCtaUrl  ?? "#",
+      menuLinks:   navbar.navLinks,
     };
   } else {
-    navbarContent = await getNavbarContent();
+    navbarContent = hardcodedNavbar;
   }
 
   // Convert WP data → FooterContent, OR use hardcoded fallback
+  const hardcodedFooter = await getFooterContent();
   let footerContent: FooterContent;
   if (footer && footer.footerEmail) {
+    const wpFooterLogoUrl = footer.footerLogo?.sourceUrl;
     footerContent = {
-      logoUrl: footer.footerLogo?.sourceUrl ?? "/logo2.svg",
+      logoUrl: wpFooterLogoUrl || hardcodedFooter.logoUrl,
       logoAlt: footer.footerLogo?.altText ?? "Racqueteer",
       contactLabel: "Contact Us",
       email: footer.footerEmail ?? "",
@@ -89,15 +96,17 @@ export default async function RootLayout({
       legalLinks: footer.footerLegalLinks ?? [],
     };
   } else {
-    footerContent = await getFooterContent();
+    footerContent = hardcodedFooter;
   }
 
   return (
     <html lang="en">
       <body className="font-mona-sans antialiased">
-        <Navbar content={navbarContent} />
-        {children}
-        <Footer content={footerContent} />
+        <CtaProvider ctaText={navbarContent.ctaText} ctaUrl={navbarContent.ctaUrl}>
+          <Navbar content={navbarContent} />
+          {children}
+          <Footer content={footerContent} />
+        </CtaProvider>
       </body>
     </html>
   );

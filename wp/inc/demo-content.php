@@ -465,21 +465,23 @@ function rq_verify_graphql(): array {
     if ( $ok_v && ! empty( $data_v['__type'] ) ) {
         $enum_vals = array_column( $data_v['__type']['enumValues'] ?? [], 'name' );
         $ver = implode( ', ', $enum_vals );
-        if ( in_array( 'v18', $enum_vals ) ) {
+        if ( in_array( 'v19', $enum_vals ) ) {
+            $log[] = '  ✅ RqDeployVersion ' . $ver . ' — graphql-extensions.php v19 (image ID→URL fix: АКТИВНИЙ)';
+        } elseif ( in_array( 'v18', $enum_vals ) ) {
             $log[] = '  ✅ RqDeployVersion ' . $ver . ' — graphql-extensions.php v18 (Strategy G+H: АКТИВНИЙ)';
         } elseif ( in_array( 'v17', $enum_vals ) ) {
             $log[] = '  ✅ RqDeployVersion ' . $ver . ' — graphql-extensions.php v17 (Strategy G: schema OK, Strategy H: runtime fix)';
         } elseif ( in_array( 'v16', $enum_vals ) ) {
-            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v16 (schema may lack Block interface). Задеплой v18.';
+            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v16 (schema may lack Block interface). Задеплой v19.';
         } elseif ( in_array( 'v15', $enum_vals ) ) {
-            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v15 (HTTP 500 ризик). Задеплой v18 graphql-extensions.php.';
+            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v15 (HTTP 500 ризик). Задеплой v19 graphql-extensions.php.';
         } elseif ( in_array( 'v14', $enum_vals ) ) {
-            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v14. Задеплой graphql-extensions.php v18.';
+            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v14. Задеплой graphql-extensions.php v19.';
         } else {
-            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — застаріла версія. Задеплой новий graphql-extensions.php (v18).';
+            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — застаріла версія. Задеплой новий graphql-extensions.php (v19).';
         }
     } else {
-        $log[] = '  ❌ RqDeployVersion не знайдено → задеплой wp/inc/graphql-extensions.php (v18)';
+        $log[] = '  ❌ RqDeployVersion не знайдено → задеплой wp/inc/graphql-extensions.php (v19)';
     }
 
     // ── v16 diagnostics: TypeRegistry + Strategy E priority-1 ────────────────
@@ -811,7 +813,7 @@ function rq_verify_graphql(): array {
     // ── 8. Navbar Options ───────────────────────────────────────────────────
     $log[] = '';
     $log[] = '4. Site Options (Navbar + Footer)';
-    [ $ok, $data ] = $query( '{ acfOptionsNavbar { navbar { navCtaText navLinks { label url } } } }' );
+    [ $ok, $data ] = $query( '{ acfOptionsNavbar { navbar { navLogo { sourceUrl altText } navLogoIcon { sourceUrl } navCtaText navLinks { label url } } } }' );
     if ( ! $ok ) {
         $log[] = "  ❌ Navbar options: {$data}";
         $log[] = '     → Перевір: WPGraphQL for ACF активний, Options Pages зареєстровані (theme-setup.php)';
@@ -820,14 +822,20 @@ function rq_verify_graphql(): array {
         if ( ! $navbar ) {
             $log[] = '  ⚠ Navbar: acfOptionsNavbar є в схемі але повертає null — збережіть Navbar options у WP Admin';
         } else {
-            $cta   = $navbar['navCtaText'] ?? '(empty)';
-            $links = count( $navbar['navLinks'] ?? [] );
+            $cta        = $navbar['navCtaText'] ?? '(empty)';
+            $links      = count( $navbar['navLinks'] ?? [] );
+            $logo_url   = $navbar['navLogo']['sourceUrl'] ?? null;
+            $icon_url   = $navbar['navLogoIcon']['sourceUrl'] ?? null;
+            $logo_msg   = $logo_url ? "logo OK ({$logo_url})" : '⚠ navLogo null — завантаж лого в WP Admin → Site Settings → Navbar';
+            $icon_msg   = $icon_url ? "icon OK" : '⚠ navLogoIcon null — завантаж іконку в WP Admin → Site Settings → Navbar';
             $log[] = "  ✅ Navbar options OK — CTA: \"{$cta}\", links: {$links}";
+            $log[] = "     {$logo_msg}";
+            $log[] = "     {$icon_msg}";
         }
     }
 
     // ── 9. Footer Options ───────────────────────────────────────────────────
-    [ $ok, $data ] = $query( '{ acfOptionsFooter { footer { footerEmail footerCopyright footerMenuLinks { label } } } }' );
+    [ $ok, $data ] = $query( '{ acfOptionsFooter { footer { footerLogo { sourceUrl } footerEmail footerCopyright footerMenuLinks { label } } } }' );
     if ( ! $ok ) {
         $log[] = "  ❌ Footer options: {$data}";
         $log[] = '     → Перевір: WPGraphQL for ACF активний, Options Pages зареєстровані (theme-setup.php)';
@@ -836,9 +844,12 @@ function rq_verify_graphql(): array {
         if ( ! $footer ) {
             $log[] = '  ⚠ Footer: acfOptionsFooter є в схемі але повертає null — збережіть Footer options у WP Admin';
         } else {
-            $email = $footer['footerEmail'] ?? '(empty)';
-            $links = count( $footer['footerMenuLinks'] ?? [] );
+            $email    = $footer['footerEmail'] ?? '(empty)';
+            $links    = count( $footer['footerMenuLinks'] ?? [] );
+            $logo_url = $footer['footerLogo']['sourceUrl'] ?? null;
+            $logo_msg = $logo_url ? "logo OK ({$logo_url})" : '⚠ footerLogo null — завантаж лого в WP Admin → Site Settings → Footer';
             $log[] = "  ✅ Footer options OK — email: \"{$email}\", menu links: {$links}";
+            $log[] = "     {$logo_msg}";
         }
     }
 
@@ -885,6 +896,42 @@ function rq_verify_graphql(): array {
                 $log[] = "  ✅ CTA: \"{$attrs['ctaPrimaryText']}\"";
                 $log[] = "  ✅ Video: \"{$attrs['videoUrl']}\"";
             }
+        }
+    }
+
+    // ── 6. About block image URL (confirms attachment ID → URL conversion) ──
+    $log[] = '';
+    $log[] = '6. About Block Images (attachment ID → URL check)';
+    [ $ok2, $data2 ] = $query( '{ pageBy(uri:"/") { blocks { __typename ... on AcfRacqueteerAboutBlock { racqueteerAbout { leftImage rightImage } } } } }' );
+    if ( ! $ok2 ) {
+        $log[] = "  ❌ About block query failed: {$data2}";
+    } else {
+        $about_block = null;
+        foreach ( $data2['pageBy']['blocks'] ?? [] as $b ) {
+            if ( ( $b['__typename'] ?? '' ) === 'AcfRacqueteerAboutBlock' ) {
+                $about_block = $b;
+                break;
+            }
+        }
+        if ( ! $about_block ) {
+            $log[] = '  ⚠ AcfRacqueteerAboutBlock not found on Home page — додай About-блок на сторінку';
+        } else {
+            $ab    = $about_block['racqueteerAbout'] ?? [];
+            $left  = $ab['leftImage']  ?? null;
+            $right = $ab['rightImage'] ?? null;
+            $check = function ( $val, $name ) use ( &$log ) {
+                if ( ! $val ) {
+                    $log[] = "  ⚠ {$name}: null — зображення не вибрано в ACF";
+                } elseif ( is_numeric( $val ) ) {
+                    $log[] = "  ❌ {$name}: attachment ID \"{$val}\" — URL не резолвиться. Задеплой graphql-extensions.php (v19 fix)";
+                } elseif ( str_starts_with( $val, 'http' ) ) {
+                    $log[] = "  ✅ {$name}: URL OK ({$val})";
+                } else {
+                    $log[] = "  ⚠ {$name}: unexpected value \"{$val}\"";
+                }
+            };
+            $check( $left,  'leftImage'  );
+            $check( $right, 'rightImage' );
         }
     }
 

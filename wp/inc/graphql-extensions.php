@@ -1,6 +1,6 @@
 <?php
 /**
- * GraphQL Extensions — v18
+ * GraphQL Extensions — v19
  * Racqueteer headless theme — WPGraphQL schema customisations.
  *
  * Changelog v18:
@@ -570,7 +570,7 @@ add_action( 'graphql_register_types', function () {
     try {
         register_graphql_enum_type( 'RqDeployVersion', array(
             'description' => 'Deployment version sentinel',
-            'values'      => array( 'v18' => array( 'value' => 'v18' ) ),
+            'values'      => array( 'v19' => array( 'value' => 'v19' ) ),
         ) );
     } catch ( \Throwable $e ) {}
 } );
@@ -646,11 +646,19 @@ add_action( 'graphql_register_types', function () {
         'AcfRacqueteerCareerContactBlock'       => array( 'field' => 'racqueteerCareerContact',       'type' => 'RqRacqueteerCareerContactFields' ),
     );
 
+    // Image field key sets — used in the resolve closure below.
+    // single_image: scalar attachment ID → URL string (return_format:'url')
+    // gallery_url:  array of IDs → JSON array of URL strings (return_format:'url')
+    // gallery_arr:  array of IDs → JSON array of {id,url,sourceUrl} objects (return_format:'array')
+    $rq_single_image_keys  = array( 'left_image', 'right_image', 'bg_image', 'image' );
+    $rq_gallery_url_keys   = array( 'images' );
+    $rq_gallery_array_keys = array( 'logos' );
+
     foreach ( $block_field_map as $block_type => $info ) {
         try {
             register_graphql_field( $block_type, $info['field'], array(
                 'type'    => $info['type'],
-                'resolve' => function ( $source ) {
+                'resolve' => function ( $source ) use ( $rq_single_image_keys, $rq_gallery_url_keys, $rq_gallery_array_keys ) {
                     $raw = isset( $source['attrs']['data'] ) ? $source['attrs']['data']
                          : ( isset( $source['attrs'] ) ? $source['attrs']
                          : ( isset( $source['data'] ) ? $source['data'] : $source ) );
@@ -661,14 +669,63 @@ add_action( 'graphql_register_types', function () {
                     foreach ( $raw as $k => $v ) {
                         $k = (string) $k;
                         if ( '' !== $k && '_' === $k[0] ) {
-                            continue;
+                            continue; // skip ACF internal meta keys like _left_image
                         }
+                        // snake_case → camelCase
                         $words = explode( '_', $k );
                         $camel = strtolower( $words[0] );
                         for ( $i = 1, $n = count( $words ); $i < $n; $i++ ) {
                             $camel .= ucfirst( strtolower( $words[ $i ] ) );
                         }
-                        // JSON-encode arrays so they can be returned as String scalars
+
+                        // ── Single image: attachment ID → URL string ─────────────────────────
+                        if ( in_array( $k, $rq_single_image_keys, true ) ) {
+                            if ( is_numeric( $v ) && (int) $v > 0 ) {
+                                $url = wp_get_attachment_url( (int) $v );
+                                $out[ $camel ] = $url ?: (string) $v;
+                            } else {
+                                $out[ $camel ] = is_string( $v ) ? $v : '';
+                            }
+                            continue;
+                        }
+
+                        // ── Gallery (return_format:'url'): array of IDs → JSON array of URLs ─
+                        if ( in_array( $k, $rq_gallery_url_keys, true ) && is_array( $v ) ) {
+                            $urls = array();
+                            foreach ( $v as $id ) {
+                                if ( is_numeric( $id ) && (int) $id > 0 ) {
+                                    $url = wp_get_attachment_url( (int) $id );
+                                    if ( $url ) { $urls[] = $url; }
+                                } elseif ( is_string( $id ) && '' !== $id ) {
+                                    $urls[] = $id; // already a URL
+                                }
+                            }
+                            $out[ $camel ] = json_encode( $urls, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+                            continue;
+                        }
+
+                        // ── Gallery (return_format:'array'): IDs → JSON array of objects ─────
+                        if ( in_array( $k, $rq_gallery_array_keys, true ) && is_array( $v ) ) {
+                            $objects = array();
+                            foreach ( $v as $id ) {
+                                if ( is_numeric( $id ) && (int) $id > 0 ) {
+                                    $url = wp_get_attachment_url( (int) $id );
+                                    if ( $url ) {
+                                        $objects[] = array( 'id' => (int) $id, 'url' => $url, 'sourceUrl' => $url );
+                                    }
+                                } elseif ( is_array( $id ) && ! empty( $id['url'] ) ) {
+                                    $objects[] = array(
+                                        'id'        => isset( $id['ID'] ) ? (int) $id['ID'] : 0,
+                                        'url'       => $id['url'],
+                                        'sourceUrl' => $id['url'],
+                                    );
+                                }
+                            }
+                            $out[ $camel ] = json_encode( $objects, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+                            continue;
+                        }
+
+                        // ── Default: JSON-encode arrays; pass scalars as-is ────────────────
                         $out[ $camel ] = is_array( $v ) ? json_encode( $v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) : $v;
                     }
                     return $out;
@@ -683,6 +740,11 @@ add_action( 'graphql_register_types', function () {
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Navbar + Footer options — manual fallback (skipped for WPGraphQL for ACF v4+)
+//
+// Priority 5 (same as block fields) so we register BEFORE WPGraphQL for ACF
+// (priority 10). If WPGraphQL for ACF tries to re-register acfOptionsNavbar /
+// acfOptionsFooter afterwards it will silently fail — our resolver wins and
+// correctly calls get_field() to resolve logo image attachment IDs to URLs.
 // ═════════════════════════════════════════════════════════════════════════════
 add_action( 'graphql_register_types', function () {
     if ( ! function_exists( 'register_graphql_field' )
@@ -836,7 +898,7 @@ add_action( 'graphql_register_types', function () {
         ) );
     } catch ( \Throwable $e ) {}
 
-}, 99 );
+}, 5 );
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Strategy H — Runtime resolver override for Page.blocks (v18)

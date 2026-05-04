@@ -2,12 +2,11 @@
  * ISR Revalidation Webhook
  *
  * WordPress надсилає POST на цей endpoint при збереженні контенту.
- * revalidatePath() скидає Full Route Cache для сторінки.
- * Оскільки fetch у wp-api.ts використовує cache: 'no-store',
- * наступний рендер завжди отримує свіжі дані з WordPress.
+ * revalidateTag('wp-content') скидає fetch-кеш для всіх запитів з тегом 'wp-content'.
+ * revalidatePath() скидає Full Route Cache для конкретних сторінок.
  */
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { NextRequest } from 'next/server';
 
 // Для CPT — маппінг на сторінки, які треба оновити
@@ -31,6 +30,8 @@ export async function POST(req: NextRequest) {
     const slug: string = body.slug || '/';
 
     const slugs = CPT_SLUG_MAP[slug] ?? [slug];
+    // Invalidate the shared fetch-cache tag so all WP data is refreshed
+    revalidateTag('wp-content');
     for (const s of slugs) {
       revalidatePath(s);
     }

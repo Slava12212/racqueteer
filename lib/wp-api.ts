@@ -20,6 +20,8 @@ import {
   GET_SITE_OPTIONS,
 } from './graphql/queries';
 
+import { unstable_cache } from 'next/cache';
+
 import type {
   Job,
   MembershipPlan,
@@ -45,9 +47,10 @@ async function wpGraphQL<T>(query: string, variables?: Record<string, unknown>):
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, variables }),
-    // No data-level cache — rely on page-level ISR (revalidate in each page.tsx).
-    // This ensures revalidatePath() always fetches fresh data from WordPress.
-    cache: 'no-store',
+    // Use ISR revalidation so pages can be statically pre-rendered at build time.
+    // On-demand cache purging is handled via revalidatePath() / revalidateTag() in the
+    // /api/revalidate route, which calls revalidateTag('wp-content').
+    next: { revalidate: 60, tags: ['wp-content'] },
   });
 
   if (!res.ok) {
@@ -410,7 +413,7 @@ export async function getPriceCompareData(): Promise<{
 // SITE OPTIONS — Navbar + Footer (Phase 8)
 // ========================================
 
-export async function getSiteOptions(): Promise<{ navbar: WPNavbarOptions | null; footer: WPFooterOptions | null }> {
+const _fetchSiteOptions = async () => {
   try {
     const data = await wpGraphQL<{
       acfOptionsNavbar?: { navbar?: WPNavbarOptions | null } | null;
@@ -425,4 +428,10 @@ export async function getSiteOptions(): Promise<{ navbar: WPNavbarOptions | null
     console.error('getSiteOptions() failed, using hardcoded fallback:', err);
     return { navbar: null, footer: null };
   }
-}
+};
+
+export const getSiteOptions = unstable_cache(
+  _fetchSiteOptions,
+  ['site-options'],
+  { revalidate: 3600, tags: ['wp-content'] }
+);

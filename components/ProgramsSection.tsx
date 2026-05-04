@@ -4,6 +4,7 @@ import { useState } from "react";
 import ScrollReveal from "./ScrollReveal";
 import ButtonArrow from "./ButtonArrow";
 import type { ProgramsContent, Program } from "@/types";
+import { useCta } from "@/lib/navbar-cta";
 
 interface ProgramsSectionProps {
   content: ProgramsContent;
@@ -150,6 +151,7 @@ function ProgramRow({
 export default function ProgramsSection({ content, programs: programsProp }: ProgramsSectionProps) {
   const programs = programsProp && programsProp.length > 0 ? programsProp : FALLBACK_PROGRAMS;
   const [activeTab, setActiveTab] = useState(content.tabs[0] || "Programming");
+  const { ctaText, ctaUrl } = useCta();
 
   return (
     <section data-header-theme="light" className="min-h-screen bg-brand-bg">
@@ -216,13 +218,14 @@ export default function ProgramsSection({ content, programs: programsProp }: Pro
 
           {/* Button - desktop only */}
           <div className="hidden lg:block">
-            <button
+            <a
+              href={ctaUrl}
               className="btn-cta btn-cta-red inline-flex items-center justify-center gap-3 text-white px-10 py-4 rounded-sm font-bold text-sm uppercase tracking-wider transition-colors w-fit"
               style={{ fontFamily: '"Mona Sans", sans-serif' }}
             >
-              Book a Court
+              {ctaText}
               <ButtonArrow color="white" />
-            </button>
+            </a>
           </div>
         </div>
 
@@ -258,13 +261,14 @@ export default function ProgramsSection({ content, programs: programsProp }: Pro
 
       {/* Mobile button after programs list */}
       <div className="lg:hidden px-5 md:px-10 py-8">
-        <button
+        <a
+          href={ctaUrl}
           className="btn-cta btn-cta-red flex items-center justify-center gap-3 text-white w-full py-4 rounded-sm font-bold text-sm uppercase tracking-wider transition-colors"
           style={{ fontFamily: '"Mona Sans", sans-serif' }}
         >
-          Book a Court
+          {ctaText}
           <ButtonArrow color="white" />
-        </button>
+        </a>
       </div>
     </section>
   );

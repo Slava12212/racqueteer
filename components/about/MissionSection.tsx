@@ -1,7 +1,9 @@
+"use client";
 
 import ScrollReveal from "../ScrollReveal";
 import ButtonArrow from "../ButtonArrow";
 import type { MissionContent } from "@/types";
+import { useCta } from "@/lib/navbar-cta";
 
 interface MissionSectionProps {
   content: MissionContent;
@@ -50,6 +52,7 @@ function StatBlock({ color }: StatBlockProps) {
 }
 
 export default function MissionSection({ content }: MissionSectionProps) {
+  const { ctaText, ctaUrl } = useCta();
   return (
     <section data-header-theme="light" className="relative overflow-hidden bg-[#F4F6F9] min-h-[420px] lg:min-h-[641px] flex items-center py-20 lg:py-0">
       {/* Blue glow — left */}
@@ -102,10 +105,10 @@ export default function MissionSection({ content }: MissionSectionProps) {
             </ScrollReveal>
 
             <ScrollReveal from="bottom" delay={300}>
-              <button className="btn-cta btn-cta-red inline-flex items-center justify-center gap-3 text-white text-sm font-bold uppercase tracking-wider px-10 py-4 rounded-sm transition-colors">
-                Book a Court
+              <a href={ctaUrl} className="btn-cta btn-cta-red inline-flex items-center justify-center gap-3 text-white text-sm font-bold uppercase tracking-wider px-10 py-4 rounded-sm transition-colors">
+                {ctaText}
                 <ButtonArrow color="white" />
-              </button>
+              </a>
             </ScrollReveal>
           </div>
 
