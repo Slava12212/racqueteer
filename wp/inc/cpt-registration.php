@@ -21,7 +21,7 @@ add_action( 'init', function () {
         'show_in_graphql' => true,
         'graphql_single_name' => 'job',
         'graphql_plural_name' => 'jobs',
-        'supports'      => [ 'title', 'custom-fields' ],
+        'supports'      => [ 'title', 'custom-fields', 'page-attributes' ], // page-attributes = Order field
         'menu_icon'     => 'dashicons-businessman',
     ] );
 
@@ -51,7 +51,7 @@ add_action( 'init', function () {
         'show_in_graphql' => true,
         'graphql_single_name' => 'membership',
         'graphql_plural_name' => 'memberships',
-        'supports'      => [ 'title', 'custom-fields' ],
+        'supports'      => [ 'title', 'custom-fields', 'page-attributes' ], // page-attributes = Order field
         'menu_icon'     => 'dashicons-awards',
     ] );
 

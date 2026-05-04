@@ -188,7 +188,7 @@ export const GET_PAGE_BY_SLUG = `
 
 export const GET_JOBS = `
   query GetJobs {
-    jobs(first: 100) {
+    jobs(first: 100, where: { orderby: { field: MENU_ORDER, order: ASC } }) {
       nodes {
         databaseId
         title
@@ -204,7 +204,7 @@ export const GET_JOBS = `
 
 export const GET_MEMBERSHIP_PLANS = `
   query GetMembershipPlans {
-    memberships(first: 10) {
+    memberships(first: 10, where: { orderby: { field: MENU_ORDER, order: ASC } }) {
       nodes {
         title
         acf {
