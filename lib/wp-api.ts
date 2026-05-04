@@ -37,7 +37,7 @@ import type { WPBlock } from '@/types/wp-blocks';
 // GraphQL client
 // ========================================
 
-async function wpGraphQL<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
+async function wpGraphQL<T>(query: string, variables?: Record<string, unknown>, tags?: string[]): Promise<T> {
   const url = process.env.NEXT_PUBLIC_WP_GRAPHQL_URL;
   if (!url) throw new Error('NEXT_PUBLIC_WP_GRAPHQL_URL is not defined');
 
@@ -45,7 +45,7 @@ async function wpGraphQL<T>(query: string, variables?: Record<string, unknown>):
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, variables }),
-    next: { revalidate: 3600 },
+    next: { revalidate: 3600, tags: tags ?? [] },
   });
 
   if (!res.ok) {
@@ -130,7 +130,8 @@ export async function getPageBlocks(slug: string): Promise<WPBlock[]> {
   try {
     const data = await wpGraphQL<{ pageBy: { blocks: RawBlock[] } | null }>(
       GET_PAGE_BY_SLUG,
-      { slug }
+      { slug },
+      [`page-blocks`, `page-blocks-${slug.replace(/\//g, '-')}`]
     );
     return (data.pageBy?.blocks ?? []).map(rawBlockToWPBlock);
   } catch (err) {
@@ -162,7 +163,7 @@ export async function getPageBySlug(slug: string): Promise<WPPageData | null> {
         status: string;
         blocks: RawBlock[];
       } | null;
-    }>(GET_PAGE_BY_SLUG, { slug });
+    }>(GET_PAGE_BY_SLUG, { slug }, [`page-blocks`, `page-blocks-${slug.replace(/\//g, '-')}`]);
 
     const page = data.pageBy;
     if (!page) return null;
@@ -214,7 +215,7 @@ export async function getJobs(): Promise<Job[]> {
   try {
     const data = await wpGraphQL<{
       jobs: { nodes: Array<{ databaseId: number; title: string; jobFields: { description: string; category: string }; date: string }> };
-    }>(GET_JOBS);
+    }>(GET_JOBS, undefined, ['jobs']);
 
     return data.jobs.nodes.map((node) => ({
       id: node.databaseId,
@@ -242,7 +243,7 @@ export async function getMembershipPlans(): Promise<MembershipPlan[]> {
   try {
     const data = await wpGraphQL<{
       memberships: { nodes: Array<{ title: string; acf: Omit<MembershipPlan, 'name'> }> };
-    }>(GET_MEMBERSHIP_PLANS);
+    }>(GET_MEMBERSHIP_PLANS, undefined, ['membership-plans']);
 
     return data.memberships.nodes.map((node) => ({
       name: node.title,
@@ -273,7 +274,7 @@ export async function getTestimonials(): Promise<Testimonial[]> {
           authorSubtitle: string;
         };
       }> };
-    }>(GET_TESTIMONIALS);
+    }>(GET_TESTIMONIALS, undefined, ['testimonials']);
 
     return data.testimonials.nodes.map((node) => ({
       id: node.databaseId,
@@ -305,13 +306,13 @@ export async function getLocations(): Promise<Location[]> {
             locationId: string;
             name: string;
             status: 'available' | 'coming_soon';
-            address: string; // textarea: lines joined by "\n", split below
+            address: string;
             description: string;
             image: { node: { sourceUrl: string } };
           };
         }>;
       };
-    }>(GET_LOCATIONS);
+    }>(GET_LOCATIONS, undefined, ['locations']);
 
     return data.locations.nodes.map((node) => ({
       id:          node.locationFields?.locationId ?? String(node.databaseId),
@@ -337,7 +338,7 @@ export async function getPrograms(): Promise<Program[]> {
   try {
     const data = await wpGraphQL<{
       programs: { nodes: Array<{ programFields: Program }> };
-    }>(GET_PROGRAMS);
+    }>(GET_PROGRAMS, undefined, ['programs']);
 
     return data.programs.nodes
       .map((node) => node.programFields)
@@ -383,7 +384,7 @@ export async function getSiteOptions(): Promise<{ navbar: WPNavbarOptions | null
     const data = await wpGraphQL<{
       acfOptionsNavbar?: { navbar?: WPNavbarOptions | null } | null;
       acfOptionsFooter?: { footer?: WPFooterOptions | null } | null;
-    }>(GET_SITE_OPTIONS);
+    }>(GET_SITE_OPTIONS, undefined, ['site-options']);
 
     return {
       navbar: data?.acfOptionsNavbar?.navbar ?? null,
