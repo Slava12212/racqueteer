@@ -37,7 +37,7 @@ import type { WPBlock } from '@/types/wp-blocks';
 // GraphQL client
 // ========================================
 
-async function wpGraphQL<T>(query: string, variables?: Record<string, unknown>, tags?: string[]): Promise<T> {
+async function wpGraphQL<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
   const url = process.env.NEXT_PUBLIC_WP_GRAPHQL_URL;
   if (!url) throw new Error('NEXT_PUBLIC_WP_GRAPHQL_URL is not defined');
 
@@ -45,7 +45,9 @@ async function wpGraphQL<T>(query: string, variables?: Record<string, unknown>, 
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, variables }),
-    next: { revalidate: 3600, tags: tags ?? [] },
+    // No data-level cache — rely on page-level ISR (revalidate in each page.tsx).
+    // This ensures revalidatePath() always fetches fresh data from WordPress.
+    cache: 'no-store',
   });
 
   if (!res.ok) {
@@ -130,8 +132,7 @@ export async function getPageBlocks(slug: string): Promise<WPBlock[]> {
   try {
     const data = await wpGraphQL<{ pageBy: { blocks: RawBlock[] } | null }>(
       GET_PAGE_BY_SLUG,
-      { slug },
-      [`page-blocks`, `page-blocks-${slug.replace(/\//g, '-')}`]
+      { slug }
     );
     return (data.pageBy?.blocks ?? []).map(rawBlockToWPBlock);
   } catch (err) {
@@ -163,7 +164,7 @@ export async function getPageBySlug(slug: string): Promise<WPPageData | null> {
         status: string;
         blocks: RawBlock[];
       } | null;
-    }>(GET_PAGE_BY_SLUG, { slug }, [`page-blocks`, `page-blocks-${slug.replace(/\//g, '-')}`]);
+    }>(GET_PAGE_BY_SLUG, { slug });
 
     const page = data.pageBy;
     if (!page) return null;
@@ -215,7 +216,7 @@ export async function getJobs(): Promise<Job[]> {
   try {
     const data = await wpGraphQL<{
       jobs: { nodes: Array<{ databaseId: number; title: string; jobFields: { description: string; category: string }; date: string }> };
-    }>(GET_JOBS, undefined, ['jobs']);
+    }>(GET_JOBS);
 
     return data.jobs.nodes.map((node) => ({
       id: node.databaseId,
@@ -248,15 +249,15 @@ export async function getMembershipPlans(): Promise<MembershipPlan[]> {
           acf: {
             price: string;
             description: string;
-            buttonVariant: string | string[]; // WP returns array e.g. ["red"]
+            buttonVariant: string | string[];
             bgClass: string;
             borderClass: string;
             hasImage: boolean;
-            values: string | string[]; // WP returns comma-separated string
+            values: string | string[];
           };
         }>;
       };
-    }>(GET_MEMBERSHIP_PLANS, undefined, ['membership-plans']);
+    }>(GET_MEMBERSHIP_PLANS);
 
     return data.memberships.nodes.map((node) => {
       const acf = node.acf ?? {};
@@ -304,7 +305,7 @@ export async function getTestimonials(): Promise<Testimonial[]> {
           authorSubtitle: string;
         };
       }> };
-    }>(GET_TESTIMONIALS, undefined, ['testimonials']);
+    }>(GET_TESTIMONIALS);
 
     return data.testimonials.nodes.map((node) => ({
       id: node.databaseId,
@@ -342,7 +343,7 @@ export async function getLocations(): Promise<Location[]> {
           };
         }>;
       };
-    }>(GET_LOCATIONS, undefined, ['locations']);
+    }>(GET_LOCATIONS);
 
     return data.locations.nodes.map((node) => ({
       id:          node.locationFields?.locationId ?? String(node.databaseId),
@@ -368,7 +369,7 @@ export async function getPrograms(): Promise<Program[]> {
   try {
     const data = await wpGraphQL<{
       programs: { nodes: Array<{ programFields: Program }> };
-    }>(GET_PROGRAMS, undefined, ['programs']);
+    }>(GET_PROGRAMS);
 
     return data.programs.nodes
       .map((node) => node.programFields)
@@ -414,7 +415,7 @@ export async function getSiteOptions(): Promise<{ navbar: WPNavbarOptions | null
     const data = await wpGraphQL<{
       acfOptionsNavbar?: { navbar?: WPNavbarOptions | null } | null;
       acfOptionsFooter?: { footer?: WPFooterOptions | null } | null;
-    }>(GET_SITE_OPTIONS, undefined, ['site-options']);
+    }>(GET_SITE_OPTIONS);
 
     return {
       navbar: data?.acfOptionsNavbar?.navbar ?? null,
