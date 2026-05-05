@@ -1,35 +1,35 @@
 <?php
 /**
- * Custom Post Types Registration
+ * Реєстрація Custom Post Types
  *
- * CPT для динамічних даних (не layout-блоки).
- * Ці типи будуть доступні через WPGraphQL як окремі колекції.
+ * CPT для динамічних даних (не блоків макету).
+ * Ці типи доступні через WPGraphQL як окремі колекції.
  */
 
 add_action( 'init', function () {
 
-    // ── Jobs (Careers) ───────────────────────────────────────────────────────
+    // ── Вакансії (Careers) ───────────────────────────────────────────────────────
     register_post_type( 'job', [
         'labels'       => [
-            'name'          => 'Jobs',
-            'singular_name' => 'Job',
-            'add_new_item'  => 'Add New Job',
-            'edit_item'     => 'Edit Job',
+            'name'          => 'Вакансії',
+            'singular_name' => 'Вакансія',
+            'add_new_item'  => 'Додати нову вакансію',
+            'edit_item'     => 'Редагувати вакансію',
         ],
         'public'        => true,
         'show_in_rest'  => true,
         'show_in_graphql' => true,
         'graphql_single_name' => 'job',
         'graphql_plural_name' => 'jobs',
-        'supports'      => [ 'title', 'custom-fields', 'page-attributes' ], // page-attributes = Order field
+        'supports'      => [ 'title', 'custom-fields', 'page-attributes' ], // page-attributes = поле сортування
         'menu_icon'     => 'dashicons-businessman',
     ] );
 
-    // ── Testimonials ─────────────────────────────────────────────────────────
+    // ── Відгуки ─────────────────────────────────────────────────────────────
     register_post_type( 'testimonial', [
         'labels'       => [
-            'name'          => 'Testimonials',
-            'singular_name' => 'Testimonial',
+            'name'          => 'Відгуки',
+            'singular_name' => 'Відгук',
         ],
         'public'        => true,
         'show_in_rest'  => true,
@@ -40,26 +40,26 @@ add_action( 'init', function () {
         'menu_icon'     => 'dashicons-format-quote',
     ] );
 
-    // ── Membership Plans ─────────────────────────────────────────────────────
+    // ── Плани членства ─────────────────────────────────────────────────────────
     register_post_type( 'membership', [
         'labels'       => [
-            'name'          => 'Membership Plans',
-            'singular_name' => 'Membership Plan',
+            'name'          => 'Плани членства',
+            'singular_name' => 'План членства',
         ],
         'public'        => true,
         'show_in_rest'  => true,
         'show_in_graphql' => true,
         'graphql_single_name' => 'membership',
         'graphql_plural_name' => 'memberships',
-        'supports'      => [ 'title', 'custom-fields', 'page-attributes' ], // page-attributes = Order field
+        'supports'      => [ 'title', 'custom-fields', 'page-attributes' ], // page-attributes = поле сортування
         'menu_icon'     => 'dashicons-awards',
     ] );
 
-    // ── Amenities ────────────────────────────────────────────────────────────
+    // ── Зручності ────────────────────────────────────────────────────────────
     register_post_type( 'amenity', [
         'labels'       => [
-            'name'          => 'Amenities',
-            'singular_name' => 'Amenity',
+            'name'          => 'Зручності',
+            'singular_name' => 'Зручність',
         ],
         'public'        => true,
         'show_in_rest'  => true,
@@ -70,11 +70,11 @@ add_action( 'init', function () {
         'menu_icon'     => 'dashicons-star-filled',
     ] );
 
-    // ── Locations ────────────────────────────────────────────────────────────
+    // ── Локації ────────────────────────────────────────────────────────────
     register_post_type( 'location', [
         'labels'       => [
-            'name'          => 'Locations',
-            'singular_name' => 'Location',
+            'name'          => 'Локації',
+            'singular_name' => 'Локація',
         ],
         'public'        => true,
         'show_in_rest'  => true,
@@ -85,11 +85,11 @@ add_action( 'init', function () {
         'menu_icon'     => 'dashicons-location-alt',
     ] );
 
-    // ── Programs / Clinics ───────────────────────────────────────────────────
+    // ── Програми / Клініки ───────────────────────────────────────────────────
     register_post_type( 'program', [
         'labels'       => [
-            'name'          => 'Programs',
-            'singular_name' => 'Program',
+            'name'          => 'Програми',
+            'singular_name' => 'Програма',
         ],
         'public'        => true,
         'show_in_rest'  => true,
@@ -101,4 +101,3 @@ add_action( 'init', function () {
     ] );
 
 } );
-

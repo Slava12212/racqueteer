@@ -1,11 +1,11 @@
 <?php
 /**
- * ISR Revalidation Webhook (WordPress side)
+ * ISR Revalidation Webhook (сторона WordPress)
  *
- * Реєструє REST endpoint /wp-json/racqueteer/v1/revalidate
- * який викликається при збереженні сторінки в WordPress.
+ * Надсилає POST-запит до Next.js ендпоінту /api/revalidate
+ * щоразу, коли сторінка або запис CPT зберігається в WordPress.
  *
- * Альтернатива: використати плагін WP Webhooks замість цього коду.
+ * Альтернатива: замість цього коду можна використовувати плагін WP Webhooks.
  */
 add_action( 'rest_api_init', function () {
     register_rest_route( 'racqueteer/v1', '/revalidate', [
@@ -35,7 +35,7 @@ function racqueteer_trigger_revalidate( WP_REST_Request $request ) {
 }
 
 /**
- * Допоміжна функція для надсилання revalidate запиту на Next.js.
+ * Хелпер: надіслати запит ревалідації до Next.js.
  */
 function racqueteer_send_revalidate( string $slug ): void {
     $secret = get_option( 'racqueteer_revalidate_secret', '' );
@@ -48,11 +48,11 @@ function racqueteer_send_revalidate( string $slug ): void {
         'body'     => wp_json_encode( [ 'slug' => $slug ] ),
         'headers'  => [ 'Content-Type' => 'application/json' ],
         'timeout'  => 5,
-        'blocking' => false, // fire and forget
+        'blocking' => false, // відправити і забути
     ] );
 }
 
-// Автоматично тригерити revalidate при збереженні сторінки
+// Автоматично ревалідувати при збереженні сторінки
 add_action( 'save_post_page', function ( $post_id ) {
     if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
         return;
@@ -61,7 +61,7 @@ add_action( 'save_post_page', function ( $post_id ) {
     racqueteer_send_revalidate( $slug );
 }, 10, 1 );
 
-// CPT job → revalidate /careers
+// CPT job → ревалідувати /careers
 add_action( 'save_post_job', function ( $post_id ) {
     if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
         return;
@@ -69,7 +69,7 @@ add_action( 'save_post_job', function ( $post_id ) {
     racqueteer_send_revalidate( '/careers' );
 }, 10, 1 );
 
-// CPT location → revalidate /
+// CPT location → ревалідувати /
 add_action( 'save_post_location', function ( $post_id ) {
     if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
         return;
@@ -77,7 +77,7 @@ add_action( 'save_post_location', function ( $post_id ) {
     racqueteer_send_revalidate( '/' );
 }, 10, 1 );
 
-// CPT testimonial → revalidate /
+// CPT testimonial → ревалідувати /
 add_action( 'save_post_testimonial', function ( $post_id ) {
     if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
         return;
@@ -85,7 +85,7 @@ add_action( 'save_post_testimonial', function ( $post_id ) {
     racqueteer_send_revalidate( '/' );
 }, 10, 1 );
 
-// CPT membership → revalidate / та /memberships
+// CPT membership → ревалідувати / та /memberships
 add_action( 'save_post_membership', function ( $post_id ) {
     if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
         return;
@@ -94,7 +94,7 @@ add_action( 'save_post_membership', function ( $post_id ) {
     racqueteer_send_revalidate( '/memberships' );
 }, 10, 1 );
 
-// CPT program → revalidate /
+// CPT program → ревалідувати /
 add_action( 'save_post_program', function ( $post_id ) {
     if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
         return;
@@ -103,15 +103,15 @@ add_action( 'save_post_program', function ( $post_id ) {
 }, 10, 1 );
 
 // Phase 7 — Тригер при зміні статусу сторінки (publish ↔ draft)
-// Це дозволяє: Draft → сторінка стає 404, Publish → сторінка знову live
+// Вмикає: Draft → сторінка повертає 404, Publish → сторінка знову жива
 add_action( 'transition_post_status', function ( $new_status, $old_status, $post ) {
     if ( $new_status === $old_status ) {
         return;
     }
 
-    // Map CPT → сторінки для revalidate
+    // Маппінг CPT → сторінки для ревалідації
     $cpt_to_slugs = [
-        'page'        => null, // обробляється через save_post_page
+        'page'        => null, // обробляється окремо через save_post_page
         'job'         => [ '/careers' ],
         'location'    => [ '/' ],
         'testimonial' => [ '/' ],
@@ -132,14 +132,14 @@ add_action( 'transition_post_status', function ( $new_status, $old_status, $post
     }
 }, 10, 3 );
 
-// Phase 8 — Revalidate layout (Navbar/Footer) при зміні ACF Options
+// Phase 8 — Ревалідувати макет (Navbar/Footer) при оновленні ACF Options
 add_action( 'acf/save_post', function ( $post_id ) {
-    // Options pages мають string post_id типу 'options' або 'acf-options-navbar' тощо
+    // Options pages мають рядковий post_id: 'options', 'acf-options-navbar' тощо
     if ( ! is_string( $post_id ) && ! str_contains( (string) $post_id, 'options' ) ) {
         return;
     }
     if ( str_contains( (string) $post_id, 'option' ) ) {
-        // Оновлюємо всі основні сторінки, де є Navbar/Footer (через layout)
+        // Ревалідувати всі головні сторінки, що містять Navbar/Footer (через layout)
         $pages = [ '/', '/memberships', '/private-events', '/about', '/careers' ];
         foreach ( $pages as $slug ) {
             racqueteer_send_revalidate( $slug );
@@ -195,5 +195,4 @@ function racqueteer_settings_page() {
     </div>
     <?php
 }
-
 

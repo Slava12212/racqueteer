@@ -1,15 +1,15 @@
 /**
  * ISR Revalidation Webhook
  *
- * WordPress надсилає POST на цей endpoint при збереженні контенту.
- * revalidateTag('wp-content') скидає fetch-кеш для всіх запитів з тегом 'wp-content'.
- * revalidatePath() скидає Full Route Cache для конкретних сторінок.
+ * WordPress sends a POST to this endpoint whenever content is saved.
+ * revalidateTag('wp-content') purges the fetch cache for all requests tagged 'wp-content'.
+ * revalidatePath() purges the Full Route Cache for specific pages.
  */
 
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { NextRequest } from 'next/server';
 
-// Для CPT — маппінг на сторінки, які треба оновити
+// CPT → page slug mapping: which pages to revalidate for each CPT update
 const CPT_SLUG_MAP: Record<string, string[]> = {
   '/careers':        ['/careers'],
   '/':               ['/'],
@@ -42,4 +42,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'Invalid request body' }, { status: 400 });
   }
 }
-

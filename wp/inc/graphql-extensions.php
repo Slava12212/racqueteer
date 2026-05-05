@@ -1,71 +1,71 @@
 <?php
 /**
  * GraphQL Extensions — v19
- * Racqueteer headless theme — WPGraphQL schema customisations.
+ * Racqueteer headless тема — кастомізації схеми WPGraphQL.
  *
  * Changelog v18:
- * - ROOT FIX (runtime) — Strategy H: graphql_resolve_field filter intercepts the `blocks`
- *   field on Page/Post types.  When WPGraphQL Content Blocks resolver returns 0 blocks
- *   (because it doesn't recognise `acf/*` block names in its own registry), our filter fires
- *   AFTER the resolver, sees an empty result, and replaces it with blocks parsed directly from
- *   `post_content` via WordPress's own `parse_blocks()`.
+ * - ROOT FIX (runtime) — Strategy H: фільтр graphql_resolve_field перехоплює поле `blocks`
+ *   на типах Page/Post. Коли резолвер WPGraphQL Content Blocks повертає 0 блоків
+ *   (тому що не розпізнає назви блоків `acf/*` у власному реєстрі), наш фільтр спрацьовує
+ *   ПІСЛЯ резолвера, бачить порожній результат і замінює його блоками, розібраними напряму
+ *   з `post_content` через власний WordPress-функцію `parse_blocks()`.
  *
- *   Each parsed block is returned as a PHP array with:
- *     __typename → AcfRacqueteer*Block   (used by graphql-php for type dispatch)
- *     id / type / tagName / innerHtml    (required Block interface fields)
- *     attrs                              (raw Gutenberg block attributes)
+ *   Кожен розібраний блок повертається як PHP-масив із:
+ *     __typename → AcfRacqueteer*Block   (використовується graphql-php для type dispatch)
+ *     id / type / tagName / innerHtml    (обов'язкові поля інтерфейсу Block)
+ *     attrs                              (сирі атрибути блоку Gutenberg)
  *
- *   The existing `racqueteerHero` / `racqueteerAbout` … resolvers (registered in the
- *   Flat Rq*Fields section below) read `$source['attrs']['data']` — exactly what ACF
- *   stores in the Gutenberg block comment — so ACF field data is returned automatically.
+ *   Наявні резолвери `racqueteerHero` / `racqueteerAbout` … (зареєстровані у секції
+ *   Flat Rq*Fields нижче) читають `$source['attrs']['data']` — саме там ACF
+ *   зберігає дані в коментарі блоку Gutenberg — тому дані ACF-полів повертаються автоматично.
  *
- *   A `rq_diag_blocks_resolver` wp_option is written on every Page.blocks resolution for
- *   diagnostic purposes (post_id, content_len, raw_count, acf_count, types).
+ *   wp_option `rq_diag_blocks_resolver` записується при кожному резолві Page.blocks
+ *   для діагностики (post_id, content_len, raw_count, acf_count, types).
  *
  * - Sentinel: v18.
- * v17: Strategy G (pre-register Block/EditorBlock at priority 1) — schema fixed.
- * v16: Strategy E priority 1 fix (insufficient — eager type construction beats it).
- * - ROOT FIX — Strategy G: Pre-register Block + EditorBlock interfaces at priority 1 of
- *   graphql_register_types, BEFORE WPGraphQL for ACF builds AcfRacqueteer*Block ObjectTypes
- *   at priority 10.
+ * v17: Strategy G (pre-register Block/EditorBlock at priority 1) — схема виправлена.
+ * v16: Strategy E priority 1 fix (недостатньо — eager type construction перемагає).
+ * - ROOT FIX — Strategy G: Попередня реєстрація інтерфейсів Block + EditorBlock з пріоритетом 1
+ *   у graphql_register_types, ДО того як WPGraphQL for ACF будує AcfRacqueteer*Block ObjectTypes
+ *   з пріоритетом 10.
  *
- *   WHY v16 still failed:
- *   WPGraphQL for ACF v2.6.0 constructs WPObjectType instances EAGERLY inside register_type()
- *   (called at priority 10). The WPObjectType constructor resolves string interface names via
- *   TypeRegistry::get_type(). At priority 10, WPGraphQL Content Blocks has NOT yet registered
- *   Block/EditorBlock (it does so at priority 100+), so get_type('Block') → null → interfaces
- *   array is empty after construction → final schema: Interfaces: none.
+ *   ЧОМУ v16 не спрацював:
+ *   WPGraphQL for ACF v2.6.0 конструює WPObjectType-екземпляри ЗАВЧАСНО всередині register_type()
+ *   (виклик з пріоритетом 10). Конструктор WPObjectType розв'язує імена інтерфейсів-рядків через
+ *   TypeRegistry::get_type(). З пріоритетом 10 WPGraphQL Content Blocks ще NOT зареєстрував
+ *   Block/EditorBlock (це відбувається з пріоритетом 100+), тому get_type('Block') → null → масив
+ *   interfaces порожній після конструювання → фінальна схема: Interfaces: none.
  *
- *   Strategy E (register_graphql_interfaces_to_types at priority 1) queues a callback at
- *   priority 10 calling register_extra_interface(). This fires at the SAME priority 10 as ACF
- *   block type construction, but the internal callback timing (FIFO order within priority 10)
- *   is uncertain and the property extra_type_interfaces was not found by reflection — confirming
- *   the mechanism wasn't working in this WPGraphQL version.
+ *   Strategy E (register_graphql_interfaces_to_types з пріоритетом 1) ставить у чергу callback
+ *   з пріоритетом 10, що викликає register_extra_interface(). Це спрацьовує на ТОМУ Ж пріоритеті 10
+ *   що і конструювання типів блоків ACF, але внутрішня черговість callbacks (FIFO усередині priority 10)
+ *   нестабільна, а властивість extra_type_interfaces не знайдено через reflection — що підтверджує:
+ *   механізм не працював у цій версії WPGraphQL.
  *
- *   Strategy G solution:
- *   At priority 1 (fires before priority 10), we pre-register Block and EditorBlock interfaces
- *   with the exact fields Content Blocks uses (id, type, tagName, innerHtml, attributes,
- *   connections) plus a resolveType that converts blockName → GraphQL type name. When ACF
- *   block types are built at priority 10, TypeRegistry::get_type('Block') now returns our stub
- *   → Block IS in the interfaces array → Page.blocks returns all ACF blocks.
+ *   Рішення Strategy G:
+ *   З пріоритетом 1 (до priority 10) ми попередньо реєструємо інтерфейси Block і EditorBlock
+ *   з тими самими полями, що їх використовує Content Blocks (id, type, tagName, innerHtml, attributes,
+ *   connections), плюс resolveType, що конвертує blockName → назву типу GraphQL. Коли типи блоків ACF
+ *   будуються з пріоритетом 10, TypeRegistry::get_type('Block') повертає наш stub
+ *   → Block IS у масиві interfaces → Page.blocks повертає всі ACF-блоки.
  *
- *   WPGraphQL TypeRegistry ignores duplicate registrations (no-op when type already exists),
- *   so Content Blocks' Block/EditorBlock registration at priority 100 is silently skipped —
- *   our stubs remain authoritative.
+ *   WPGraphQL TypeRegistry ігнорує повторні реєстрації (no-op для вже існуючих типів),
+ *   тому реєстрація Block/EditorBlock від Content Blocks з пріоритетом 100 мовчки пропускається —
+ *   наші stubs залишаються авторитетними.
  *
  * - Sentinel: v17.
- * v16: Strategy E priority 1 fix (insufficient — eager type construction beats it).
+ * v16: Strategy E priority 1 fix (недостатньо — eager type construction перемагає).
  * v15: Strategy F graphql_schema_config direct injection (HTTP 500 — readonly PHP 8.1 props).
  * v14: Strategy C priority 9→100. Strategy E: register_graphql_interfaces_to_types.
- * v13: diagnostics for TypeRegistry interfaces.
- * v12: added attributes:Attribute + connections:[PostObjectUnion].
+ * v13: діагностика TypeRegistry interfaces.
+ * v12: додано attributes:Attribute + connections:[PostObjectUnion].
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// ── PHP Fatal capture → wp_options ──────────────────────────────────────────
+// ── Перехоплення PHP Fatal → wp_options ──────────────────────────────────────────
 register_shutdown_function( function () {
     $error = error_get_last();
     if ( $error && in_array( $error['type'], array( E_ERROR, E_PARSE, E_CORE_ERROR, E_USER_ERROR ), true ) ) {
@@ -96,7 +96,7 @@ add_action( 'init', function () {
     }
 } );
 
-// ── Admin notices ─────────────────────────────────────────────────────────────
+// ── Сповіщення адміна ─────────────────────────────────────────────────────────────
 add_action( 'init', function () {
     if ( ! function_exists( 'register_graphql_field' ) ) {
         add_action( 'admin_notices', function () {
@@ -110,25 +110,25 @@ add_action( 'init', function () {
     }
 } );
 
-// ── WPGraphQL: increase max query depth ──────────────────────────────────────
+// ── WPGraphQL: збільшити максимальну глибину запиту ──────────────────────────
 add_filter( 'graphql_query_max_depth', function () {
     return 20;
 } );
 
 // ═════════════════════════════════════════════════════════════════════════════
-// BLOCK INTERFACE INJECTION — v17 approach
+// ІН'ЄКЦІЯ ІНТЕРФЕЙСУ BLOCK — підхід v17
 //
-// Goal: make all AcfRacqueteer*Block types implement the Block interface
-// so WPGraphQL Content Blocks includes them in Page.blocks results.
+// Мета: змусити всі типи AcfRacqueteer*Block реалізовувати інтерфейс Block,
+// щоб WPGraphQL Content Blocks включав їх у результати Page.blocks.
 //
-// Strategy G: pre-register Block + EditorBlock at PRIORITY 1 ← MAIN FIX v17
-// Strategy A: wpgraphql_acf_block_type_config — WPGraphQL for ACF native hook
-// Strategy B: graphql_wp_object_type_config — schema build time, pattern match
-// Strategy C: priority 100 — fallback registration for types ACF missed
-// Strategy E: register_graphql_interfaces_to_types at PRIORITY 1 (belt-and-suspenders)
+// Strategy G: попередня реєстрація Block + EditorBlock з ПРІОРИТЕТОМ 1 ← ГОЛОВНИЙ FIX v17
+// Strategy A: wpgraphql_acf_block_type_config — нативний хук WPGraphQL for ACF
+// Strategy B: graphql_wp_object_type_config — час побудови схеми, пошук за шаблоном
+// Strategy C: priority 100 — fallback-реєстрація для типів, пропущених ACF
+// Strategy E: register_graphql_interfaces_to_types з ПРІОРИТЕТОМ 1 (підстраховка)
 // ═════════════════════════════════════════════════════════════════════════════
 
-// Block type names used across strategies
+// Назви типів блоків, що використовуються у стратегіях
 $rq_acf_block_names = array(
     'AcfRacqueteerHeroBlock',
     'AcfRacqueteerAboutBlock',
@@ -152,7 +152,7 @@ $rq_acf_block_names = array(
     'AcfRacqueteerCareerContactBlock',
 );
 
-// ── Strategy A: WPGraphQL for ACF native filter ───────────────────────────
+// ── Strategy A: нативний фільтр WPGraphQL for ACF ───────────────────────
 add_filter( 'wpgraphql_acf_block_type_config', function ( $config ) {
     if ( ! is_array( $config ) ) {
         return $config;
@@ -161,14 +161,14 @@ add_filter( 'wpgraphql_acf_block_type_config', function ( $config ) {
     if ( ! in_array( 'Block', $interfaces, true ) ) {
         $interfaces[] = 'Block';
     }
-    // EditorBlock is optional in some WPGraphQL Content Blocks builds.
-    // Avoid forcing a possibly-missing interface at this early stage.
+    // EditorBlock необов'язковий у деяких білдах WPGraphQL Content Blocks.
+    // Не варто примусово додавати можливо відсутній інтерфейс на цьому ранньому етапі.
     $config['interfaces'] = $interfaces;
     update_option( 'rq_diag_strategy_a', 'fired:' . ( isset( $config['name'] ) ? $config['name'] : 'unknown' ), false );
     return $config;
 }, 5 );
 
-// Alternative filter name used by some ACF/WPGraphQL versions
+// Альтернативна назва фільтру, яку використовують деякі версії ACF/WPGraphQL
 add_filter( 'graphql_acf_block_type_config', function ( $config ) {
     if ( ! is_array( $config ) ) {
         return $config;
@@ -182,23 +182,23 @@ add_filter( 'graphql_acf_block_type_config', function ( $config ) {
 }, 5 );
 
 // ═══════════════════════════════════════════════════════════════════════════
-// ── Strategy G: Pre-register Block + EditorBlock interfaces ──────────────────
+// ── Strategy G: Попередня реєстрація інтерфейсів Block + EditorBlock ──────────────
 //
-// Fires at priority 1 — BEFORE WPGraphQL for ACF builds ACF block ObjectTypes at priority 10.
+// Спрацьовує з пріоритетом 1 — ДО того як WPGraphQL for ACF будує ACF block ObjectTypes з пріоритетом 10.
 //
-// Problem: WPGraphQL for ACF v2.6.0 constructs WPObjectType instances eagerly inside
-// TypeRegistry::register_type(). The constructor resolves string interface names via
-// TypeRegistry::get_type(). WPGraphQL Content Blocks registers Block at priority 100+,
-// so at priority 10 (ACF block construction time), get_type('Block') → null → interfaces dropped.
+// Проблема: WPGraphQL for ACF v2.6.0 конструює WPObjectType-екземпляри завчасно всередині
+// TypeRegistry::register_type(). Конструктор розв'язує імена інтерфейсів-рядків через
+// TypeRegistry::get_type(). WPGraphQL Content Blocks реєструє Block з пріоритетом 100+,
+// тому з priority 10 (час конструювання блоків ACF) get_type('Block') → null → інтерфейси губляться.
 //
-// Fix: register Block/EditorBlock ourselves at priority 1. WPGraphQL TypeRegistry ignores
-// duplicate registrations (no-op when name already registered), so Content Blocks' later
-// registration is silently skipped and our stubs remain. When ACF block types are built at
-// priority 10, TypeRegistry::get_type('Block') returns our stub → Block is preserved.
+// Рішення: реєструємо Block/EditorBlock самостійно з priority 1. WPGraphQL TypeRegistry ігнорує
+// повторні реєстрації (no-op якщо назва вже зареєстрована), тому пізніша реєстрація від Content Blocks
+// мовчки пропускається і наші stubs залишаються. Коли типи блоків ACF будуються з priority 10,
+// TypeRegistry::get_type('Block') повертає наш stub → Block збережено.
 //
-// resolveType: WPGraphQL Content Blocks sets __typename on each block array. graphql-php
-// uses __typename directly before calling resolveType, so our resolveType is a fallback only.
-// It also handles blockName → type name conversion for safety.
+// resolveType: WPGraphQL Content Blocks встановлює __typename на кожному блок-масиві. graphql-php
+// використовує __typename напряму перед викликом resolveType, тому наш resolveType є лише запасним.
+// Він також обробляє перетворення blockName → type name для надійності.
 // ─────────────────────────────────────────────────────────────────────────────
 add_action( 'graphql_register_types', function () {
     if ( ! function_exists( 'register_graphql_interface_type' ) ) {
@@ -206,16 +206,16 @@ add_action( 'graphql_register_types', function () {
         return;
     }
 
-    // resolveType: maps block data array → WPGraphQL concrete type object.
+    // resolveType: відображає масив блоку → конкретний тип-об'єкт WPGraphQL.
     $resolve_type = static function ( $block ) {
         try {
             $type_name = null;
             if ( is_array( $block ) ) {
-                // WPGraphQL Content Blocks sets __typename or graphqlTypeName directly.
+                // WPGraphQL Content Blocks встановлює __typename або graphqlTypeName напряму.
                 $type_name = isset( $block['__typename'] )     ? $block['__typename']
                            : ( isset( $block['graphqlTypeName'] ) ? $block['graphqlTypeName'] : null );
 
-                // Fallback: derive from blockName e.g. 'acf/racqueteer-hero' → 'AcfRacqueteerHeroBlock'
+                // Fallback: вивести з blockName, наприклад 'acf/racqueteer-hero' → 'AcfRacqueteerHeroBlock'
                 if ( ! $type_name && ! empty( $block['blockName'] ) ) {
                     $parts = explode( '/', $block['blockName'] );
                     $converted = '';
@@ -245,8 +245,8 @@ add_action( 'graphql_register_types', function () {
         return null;
     };
 
-    // Fields that WPGraphQL Content Blocks declares on the Block interface.
-    // Registering the exact same fields ensures schema compatibility.
+    // Поля, які WPGraphQL Content Blocks оголошує на інтерфейсі Block.
+    // Реєстрація тих самих полів забезпечує сумісність схеми.
     $block_fields = array(
         'id'          => array( 'type' => array( 'non_null' => 'ID' ) ),
         'type'        => array( 'type' => 'String' ),
@@ -260,7 +260,7 @@ add_action( 'graphql_register_types', function () {
 
     try {
         register_graphql_interface_type( 'Block', array(
-            'description' => 'Block interface — pre-registered at priority 1 for ACF timing fix (v17)',
+            'description' => 'Інтерфейс Block — попередньо зареєстровано з priority 1 для ACF timing fix (v17)',
             'fields'      => $block_fields,
             'resolveType' => $resolve_type,
         ) );
@@ -271,7 +271,7 @@ add_action( 'graphql_register_types', function () {
 
     try {
         register_graphql_interface_type( 'EditorBlock', array(
-            'description' => 'EditorBlock interface — pre-registered at priority 1 for ACF timing fix (v17)',
+            'description' => 'Інтерфейс EditorBlock — попередньо зареєстровано з priority 1 для ACF timing fix (v17)',
             'fields'      => $block_fields,
             'resolveType' => $resolve_type,
         ) );
@@ -281,14 +281,14 @@ add_action( 'graphql_register_types', function () {
     }
 
     update_option( 'rq_diag_strategy_g', implode( '|', $g_log ), false );
-}, 1 ); // ← MUST be priority 1, fires before ACF blocks at priority 10
+}, 1 ); // ← ОБОВ'ЯЗКОВО priority 1, спрацьовує до блоків ACF з priority 10
 
-// ── Strategy E: kept as belt-and-suspenders ───────────────────────────────── (originally v16 MAIN FIX)
+// ── Strategy E: збережено як підстраховка ───────────────────────────────── (початково ГОЛОВНИЙ FIX v16)
 //
-// register_graphql_interfaces_to_types() called at graphql_register_types PRIORITY 1.
-// With Strategy G now pre-registering Block at priority 1, this is a secondary safety net.
-// It queues an internal callback at priority 10 that calls register_extra_interface() for each
-// ACF block type name, in case the eager type construction path missed Block for any type.
+// register_graphql_interfaces_to_types() виклик у graphql_register_types ПРІОРИТЕТ 1.
+// Оскільки Strategy G тепер попередньо реєструє Block з priority 1, це вторинна страховка.
+// Ставить у чергу внутрішній callback з priority 10, що викликає register_extra_interface() для кожної
+// назви типу блоку ACF, на випадок якщо eager type construction пропустив Block для будь-якого типу.
 // ═══════════════════════════════════════════════════════════════════════════
 add_action( 'graphql_register_types', function () use ( $rq_acf_block_names ) {
     if ( ! function_exists( 'register_graphql_interfaces_to_types' ) ) {
@@ -301,9 +301,9 @@ add_action( 'graphql_register_types', function () use ( $rq_acf_block_names ) {
     } catch ( \Throwable $e ) {
         update_option( 'rq_diag_strategy_e', 'err:' . $e->getMessage(), false );
     }
-}, 1 ); // ← priority 1 — CRITICAL for v16 fix
+}, 1 ); // ← priority 1 — КРИТИЧНО для fix v16
 
-// ── v17 DIAGNOSTIC: TypeRegistry check at priority 99 ───────────────────────
+// ── v17 DIAGNOSTICS: перевірка TypeRegistry з priority 99 ───────────────────────
 add_action( 'graphql_register_types', function () {
     try {
         $reg = class_exists( '\WPGraphQL' ) ? \WPGraphQL::get_type_registry() : null;
@@ -314,7 +314,7 @@ add_action( 'graphql_register_types', function () {
                 if ( method_exists( $reg, $method ) ) {
                     $t = $reg->{$method}( $name );
                     if ( $t ) { return 'found_via_' . $method . ':' . ( is_array( $t ) ? 'array_config' : get_class( $t ) ); }
-                    // Also lowercase
+        // Також lowercase
                     $t = $reg->{$method}( strtolower( $name ) );
                     if ( $t ) { return 'found_lc_via_' . $method . ':' . ( is_array( $t ) ? 'array_config' : get_class( $t ) ); }
                 }
@@ -332,14 +332,14 @@ add_action( 'graphql_register_types', function () {
              . '|StrategyG=' . get_option( 'rq_diag_strategy_g', 'not_set' );
         update_option( 'rq_diag_ifaces_in_reg', $val, false );
 
-        // Sample registered type names at priority 99 (for diagnosing key naming)
+        // Зразок зареєстрованих назв типів з priority 99 (для діагностики іменування ключів)
         if ( $reg && method_exists( $reg, 'get_type_map' ) ) {
             $map   = $reg->get_type_map();
             $names = array_slice( array_keys( $map ), 0, 40 );
             update_option( 'rq_diag_v16_typemap_p99', implode( '|', $names ), false );
         }
 
-        // Check extra_type_interfaces to confirm Strategy E fired
+        // Перевірка extra_type_interfaces — підтверджує, що Strategy E з priority 1 спрацювала
         $extra_ifaces = 'unknown';
         if ( $reg ) {
             try {
@@ -369,9 +369,9 @@ add_action( 'graphql_register_types', function () {
     }
 }, 99 );
 
-// ── Strategy B: graphql_wp_object_type_config — fires at schema build ──────
-// At this point, ALL graphql_register_types callbacks have completed.
-// Block should now be in TypeRegistry (buildable via get_type).
+// ── Strategy B: graphql_wp_object_type_config — спрацьовує під час побудови схеми ──────
+// На цьому етапі всі callbacks graphql_register_types виконані.
+// Block тепер має бути у TypeRegistry (через get_type).
 add_filter( 'graphql_wp_object_type_config', function ( $config ) {
     if ( ! is_array( $config ) || ! isset( $config['name'] ) ) {
         return $config;
@@ -379,7 +379,7 @@ add_filter( 'graphql_wp_object_type_config', function ( $config ) {
 
     $name = $config['name'];
 
-    // Track all Acf* type names for diagnostics
+    // Відстеження всіх назв типів Acf* для діагностики
     if ( 0 === strncmp( $name, 'Acf', 3 ) ) {
         $seen = get_option( 'rq_diag_type_names', array() );
         if ( ! is_array( $seen ) ) { $seen = array(); }
@@ -387,13 +387,13 @@ add_filter( 'graphql_wp_object_type_config', function ( $config ) {
         update_option( 'rq_diag_type_names', $seen, false );
     }
 
-    // Inject Block interface for AcfRacqueteer*Block types
+    // Ін'єкція інтерфейсу Block для типів AcfRacqueteer*Block
     if ( 0 === strncmp( $name, 'Acf', 3 ) && 'Block' === substr( $name, -5 ) ) {
         $before = isset( $config['interfaces'] ) ? implode( ',', (array) $config['interfaces'] ) : 'NONE';
 
-        try {
-            // At graphql_wp_object_type_config time, try to get the actual type OBJECT
-            // (not just a string) — all graphql_register_types callbacks are done.
+            try {
+                // На момент graphql_wp_object_type_config спробуємо отримати фактичний ОБʼЄКТ типу
+                // (не просто рядок) — всі callbacks graphql_register_types вже виконані.
             $block_type  = null;
             $editor_type = null;
             $reg_info    = 'no_reg';
@@ -422,15 +422,15 @@ add_filter( 'graphql_wp_object_type_config', function ( $config ) {
 
             $interfaces = isset( $config['interfaces'] ) ? (array) $config['interfaces'] : array();
 
-            // Prefer real type objects; fall back to strings
+            // Переважно реальні обʼєкти типів; рядки — запасний варіант
             $required_ifaces = array( 'Block' => $block_type );
-            // Add EditorBlock only when we resolved a real type object.
+            // Додати EditorBlock тільки якщо ми отримали реальний обʼєкт типу.
             if ( $editor_type && ! is_array( $editor_type ) ) {
                 $required_ifaces['EditorBlock'] = $editor_type;
             }
 
             foreach ( $required_ifaces as $iface_name => $iface_obj ) {
-                // Check if already present (by string or object name)
+                // Перевірити, чи вже присутній (як рядок або назва обʼєкта)
                 $already = false;
                 foreach ( $interfaces as $existing ) {
                     if ( is_string( $existing ) && $existing === $iface_name ) { $already = true; break; }
@@ -440,7 +440,7 @@ add_filter( 'graphql_wp_object_type_config', function ( $config ) {
                     }
                 }
                 if ( ! $already ) {
-                    // Use real object if available AND it's a proper type instance, else string
+                    // Використати реальний обʼєкт якщо доступний І є правильним екземпляром типу, інакше рядок
                     $interfaces[] = ( $iface_obj && ! is_array( $iface_obj ) ) ? $iface_obj : $iface_name;
                 }
             }
@@ -464,10 +464,10 @@ add_filter( 'graphql_wp_object_type_config', function ( $config ) {
     return $config;
 }, 999 );
 
-// ── Strategy C: Priority 100 FALLBACK registration ───────────────────────────
-// Fires after WPGraphQL for ACF (~priority 10) — registers any missed block types.
-// Interfaces are intentionally empty here; Strategy E (priority 1) injects them via
-// TypeRegistry::extra_type_interfaces which is applied during type build.
+// ── Strategy C: FALLBACK-реєстрація з пріоритетом 100 ───────────────────────────
+// Спрацьовує після WPGraphQL for ACF (~priority 10) — реєструє пропущені типи блоків.
+// Інтерфейси тут навмисно порожні; Strategy E (priority 1) ін'єктує їх через
+// TypeRegistry::extra_type_interfaces, яке застосовується під час побудови типів.
 add_action( 'graphql_register_types', function () use ( $rq_acf_block_names ) {
     if ( ! function_exists( 'register_graphql_object_type' ) ) {
         return;
@@ -491,7 +491,7 @@ add_action( 'graphql_register_types', function () use ( $rq_acf_block_names ) {
                 $already_registered = true;
             }
         } catch ( \Throwable $e ) {
-            // Proceed with registration attempt
+            // Продовжити спробу реєстрації
         }
 
         if ( $already_registered ) {
@@ -501,8 +501,8 @@ add_action( 'graphql_register_types', function () use ( $rq_acf_block_names ) {
         try {
             register_graphql_object_type( $type_name, array(
                 'description' => 'ACF Gutenberg block: ' . $type_name,
-                // Ensure fallback types satisfy WPGraphQL Content Blocks contract.
-                // Without these interfaces/fields, Page.blocks excludes the block type.
+                // Переконатись, що fallback-типи відповідають контракту WPGraphQL Content Blocks.
+                // Без цих interfaces/fields Page.blocks виключає тип блоку.
                 'interfaces'  => array( 'Block' ),
                 'fields'      => array(
                     'id'       => array(
@@ -552,7 +552,7 @@ add_action( 'graphql_register_types', function () use ( $rq_acf_block_names ) {
 }, 100 );
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Deploy sentinel + enums
+// Sentinel деплою + enum-и
 // ═════════════════════════════════════════════════════════════════════════════
 add_action( 'graphql_register_types', function () {
     if ( ! function_exists( 'register_graphql_enum_type' ) ) {
@@ -560,7 +560,7 @@ add_action( 'graphql_register_types', function () {
     }
     try {
         register_graphql_enum_type( 'LocationStatus', array(
-            'description' => 'Status of a Racqueteer location',
+            'description' => 'Статус локації Racqueteer',
             'values'      => array(
                 'available'   => array( 'value' => 'available' ),
                 'coming_soon' => array( 'value' => 'coming_soon' ),
@@ -569,15 +569,15 @@ add_action( 'graphql_register_types', function () {
     } catch ( \Throwable $e ) {}
     try {
         register_graphql_enum_type( 'RqDeployVersion', array(
-            'description' => 'Deployment version sentinel',
+            'description' => 'Sentinel версії деплою',
             'values'      => array( 'v19' => array( 'value' => 'v19' ) ),
         ) );
     } catch ( \Throwable $e ) {}
 } );
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Flat Rq*Fields types + flat ACF field on each block type
-// Priority 5 — registered before block types are built
+// Плоскі типи Rq*Fields + плоске ACF-поле на кожному типі блоку
+// Priority 5 — реєструється до побудови типів блоків
 // ═════════════════════════════════════════════════════════════════════════════
 add_action( 'graphql_register_types', function () {
     if ( ! function_exists( 'register_graphql_object_type' ) ) {
@@ -614,15 +614,15 @@ add_action( 'graphql_register_types', function () {
         }
         try {
             register_graphql_object_type( $fields_type, array(
-                'description' => 'Flat ACF fields for ' . $fields_type,
+                'description' => 'Плоскі ACF-поля для ' . $fields_type,
                 'fields'      => $gql_fields,
             ) );
         } catch ( \Throwable $e ) {
-            // Ignore duplicate registration
+            // Ігнорувати повторну реєстрацію
         }
     }
 
-    // Register flat ACF field on each block type
+    // Зареєструвати плоске ACF-поле на кожному типі блоку
     $block_field_map = array(
         'AcfRacqueteerHeroBlock'                => array( 'field' => 'racqueteerHero',                'type' => 'RqRacqueteerHeroFields' ),
         'AcfRacqueteerAboutBlock'               => array( 'field' => 'racqueteerAbout',               'type' => 'RqRacqueteerAboutFields' ),
@@ -646,10 +646,10 @@ add_action( 'graphql_register_types', function () {
         'AcfRacqueteerCareerContactBlock'       => array( 'field' => 'racqueteerCareerContact',       'type' => 'RqRacqueteerCareerContactFields' ),
     );
 
-    // Image field key sets — used in the resolve closure below.
-    // single_image: scalar attachment ID → URL string (return_format:'url')
-    // gallery_url:  array of IDs → JSON array of URL strings (return_format:'url')
-    // gallery_arr:  array of IDs → JSON array of {id,url,sourceUrl} objects (return_format:'array')
+    // Набори ключів зображень — використовуються у closure резолвера нижче.
+    // single_image: скалярний attachment ID → рядок URL (return_format:'url')
+    // gallery_url:  масив ID → JSON-масив рядків URL (return_format:'url')
+    // gallery_arr:  масив ID → JSON-масив об'єктів {id,url,sourceUrl} (return_format:'array')
     $rq_single_image_keys  = array( 'left_image', 'right_image', 'bg_image', 'image' );
     $rq_gallery_url_keys   = array( 'images' );
     $rq_gallery_array_keys = array( 'logos' );
@@ -669,7 +669,7 @@ add_action( 'graphql_register_types', function () {
                     foreach ( $raw as $k => $v ) {
                         $k = (string) $k;
                         if ( '' !== $k && '_' === $k[0] ) {
-                            continue; // skip ACF internal meta keys like _left_image
+                            continue; // пропустити внутрішні мета-ключі ACF, наприклад _left_image
                         }
                         // snake_case → camelCase
                         $words = explode( '_', $k );
@@ -678,7 +678,7 @@ add_action( 'graphql_register_types', function () {
                             $camel .= ucfirst( strtolower( $words[ $i ] ) );
                         }
 
-                        // ── Single image: attachment ID → URL string ─────────────────────────
+                        // ── Одиночне зображення: attachment ID → рядок URL ─────────────────────────
                         if ( in_array( $k, $rq_single_image_keys, true ) ) {
                             if ( is_numeric( $v ) && (int) $v > 0 ) {
                                 $url = wp_get_attachment_url( (int) $v );
@@ -689,7 +689,7 @@ add_action( 'graphql_register_types', function () {
                             continue;
                         }
 
-                        // ── Gallery (return_format:'url'): array of IDs → JSON array of URLs ─
+                        // ── Галерея (return_format:'url'): масив ID → JSON-масив URL ─
                         if ( in_array( $k, $rq_gallery_url_keys, true ) && is_array( $v ) ) {
                             $urls = array();
                             foreach ( $v as $id ) {
@@ -697,14 +697,14 @@ add_action( 'graphql_register_types', function () {
                                     $url = wp_get_attachment_url( (int) $id );
                                     if ( $url ) { $urls[] = $url; }
                                 } elseif ( is_string( $id ) && '' !== $id ) {
-                                    $urls[] = $id; // already a URL
+                                    $urls[] = $id; // вже є URL
                                 }
                             }
                             $out[ $camel ] = json_encode( $urls, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
                             continue;
                         }
 
-                        // ── Gallery (return_format:'array'): IDs → JSON array of objects ─────
+                        // ── Галерея (return_format:'array'): ID → JSON-масив об'єктів ─────
                         if ( in_array( $k, $rq_gallery_array_keys, true ) && is_array( $v ) ) {
                             $objects = array();
                             foreach ( $v as $id ) {
@@ -725,26 +725,26 @@ add_action( 'graphql_register_types', function () {
                             continue;
                         }
 
-                        // ── Default: JSON-encode arrays; pass scalars as-is ────────────────
+                        // ── За замовчуванням: JSON-кодувати масиви; scalars передавати як є ────────────
                         $out[ $camel ] = is_array( $v ) ? json_encode( $v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) : $v;
                     }
                     return $out;
                 },
             ) );
         } catch ( \Throwable $e ) {
-            // Field already exists (WPGraphQL for ACF registered it) — ignore
+            // Поле вже існує (зареєстровано WPGraphQL for ACF) — ігнорувати
         }
     }
 
 }, 5 );
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Navbar + Footer options — manual fallback (skipped for WPGraphQL for ACF v4+)
+// Navbar + Footer options — ручний fallback (пропускається для WPGraphQL for ACF v4+)
 //
-// Priority 5 (same as block fields) so we register BEFORE WPGraphQL for ACF
-// (priority 10). If WPGraphQL for ACF tries to re-register acfOptionsNavbar /
-// acfOptionsFooter afterwards it will silently fail — our resolver wins and
-// correctly calls get_field() to resolve logo image attachment IDs to URLs.
+// Priority 5 (те саме що поля блоків), щоб зареєструватись ДО WPGraphQL for ACF
+// (priority 10). Якщо WPGraphQL for ACF спробує повторно зареєструвати acfOptionsNavbar /
+// acfOptionsFooter — мовчки не спрацює. Наш резолвер перемагає та
+// коректно викликає get_field() для конвертації attachment ID зображень лого у URL.
 // ═════════════════════════════════════════════════════════════════════════════
 add_action( 'graphql_register_types', function () {
     if ( ! function_exists( 'register_graphql_field' )
@@ -752,7 +752,7 @@ add_action( 'graphql_register_types', function () {
         return;
     }
 
-    // Skip for WPGraphQL for ACF v4.x — it auto-registers these fields
+    // Пропустити для WPGraphQL for ACF v4.x — він реєструє ці поля автоматично
     if ( defined( 'WPGRAPHQL_FOR_ACF_VERSION' )
         && version_compare( WPGRAPHQL_FOR_ACF_VERSION, '4.0.0', '>=' ) ) {
         return;
@@ -772,7 +772,7 @@ add_action( 'graphql_register_types', function () {
 
     if ( ! $type_exists( 'RqNavLink' ) ) {
         register_graphql_object_type( 'RqNavLink', array(
-            'description' => 'Navigation link item',
+            'description' => 'Елемент навігаційного посилання',
             'fields'      => array(
                 'label' => array( 'type' => 'String' ),
                 'url'   => array( 'type' => 'String' ),
@@ -781,7 +781,7 @@ add_action( 'graphql_register_types', function () {
     }
     if ( ! $type_exists( 'RqImageRef' ) ) {
         register_graphql_object_type( 'RqImageRef', array(
-            'description' => 'Image reference',
+            'description' => 'Посилання на зображення',
             'fields'      => array(
                 'sourceUrl' => array( 'type' => 'String' ),
                 'altText'   => array( 'type' => 'String' ),
@@ -790,7 +790,7 @@ add_action( 'graphql_register_types', function () {
     }
     if ( ! $type_exists( 'RqFooterLocation' ) ) {
         register_graphql_object_type( 'RqFooterLocation', array(
-            'description' => 'Footer location',
+            'description' => 'Локація у футері',
             'fields'      => array(
                 'name'    => array( 'type' => 'String' ),
                 'address' => array( 'type' => 'String' ),
@@ -799,7 +799,7 @@ add_action( 'graphql_register_types', function () {
     }
     if ( ! $type_exists( 'RqNavbarFields' ) ) {
         register_graphql_object_type( 'RqNavbarFields', array(
-            'description' => 'ACF Navbar options fields',
+            'description' => 'Поля ACF Navbar options',
             'fields'      => array(
                 'navLogo'     => array( 'type' => 'RqImageRef' ),
                 'navLogoIcon' => array( 'type' => 'RqImageRef' ),
@@ -811,7 +811,7 @@ add_action( 'graphql_register_types', function () {
     }
     if ( ! $type_exists( 'RqNavbarWrapper' ) ) {
         register_graphql_object_type( 'RqNavbarWrapper', array(
-            'description' => 'Wrapper for acfOptionsNavbar',
+            'description' => 'Обгортка для acfOptionsNavbar',
             'fields'      => array(
                 'navbar' => array(
                     'type'    => 'RqNavbarFields',
@@ -835,7 +835,7 @@ add_action( 'graphql_register_types', function () {
     }
     if ( ! $type_exists( 'RqFooterFields' ) ) {
         register_graphql_object_type( 'RqFooterFields', array(
-            'description' => 'ACF Footer options fields',
+            'description' => 'Поля ACF Footer options',
             'fields'      => array(
                 'footerLogo'       => array( 'type' => 'RqImageRef' ),
                 'footerEmail'      => array( 'type' => 'String' ),
@@ -851,7 +851,7 @@ add_action( 'graphql_register_types', function () {
     }
     if ( ! $type_exists( 'RqFooterWrapper' ) ) {
         register_graphql_object_type( 'RqFooterWrapper', array(
-            'description' => 'Wrapper for acfOptionsFooter',
+            'description' => 'Обгортка для acfOptionsFooter',
             'fields'      => array(
                 'footer' => array(
                     'type'    => 'RqFooterFields',
@@ -901,44 +901,44 @@ add_action( 'graphql_register_types', function () {
 }, 5 );
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Strategy H — Runtime resolver override for Page.blocks (v18)
+// Strategy H — Перевизначення резолвера під час виконання для Page.blocks (v18)
 //
-// Problem: WPGraphQL Content Blocks' Page.blocks resolver only returns blocks
-// that are in its own internal registry (built from WP Block Registry AT THE
-// TIME Content Blocks initialises). When Content Blocks processes the registry,
-// the block type `acf/racqueteer-hero` IS in WP_Block_Type_Registry (registered
-// by acf_register_block_type → register_block_type on acf/init), but Content
-// Blocks may skip it because its own type `AcfRacqueteerHeroBlock` was already
-// registered by WPGraphQL for ACF → duplicate → Content Blocks omits the
-// `acf/racqueteer-hero` → AcfRacqueteerHeroBlock mapping from its lookup table
-// → returning 0 blocks at runtime even though the schema is correct.
+// Проблема: резолвер Page.blocks від WPGraphQL Content Blocks повертає лише блоки,
+// що є у його власному внутрішньому реєстрі (побудованому з WP Block Registry НА МОМЕНТ
+// ініціалізації Content Blocks). Коли Content Blocks обробляє реєстр,
+// тип блоку `acf/racqueteer-hero` ЄА у WP_Block_Type_Registry (зареєстровано через
+// acf_register_block_type → register_block_type в acf/init), але Content Blocks
+// може пропустити його, оскільки його власний тип `AcfRacqueteerHeroBlock` вже
+// зареєстровано WPGraphQL for ACF → дублікат → Content Blocks виключає
+// маппінг `acf/racqueteer-hero` → AcfRacqueteerHeroBlock зі своєї таблиці пошуку
+// → повертає 0 блоків під час виконання, хоча схема коректна.
 //
-// Fix: hook into graphql_resolve_field AFTER the resolver runs. If `blocks`
-// returned an empty array, we replace it with our own parse_blocks() result,
-// mapping each `acf/*` block name to the correct GraphQL type name. The existing
-// flat Rq*Fields resolvers (registered below at priority 5) read from
-// $source['attrs']['data'] — exactly where ACF stores field values inside the
-// Gutenberg block comment — so all ACF field data flows through automatically.
+// Рішення: зачіпатись у graphql_resolve_field ПІСЛЯ виконання резолвера. Якщо `blocks`
+// повернув порожній масив, замінюємо його власним результатом parse_blocks(),
+// відображаючи кожну назву блоку `acf/*` на правильний тип GraphQL. Наявні
+// резолвери flat Rq*Fields (зареєстровані нижче з priority 5) читають з
+// $source['attrs']['data'] — саме там ACF зберігає значення полів всередині
+// коментаря Gutenberg-блоку — тому всі дані ACF-полів проходять автоматично.
 // ═════════════════════════════════════════════════════════════════════════════
 add_filter( 'graphql_resolve_field', function ( $result, $source, $args, $context, $info, $type_name, $field_key, $type, $field ) {
 
-    // Only intercept the `blocks` field (not editorBlocks or other fields)
+    // Перехоплювати лише поле `blocks` (не editorBlocks чи інші поля)
     if ( 'blocks' !== $field_key ) {
         return $result;
     }
 
-    // Only act on Page / Post / similar content types
+    // Діяти лише на типах Page / Post / подібних типах контенту
     $content_types = array( 'Page', 'Post', 'NodeWithContentEditor' );
     if ( ! in_array( $type_name, $content_types, true ) ) {
         return $result;
     }
 
-    // Only replace if result is empty (don't override a working resolver)
+    // Замінювати лише якщо результат порожній (не перевизначати робочий резолвер)
     if ( ! empty( $result ) ) {
         return $result;
     }
 
-    // WP block name → GraphQL type name mapping
+    // Маппінг назви WP-блоку → назви типу GraphQL
     static $block_type_map = null;
     if ( null === $block_type_map ) {
         $block_type_map = array(
@@ -966,7 +966,7 @@ add_filter( 'graphql_resolve_field', function ( $result, $source, $args, $contex
     }
 
     try {
-        // Resolve the raw WP_Post object from the WPGraphQL model
+        // Отримати сирий об'єкт WP_Post з моделі WPGraphQL
         $post_id = null;
         if ( is_object( $source ) ) {
             $post_id = isset( $source->databaseId ) ? (int) $source->databaseId
@@ -993,11 +993,11 @@ add_filter( 'graphql_resolve_field', function ( $result, $source, $args, $contex
         $resolved    = array();
         $type_names  = array();
 
-        foreach ( $raw_blocks as $raw ) {
-            $block_name = isset( $raw['blockName'] ) ? $raw['blockName'] : '';
-            if ( empty( $block_name ) || ! isset( $block_type_map[ $block_name ] ) ) {
-                continue; // skip non-ACF or whitespace blocks
-            }
+            foreach ( $raw_blocks as $raw ) {
+                $block_name = isset( $raw['blockName'] ) ? $raw['blockName'] : '';
+                if ( empty( $block_name ) || ! isset( $block_type_map[ $block_name ] ) ) {
+                    continue; // пропустити не-ACF або пробільні блоки
+                }
 
             $type_name_block = $block_type_map[ $block_name ];
             $attrs           = isset( $raw['attrs'] ) ? $raw['attrs'] : array();
@@ -1012,6 +1012,7 @@ add_filter( 'graphql_resolve_field', function ( $result, $source, $args, $contex
                 'tagName'     => 'div',
                 'innerHtml'   => isset( $raw['innerHTML'] ) ? $raw['innerHTML'] : '',
                 // ACF field resolver reads from attrs.data (set during import)
+                // Резолвер ACF-полів читає з attrs.data (встановлюється під час імпорту)
                 'attrs'       => $attrs,
                 'data'        => isset( $attrs['data'] ) ? $attrs['data'] : array(),
                 'innerBlocks' => isset( $raw['innerBlocks'] ) ? $raw['innerBlocks'] : array(),
@@ -1019,7 +1020,7 @@ add_filter( 'graphql_resolve_field', function ( $result, $source, $args, $contex
             $type_names[] = $type_name_block;
         }
 
-        // Store diagnostic info (consumed by rq_verify_graphql diagnostics)
+        // Зберегти діагностичну інформацію (споживається діагностикою rq_verify_graphql)
         update_option( 'rq_diag_blocks_resolver', array(
             'post_id'     => $post_id,
             'content_len' => strlen( $post->post_content ),
@@ -1037,7 +1038,7 @@ add_filter( 'graphql_resolve_field', function ( $result, $source, $args, $contex
 
 }, 10, 9 );
 
-// ── passthrough no-op (kept for compat) ───────────────────────────────────
+// ── passthrough no-op (збережено для сумісності) ───────────────────────────
 add_filter( 'graphql_connection_query_args', function ( $args ) {
     return $args;
 } );

@@ -1,19 +1,19 @@
 <?php
 /**
- * ACF Blocks Registration
- * Реєстрація всіх Gutenberg блоків через ACF PRO (headless — render_callback повертає порожній рядок).
+ * Реєстрація ACF Blocks
+ * Реєструє всі Gutenberg-блоки через ACF PRO (headless — render_callback повертає порожній рядок на фронтенді).
  */
 if ( ! function_exists( 'acf_register_block_type' ) ) {
     return;
 }
 
 /**
- * Headless render callback — outputs a minimal editor placeholder so ACF
- * can correctly initialise and persist field values. Returns empty string
- * on the front-end (used only as a CMS/API backend).
+ * Headless render callback — виводить мінімальний плейсхолдер в редакторі, щоб ACF
+ * міг коректно ініціалізуватися та зберігати значення полів. На фронтенді
+ * повертає порожній рядок (використовується лише як CMS/API бекенд).
  */
 function racqueteer_block_render_callback( array $block ): void {
-    // На фронтенді (headless) нічого не виводимо.
+    // На фронтенді (headless) — нічого не виводимо.
     if ( ! is_admin() && ! ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
         return;
     }
@@ -48,7 +48,7 @@ function racqueteer_block_render_callback( array $block ): void {
             </table>
         <?php else : ?>
             <p style="margin:0;padding:16px 14px;color:#8c8f94;font-size:12px;text-align:center;">
-                Поля порожні
+                No field data
             </p>
         <?php endif; ?>
 
@@ -58,7 +58,7 @@ function racqueteer_block_render_callback( array $block ): void {
 
 add_action( 'acf/init', function () {
     $blocks = [
-        // Home
+        // Головна
         ['name'=>'racqueteer-hero','title'=>'Hero Section','icon'=>'cover-image','keywords'=>['hero','banner'],'fields'=>[
             ['key'=>'field_hero_title','label'=>'Title','name'=>'title','type'=>'text'],
             ['key'=>'field_hero_description','label'=>'Description','name'=>'description','type'=>'textarea'],
@@ -115,7 +115,7 @@ add_action( 'acf/init', function () {
             ['key'=>'field_events_cta_url','label'=>'CTA URL','name'=>'cta_url','type'=>'text','instructions'=>'e.g. /events'],
             ['key'=>'field_events_image','label'=>'Image','name'=>'image','type'=>'image','return_format'=>'url'],
         ]],
-        // Memberships Page
+        // Сторінка Memberships
         ['name'=>'racqueteer-membership-hero','title'=>'Membership Hero','icon'=>'cover-image','keywords'=>['membership','hero'],'fields'=>[
             ['key'=>'field_mhero_label','label'=>'Label','name'=>'label','type'=>'text'],
             ['key'=>'field_mhero_title','label'=>'Title','name'=>'title','type'=>'text'],
@@ -135,7 +135,7 @@ add_action( 'acf/init', function () {
             ['key'=>'field_pc_title','label'=>'Title','name'=>'title','type'=>'text'],
             ['key'=>'field_pc_description','label'=>'Description','name'=>'description','type'=>'textarea'],
         ]],
-        // Private Events Page
+        // Сторінка Private Events
         ['name'=>'racqueteer-private-events-hero','title'=>'Private Events Hero','icon'=>'cover-image','keywords'=>['private events'],'fields'=>[
             ['key'=>'field_pehero_label','label'=>'Label','name'=>'label','type'=>'text'],
             ['key'=>'field_pehero_title','label'=>'Title','name'=>'title','type'=>'text'],
@@ -155,7 +155,7 @@ add_action( 'acf/init', function () {
             ['key'=>'field_logo_title','label'=>'Title','name'=>'title','type'=>'text'],
             ['key'=>'field_logo_logos','label'=>'Logos','name'=>'logos','type'=>'gallery','return_format'=>'array'],
         ]],
-        // About Page
+        // Сторінка About
         ['name'=>'racqueteer-about-hero','title'=>'About Hero','icon'=>'cover-image','keywords'=>['about','hero'],'fields'=>[
             ['key'=>'field_ahero_label','label'=>'Label','name'=>'label','type'=>'text'],
             ['key'=>'field_ahero_title','label'=>'Title','name'=>'title','type'=>'text'],
@@ -177,7 +177,7 @@ add_action( 'acf/init', function () {
             ['key'=>'field_cont_cta_text','label'=>'CTA Text','name'=>'cta_text','type'=>'text'],
             ['key'=>'field_cont_cta_url','label'=>'CTA URL','name'=>'cta_url','type'=>'text','instructions'=>'e.g. /contact'],
         ]],
-        // Careers Page
+        // Сторінка Careers
         ['name'=>'racqueteer-careers-hero','title'=>'Careers Hero','icon'=>'cover-image','keywords'=>['careers'],'fields'=>[
             ['key'=>'field_chero_label','label'=>'Label','name'=>'label','type'=>'text'],
             ['key'=>'field_chero_title','label'=>'Title','name'=>'title','type'=>'text'],
@@ -201,8 +201,8 @@ add_action( 'acf/init', function () {
     foreach ( $blocks as $block ) {
         $fields = $block['fields'];
         unset( $block['fields'] );
-        // graphql_field_name: camelCase name used by WPGraphQL for ACF to expose block attributes
-        // e.g. 'racqueteer-hero' → 'racqueteerHero' → type AcfRacqueteerHeroBlock
+        // graphql_field_name: camelCase-ім'я, яке WPGraphQL for ACF використовує для атрибутів блоку
+        // наприклад: 'racqueteer-hero' → 'racqueteerHero' → тип AcfRacqueteerHeroBlock
         $graphql_name = lcfirst( str_replace( '-', '', ucwords( $block['name'], '-' ) ) );
         acf_register_block_type( array_merge( $block, [
             'api_version'        => 3,
@@ -210,21 +210,21 @@ add_action( 'acf/init', function () {
             'mode'               => 'edit',
             'render_callback'    => 'racqueteer_block_render_callback',
             'supports'           => [ 'jsx' => false ],
-            'show_in_graphql'    => true, // ← REQUIRED for WPGraphQL Content Blocks
-            'graphql_field_name' => $graphql_name, // WPGraphQL for ACF: block type name
+            'show_in_graphql'    => true, // ← ОБОВ'ЯЗКОВО для WPGraphQL Content Blocks
+            'graphql_field_name' => $graphql_name, // WPGraphQL for ACF: ім'я типу блоку
         ] ) );
         acf_add_local_field_group( [
             'key'                => 'group_' . $block['name'],
             'title'              => $block['title'] . ' Fields',
-            'show_in_graphql'    => true,   // ← REQUIRED for AcfXxxBlock types in schema
-            'graphql_field_name' => $graphql_name, // ← field group data under attributes.{graphql_field_name}
+            'show_in_graphql'    => true,   // ← ОБОВ'ЯЗКОВО для типів AcfXxxBlock у схемі
+            'graphql_field_name' => $graphql_name, // ← дані group під attributes.{graphql_field_name}
             'fields'             => $fields,
             'location'           => [ [ [ 'param' => 'block', 'operator' => '==', 'value' => 'acf/' . $block['name'] ] ] ],
         ] );
     }
 
     // ======================================================
-    // Phase 8 — Navbar Options Fields
+    // Phase 8 — Поля Navbar Options
     // ======================================================
     acf_add_local_field_group( [
         'key'                => 'group_navbar_options',
@@ -278,7 +278,7 @@ add_action( 'acf/init', function () {
     ] );
 
     // ======================================================
-    // Phase 8 — Footer Options Fields
+    // Phase 8 — Поля Footer Options
     // ======================================================
     acf_add_local_field_group( [
         'key'                => 'group_footer_options',
@@ -362,10 +362,10 @@ add_action( 'acf/init', function () {
     ] );
 
     // ======================================================
-    // CPT Field Groups (Jobs, Testimonials, Locations, Programs, Membership Plans)
+    // Групи полів CPT (Вакансії, Відгуки, Локації, Програми, Плани членства)
     // ======================================================
 
-    // Jobs CPT
+    // CPT Вакансії (Jobs)
     acf_add_local_field_group( [
         'key'                => 'group_cpt_job',
         'title'              => 'Job Details',
@@ -378,9 +378,9 @@ add_action( 'acf/init', function () {
         'location' => [ [ [ 'param' => 'post_type', 'operator' => '==', 'value' => 'job' ] ] ],
     ] );
 
-    // Testimonials CPT
-    // Note: field_test_label / field_test_title / field_test_description are taken by the testimonials BLOCK —
-    // CPT-specific keys (category, rating, quote, author_*) do NOT conflict.
+    // CPT Відгуки (Testimonials)
+    // Примітка: field_test_label / field_test_title / field_test_description зайняті блоком testimonials —
+    // CPT-специфічні ключі (category, rating, quote, author_*) НЕ конфліктують.
     acf_add_local_field_group( [
         'key'                => 'group_cpt_testimonial',
         'title'              => 'Testimonial Details',
@@ -397,9 +397,9 @@ add_action( 'acf/init', function () {
         'location' => [ [ [ 'param' => 'post_type', 'operator' => '==', 'value' => 'testimonial' ] ] ],
     ] );
 
-    // Locations CPT
-    // Note: field_loc_description conflicts with the racqueteer-locations BLOCK field —
-    // CPT description uses the unique key field_cpt_loc_description (same ACF name = 'description').
+    // CPT Локації (Locations)
+    // Примітка: field_loc_description конфліктує з полем блоку racqueteer-locations —
+    // CPT description використовує унікальний ключ field_cpt_loc_description (ACF name = 'description').
     acf_add_local_field_group( [
         'key'                => 'group_cpt_location',
         'title'              => 'Location Details',
@@ -429,9 +429,9 @@ add_action( 'acf/init', function () {
         'location' => [ [ [ 'param' => 'post_type', 'operator' => '==', 'value' => 'location' ] ] ],
     ] );
 
-    // Programs CPT
-    // Uses 'programFields' (NOT 'acf') to avoid type conflict with the Membership 'acf' field group.
-    // The shared generic 'Acf' type built by memberships would not include 'title', causing schema errors.
+    // CPT Програми (Programs)
+    // Використовує 'programFields' (НЕ 'acf'), щоб уникнути конфлікту типів з полем 'acf' для Membership.
+    // Загальний тип 'Acf', будований для membershipів, не включав би 'title' → помилки схеми.
     acf_add_local_field_group( [
         'key'                => 'group_cpt_program',
         'title'              => 'Program Details',
@@ -453,12 +453,12 @@ add_action( 'acf/init', function () {
         'location' => [ [ [ 'param' => 'post_type', 'operator' => '==', 'value' => 'program' ] ] ],
     ] );
 
-    // Membership Plans CPT
+    // CPT Плани членства (Membership Plans)
     acf_add_local_field_group( [
         'key'                => 'group_cpt_membership',
         'title'              => 'Membership Plan Details',
         'show_in_graphql'    => true,
-        'graphql_field_name' => 'acf', // ← intentionally 'acf'; confirmed working in schema
+        'graphql_field_name' => 'acf', // ← свідомо 'acf'; підтверджено роботу у схемі
         'fields' => [
             [ 'key' => 'field_mem_description',  'label' => 'Description',  'name' => 'description',   'type' => 'text'      ],
             [ 'key' => 'field_mem_price',         'label' => 'Price',        'name' => 'price',         'type' => 'text'      ],

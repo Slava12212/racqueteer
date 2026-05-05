@@ -1,31 +1,31 @@
 <?php
 /**
- * Theme Setup
- * Базові налаштування WordPress теми.
+ * Налаштування теми
+ * Базова конфігурація WordPress теми.
  */
 
 add_action( 'after_setup_theme', function () {
-    // Підтримка необхідних WordPress фіч
+    // Увімкнути необхідні функції WordPress
     add_theme_support( 'post-thumbnails' );
     add_theme_support( 'title-tag' );
     add_theme_support( 'editor-styles' );
 
-    // Gutenberg block editor
+    // Блоковий редактор Gutenberg
     add_theme_support( 'align-wide' );
     add_theme_support( 'wp-block-styles' );
 
-    // Відключаємо frontend стилі WordPress (headless — не потрібно)
+    // Вимкнути адмін-бар на фронтенді (headless — не потрібно)
     add_filter( 'show_admin_bar', '__return_false' );
 } );
 
-// Відключаємо непотрібні frontend скрипти/стилі для headless
+// Вимкнути невикористовувані скрипти/стилі фронтенду для headless-режиму
 add_action( 'wp_enqueue_scripts', function () {
     wp_dequeue_style( 'wp-block-library' );
     wp_dequeue_style( 'wp-block-library-theme' );
     wp_dequeue_style( 'global-styles' );
 }, 100 );
 
-// Додати категорію блоків "Racqueteer"
+// Зареєструвати категорію блоків "Racqueteer"
 add_filter( 'block_categories_all', function ( $categories ) {
     return array_merge(
         [
@@ -42,15 +42,15 @@ add_filter( 'block_categories_all', function ( $categories ) {
 // ======================================================
 // Phase 8 — ACF Options Pages (Navbar + Footer)
 // ======================================================
-// Must use priority 5 — before ACF registers its own internal hooks at 10
+// Пріоритет 5 — до того як ACF реєструє власні внутрішні хуки at priority 10
 add_action( 'acf/init', function () {
     if ( ! function_exists( 'acf_add_options_page' ) ) {
         return;
     }
 
-    // Головна ACF-сторінка — "Site Settings" у sidebar
-    // IMPORTANT: show_in_graphql must be TRUE on parent so sub-pages are exposed in GraphQL.
-    // WPGraphQL for ACF requires parent page to be in GraphQL for sub-pages to appear.
+    // Батьківська ACF-сторінка — "Site Settings" у бічному меню
+    // ВАЖЛИВО: show_in_graphql ПОВИНЕН бути TRUE на батьківській сторінці, щоб підсторінки були доступні у GraphQL.
+    // WPGraphQL for ACF вимагає, щоб батьківська сторінка була у GraphQL для відображення підсторінок.
     acf_add_options_page( [
         'page_title'         => 'Site Settings',
         'menu_title'         => 'Site Settings',
@@ -59,8 +59,8 @@ add_action( 'acf/init', function () {
         'icon_url'           => 'dashicons-admin-settings',
         'position'           => 2,
         'redirect'           => true,
-        'show_in_graphql'    => true,           // ← MUST be true for sub-pages to appear in GraphQL
-        'graphql_field_name' => 'siteSettings', // → acfOptionsSiteSettings (parent, not queried directly)
+        'show_in_graphql'    => true,           // ← ОБОВ'ЯЗКОВО true, щоб підсторінки з'явились у GraphQL
+        'graphql_field_name' => 'siteSettings', // → acfOptionsSiteSettings (батьківська, не запитується напряму)
     ] );
 
     // Підсторінка Navbar

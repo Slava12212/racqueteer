@@ -1,11 +1,11 @@
 /**
- * WordPress GraphQL API client — нова версія api.ts
+ * WordPress GraphQL API client — primary data layer (replaces lib/api.ts)
  *
- * Використовується для отримання даних з WordPress через WPGraphQL.
- * lib/api.ts залишається як fallback з hardcoded даними.
+ * Fetches all content from WordPress via WPGraphQL.
+ * lib/api.ts remains as the hardcoded fallback when WordPress is unavailable.
  *
- * Підключення: замінити імпорти в page.tsx з "@/lib/api" на "@/lib/wp-api"
- * після того як WordPress буде повністю налаштований.
+ * Integration: imports in page.tsx already point to "@/lib/wp-api".
+ * Switch back to "@/lib/api" only if WordPress is temporarily unreachable.
  */
 
 import {
@@ -68,7 +68,7 @@ async function wpGraphQL<T>(query: string, variables?: Record<string, unknown>):
 }
 
 // ========================================
-// PAGE BLOCKS — для BlockRenderer
+// PAGE BLOCKS — for BlockRenderer
 // ========================================
 
 /**
@@ -129,7 +129,7 @@ function rawBlockToWPBlock(raw: RawBlock): WPBlock {
 }
 
 /**
- * Отримати блоки сторінки за slug (наприклад: '/', '/memberships')
+ * Fetch page blocks by slug (e.g. '/', '/memberships')
  */
 export async function getPageBlocks(slug: string): Promise<WPBlock[]> {
   try {
@@ -156,8 +156,8 @@ export interface WPPageData {
 }
 
 /**
- * Отримати сторінку за slug з її статусом і блоками.
- * Draft або відсутня → повертає null.
+ * Fetch a page by slug with its status and blocks.
+ * Draft or missing → returns null.
  */
 export async function getPageBySlug(slug: string): Promise<WPPageData | null> {
   try {
@@ -185,8 +185,8 @@ export async function getPageBySlug(slug: string): Promise<WPPageData | null> {
 }
 
 /**
- * Отримати всі опубліковані slugs (для generateStaticParams у [slug]/page.tsx).
- * Використовує WP REST API (не GraphQL) — простіше і надійніше.
+ * Fetch all published page slugs (for generateStaticParams in [slug]/page.tsx).
+ * Uses WP REST API (not GraphQL) — simpler and more reliable for slug enumeration.
  */
 export async function getAllPageSlugs(): Promise<string[]> {
   try {
@@ -200,7 +200,7 @@ export async function getAllPageSlugs(): Promise<string[]> {
     if (!res.ok) return [];
 
     const pages: Array<{ slug: string }> = await res.json();
-    // Виключити slugи, які вже мають статичні маршрути в Next.js
+    // Exclude slugs that already have static routes in Next.js
     const staticSlugs = new Set(['', 'memberships', 'private-events', 'about', 'careers', 'home', 'sample-page']);
     return pages
       .map((p) => p.slug)
@@ -354,7 +354,7 @@ export async function getLocations(): Promise<Location[]> {
       status:      node.locationFields?.status      ?? 'available',
       address:     (node.locationFields?.address ?? '').split('\n').filter(Boolean),
       description: node.locationFields?.description ?? '',
-      amenities:   [], // іконки додаються в компоненті
+      amenities:   [], // icons are added in the component
       image:       node.locationFields?.image?.node?.sourceUrl ?? '',
     }));
   } catch (err) {
