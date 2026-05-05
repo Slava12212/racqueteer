@@ -239,7 +239,7 @@ Revalidate Secret:  Racqueteer_ISR_2026_ChangeMe!
 
 ---
 
-## ФАЗА 7 — Динамічні сторінки: Draft = 404, нові = auto-live ⏳
+## ФАЗА 7 — Динамічні сторінки: Draft = 404, нові = auto-live ✅
 
 > **Мета:** будь-яка нова сторінка у WP автоматично з'являється на racqueteer.com, переведення у Draft = сторінка повертає 404.
 
@@ -363,17 +363,17 @@ add_action('transition_post_status', function($new_status, $old_status, $post) {
       → racqueteer.com/memberships → сторінка знову live ✅
 ```
 
-### 7.5 Файли для створення/оновлення
+### 7.5 Статус (виконано)
 
 ```
-[ ] app/[slug]/page.tsx                  ← СТВОРИТИ
-[ ] lib/wp-api.ts                        ← ДОДАТИ getAllPageSlugs(), getPageBySlug()
-[ ] wp/inc/revalidate-webhook.php        ← ДОДАТИ transition_post_status hook
+[x] app/[slug]/page.tsx                  ← СТВОРЕНО
+[x] lib/wp-api.ts                        ← getAllPageSlugs(), getPageBySlug() додано
+[x] wp/inc/revalidate-webhook.php        ← transition_post_status hook додано
 ```
 
 ---
 
-## ФАЗА 8 — ACF Options Page: редагування Navbar та Footer ⏳
+## ФАЗА 8 — ACF Options Page: редагування Navbar та Footer ✅
 
 > **Мета:** редактор може змінювати посилання, текст і дані у хедері та футері прямо з WP Admin без участі розробника.
 
@@ -561,17 +561,17 @@ WP Admin (sidebar)
        └─ Footer                ← редагувати логотип, колонки, соцмережі, copyright
 ```
 
-### 8.9 Файли для створення/оновлення
+### 8.9 Статус (виконано)
 
 ```
-[ ] wp/inc/theme-setup.php               ← ДОДАТИ acf_add_options_page()
-[ ] wp/inc/acf-blocks.php                ← ДОДАТИ поля Navbar + Footer
-[ ] wp/inc/revalidate-webhook.php        ← ДОДАТИ acf/save_post hook
-[ ] lib/graphql/queries.ts               ← ДОДАТИ GET_SITE_OPTIONS
-[ ] lib/wp-api.ts                        ← ДОДАТИ getSiteOptions()
-[ ] app/layout.tsx                       ← ОНОВИТИ передати data в Navbar/Footer
-[ ] components/Navbar.tsx                ← ОНОВИТИ прийняти data prop з fallback
-[ ] components/Footer.tsx                ← ОНОВИТИ прийняти data prop з fallback
+[x] wp/inc/theme-setup.php               ← acf_add_options_page() додано
+[x] wp/inc/acf-blocks.php                ← поля Navbar + Footer додано
+[x] wp/inc/revalidate-webhook.php        ← acf/save_post hook додано
+[x] lib/graphql/queries.ts               ← GET_SITE_OPTIONS додано
+[x] lib/wp-api.ts                        ← getSiteOptions() додано
+[x] app/layout.tsx                       ← передає data в Navbar/Footer
+[x] components/Navbar.tsx                ← приймає content prop з fallback
+[x] components/Footer.tsx                ← приймає content prop з fallback
 ```
 
 ---

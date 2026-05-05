@@ -1,215 +1,167 @@
-# ACF Pro Prep Refactor - Status Report
+# ACF Pro Prep Refactor + WordPress Integration — Status Report
 
-## ✅ Completed
-
-### 1. TypeScript Interfaces (`types/index.ts`)
-- ✅ All content interfaces defined for all 5 pages
-- ✅ Shared component interfaces (Navbar, Footer)
-- ✅ Nested interfaces for section-level content
-- ✅ ~20 new interfaces added
-
-### 2. API Functions (`lib/api.ts`)
-- ✅ `getHomepageContent()` - Complete with all sections
-- ✅ `getMembershipsPageContent()` - Complete
-- ✅ `getPrivateEventsPageContent()` - Complete
-- ✅ `getAboutPageContent()` - Complete
-- ✅ `getCareersPageContent()` - Complete
-- ✅ `getNavbarContent()` - Complete
-- ✅ `getFooterContent()` - Complete
-- ✅ All functions have TODO comments with WP REST API endpoints
-
-### 3. Components Refactored
-- ✅ **HeroSection** - Accepts `HeroContent` props
-- ✅ **AboutSection** - Accepts `AboutContent` props
-- ✅ **Navbar** - Accepts `NavbarContent` props (fully refactored, dynamic menu links)
-- ✅ **Footer** - Accepts `FooterContent` props (fully refactored, dynamic links & locations)
-
-### 4. Page Files Updated
-- ✅ **app/page.tsx** - Fetches homepage, navbar, footer content; passes props to Hero & About sections
-- ⚠️ Remaining homepage sections (Locations, Programs, Membership, Subscriptions, Testimonials, Events) not yet connected
-
-### 5. Documentation
-- ✅ **docs/ACF-FIELD-MAP.md** - Complete field mapping for all pages and CPTs
-  - All 5 page content field groups documented
-  - Site Settings (global) field group documented
-  - All 5 custom post types documented
-  - ~100+ fields mapped with types and component prop names
-
-### 6. Testing
-- ✅ Dev server running on port 3042
-- ✅ Homepage returns 200 status
-- ✅ No TypeScript errors in refactored components
-- ✅ Visual appearance unchanged (Hero & About sections)
+> **Актуалізовано: 05.05.2026**
+> Попередній звіт (13.04.2026) суттєво застарів — нижче фактичний стан проекту.
 
 ---
 
-## ⚠️ Remaining Work
+## ✅ ПОВНІСТЮ ГОТОВО (Next.js side)
 
-### Components to Refactor
+### 1. TypeScript Interfaces (`types/index.ts`) ✅
+- Всі content interfaces для 5 сторінок
+- Shared interfaces: Navbar, Footer
+- WP Options interfaces: WPNavbarOptions, WPFooterOptions, WPSiteOptions
+- Block attributes interfaces (`types/wp-blocks.ts`)
 
-#### Homepage Components
-- ⏳ **LocationsSection** - Needs content props for header (label, title, description)
-  - Hardcoded amenities data needs to stay (icons are React components)
-  - Uses `getLocations()` API function (already abstracted)
-  
-- ⏳ **ProgramsSection** - Needs content props for header (label, title, description, tabs)
-  - Uses `getPrograms()` and `getProgramTabs()` API functions (already abstracted)
-  
-- ⏳ **MembershipSection** - Needs content props (label, title, description, CTA, background image)
-  
-- ⏳ **HomeSubscriptionsSection** - Needs content props for header (label, title, description)
-  - Uses `getMembershipPlans()` API function (already abstracted)
-  
-- ⏳ **TestimonialsSection** - Needs content props for header (label, title, description)
-  - Uses `getTestimonials()` API function (already abstracted)
-  
-- ⏳ **EventsSection** - Needs content props (title, description, CTA, image)
+### 2. API Functions (`lib/api.ts`) ✅ (hardcoded fallback)
+- `getHomepageContent()`, `getMembershipsPageContent()`, `getPrivateEventsPageContent()`
+- `getAboutPageContent()`, `getCareersPageContent()`, `getNavbarContent()`, `getFooterContent()`
 
-#### Memberships Page Components
-- ⏳ **HeroMembership** - Needs content props (label, title, description, price, CTA, video)
-- ⏳ **SubscriptionsSection** - Needs header content props
-- ⏳ **PriceCompareSection** - Needs header content props
+### 3. WordPress GraphQL API (`lib/wp-api.ts`) ✅
+- `getPageBlocks(slug)` — блоки сторінки через WPGraphQL
+- `getPageBySlug(slug)` — для динамічного `[slug]` роуту
+- `getAllPageSlugs()` — для `generateStaticParams`
+- `getJobs()`, `getMembershipPlans()`, `getTestimonials()`, `getLocations()`, `getPrograms()`
+- `getPriceCompareData()`, `getSiteOptions()` — navbar + footer з ACF Options
 
-#### Private Events Page Components
-- ⏳ **HeroPrivateEvents** - Needs content props
-- ⏳ **GallerySection** - Needs content props
-- ⏳ **LogoSection** - Needs content props
+### 4. GraphQL Queries (`lib/graphql/queries.ts`) ✅
+- `GET_PAGE_BY_SLUG` — всі 20 блоків із inline fragments
+- `GET_JOBS`, `GET_MEMBERSHIP_PLANS`, `GET_TESTIMONIALS`, `GET_LOCATIONS`, `GET_PROGRAMS`
+- `GET_PRICE_COMPARE`, `GET_SITE_OPTIONS` (Navbar + Footer)
 
-#### About Page Components
-- ⏳ **HeroAbout** - Needs content props
-- ⏳ **MissionSection** - Needs content props
-- ⏳ **ContactSection** - Needs content props
+### 5. BlockRenderer + 20 Block-компонентів ✅
+- `components/blocks/BlockRenderer.tsx` — маппінг `__typename` → компонент
+- 20 × `components/blocks/*Block.tsx` — кожна секція site
 
-#### Careers Page Components
-- ⏳ **HeroCareers** - Needs content props
-- ⏳ **JobListingsSection** - Needs header content props
-- ⏳ **CareerContactSection** - Needs content props
+### 6. Оновлення page.tsx (5 файлів) ✅
+- `app/page.tsx` — BlockRenderer + hardcoded fallback (всі секції підключені)
+- `app/memberships/page.tsx` — BlockRenderer + fallback
+- `app/private-events/page.tsx` — BlockRenderer + fallback
+- `app/about/page.tsx` — BlockRenderer + fallback
+- `app/careers/page.tsx` — BlockRenderer + fallback (з pre-fetch jobs)
+- `app/layout.tsx` — async, getSiteOptions + fallback для Navbar/Footer
+- `app/[slug]/page.tsx` — динамічні WP сторінки (Draft = 404)
 
-### Page Files to Update
-- ⏳ **app/memberships/page.tsx** - Fetch & pass content
-- ⏳ **app/private-events/page.tsx** - Fetch & pass content
-- ⏳ **app/about/page.tsx** - Fetch & pass content
-- ⏳ **app/careers/page.tsx** - Fetch & pass content
-- ⏳ **app/page.tsx** - Connect remaining homepage sections (Locations through Events)
+### 7. Компоненти (всі секції підключені) ✅
+**Homepage:**
+- ✅ HeroSection, AboutSection, LocationsSection, ProgramsSection
+- ✅ HomeSubscriptionsSection, TestimonialsSection, EventsSection
+- (MembershipSection схована за запитом Алекса — код збережено)
+
+**Memberships:**
+- ✅ HeroMembership, SubscriptionsSection
+- (PriceCompareSection схована за запитом Алекса)
+
+**Private Events:** ✅ HeroPrivateEvents, GallerySection, LogoSection
+
+**About:** ✅ HeroAbout, MissionSection, LocationsSection (shared), ContactSection
+
+**Careers:** ✅ HeroCareers, JobListingsSection, CareerContactSection
+
+**Shared:** ✅ Navbar, Footer
+
+### 8. ISR Webhook (Phase 6) ✅
+- `app/api/revalidate/route.ts` — Next.js endpoint
+- `wp/inc/revalidate-webhook.php` — WordPress side (все CPT + status transitions + ACF options)
+
+### 9. Динамічні сторінки (Phase 7) ✅
+- `app/[slug]/page.tsx` — Draft=404, нові WP сторінки → auto-live
+- `lib/wp-api.ts` — `getAllPageSlugs()`, `getPageBySlug()`
+
+### 10. ACF Options (Phase 8) ✅
+- `wp/inc/theme-setup.php` — ACF Options Pages (Navbar + Footer sub-pages)
+- `wp/inc/acf-blocks.php` — ACF field groups для Navbar + Footer options
+- `lib/graphql/queries.ts` — GET_SITE_OPTIONS
+- `lib/wp-api.ts` — getSiteOptions() з unstable_cache (1 год)
+- `app/layout.tsx` — передає WP data в Navbar/Footer з hardcoded fallback
+
+### 11. WordPress PHP theme files ✅
+- `wp/inc/acf-blocks.php` — 20 ACF блоків + CPT field groups + Options fields
+- `wp/inc/cpt-registration.php` — 6 CPT (job, testimonial, membership, amenity, location, program)
+- `wp/inc/theme-setup.php` — block category + ACF options pages
+- `wp/inc/graphql-extensions.php` — **v19**: Block/EditorBlock interfaces, flat Rq*Fields, Strategy H runtime resolver
+- `wp/inc/revalidate-webhook.php` — ISR webhook + settings page
+- `wp/inc/demo-content.php` — Demo Content Importer (Tools → 🎾 Racqueteer Import)
+- `wp/functions.php`, `wp/style.css`, `wp/index.php` ✅
+- `wp/plugins/racqueteer-demo-content/` — stub plugin (перенаправляє на theme-based importer)
+
+### 12. TypeScript ✅
+- `npx tsc --noEmit` → 0 помилок
 
 ---
 
-## 📝 Refactoring Pattern (for remaining components)
+## ⏳ ЗАЛИШИЛОСЬ — ТІЛЬКИ WP ДЕПЛОЙ + ТЕСТУВАННЯ
 
-Each component refactor follows this pattern:
+### Phase 2: Наповнення WordPress (⏳ потрібна дія)
 
-### 1. Update Component Signature
-```tsx
-import type { SectionContent } from "@/types";
+| Крок | Що |
+|------|----|
+| 1 | Залити `wp/` → `wp-content/themes/racqueteer/` на `racqueteer.websplash.pro` |
+| 2 | WP Admin → Appearance → Themes → Activate **Racqueteer** |
+| 3 | Встановити плагіни: **ACF PRO**, **WPGraphQL**, **WPGraphQL for ACF**, **WPGraphQL Content Blocks** |
+| 4 | WP Admin → Settings → Racqueteer: Next.js URL + Revalidate Secret |
+| 5 | WP Admin → Tools → 🎾 Racqueteer Import → **Import Demo Content** |
+| 6 | WP Admin → Tools → 🎾 Racqueteer Import → **Verify GraphQL** |
 
-interface SectionProps {
-  content: SectionContent;
-}
+### Phase 9: Тестування (⏳ після деплою)
 
-export default function Section({ content }: SectionProps) {
-  // ...
-}
 ```
-
-### 2. Replace Hardcoded Strings with Props
-```tsx
-// Before:
-<h2>Hardcoded Title</h2>
-
-// After:
-<h2>{content.title}</h2>
-```
-
-### 3. Update Page File
-```tsx
-import { getSectionContent } from "@/lib/api";
-
-export default async function Page() {
-  const content = await getSectionContent();
-  
-  return <Section content={content.section} />;
-}
+[ ] graphql-extensions.php v19 задеплоєно
+[ ] Verify GraphQL → ✅ 20 blocks, ✅ AcfRacqueteerHeroBlock implements Block
+[ ] https://racqueteer.websplash.pro/graphql → тест pageBy queries
+[ ] git push → Vercel auto-deploy
+[ ] Перевірити сторінки рендеряться через блоки (не fallback)
+[ ] Змінити текст WP → зберегти → ISR оновлення на фронті (~60с)
+[ ] Перевести сторінку в Draft → 404 ✅
+[ ] Нова WP сторінка → auto-live ✅
+[ ] Змінити Navbar CTA в Site Settings → оновлення ✅
+[ ] Lighthouse: Performance ≥ 95, SEO 100
+[ ] pnpm build → 0 помилок
 ```
 
 ---
 
-## 🎯 Next Steps
+## 📊 Підсумок
 
-### Priority 1: Complete Homepage
-1. Refactor LocationsSection, ProgramsSection, MembershipSection
-2. Refactor HomeSubscriptionsSection, TestimonialsSection, EventsSection
-3. Update app/page.tsx to pass all content props
-4. Test homepage end-to-end
-
-### Priority 2: Complete Other Pages
-1. Refactor Memberships page components + update page file
-2. Refactor Private Events page components + update page file
-3. Refactor About page components + update page file
-4. Refactor Careers page components + update page file
-
-### Priority 3: Testing
-1. Verify all 5 pages return 200 on port 3042
-2. Visual regression test (site should look identical)
-3. Check for TypeScript errors
-4. Verify no broken links or missing props
+| Категорія | Статус |
+|-----------|--------|
+| Next.js код (всі фази 3–8) | ✅ **100% готово** |
+| WordPress PHP theme files | ✅ **100% готово** (в `wp/`) |
+| WordPress deployment | ⏳ Потрібно залити на сервер |
+| Demo content import | ⏳ Після деплою |
+| End-to-end testing | ⏳ Після деплою |
+| **Загальна готовність** | **~95%** |
 
 ---
 
-## 📦 Deliverables Status
+## 🔧 Корисні URL
 
-| Deliverable | Status | Notes |
-|-------------|--------|-------|
-| All components refactored | 🟡 In Progress | 4/18 components done |
-| Updated `types/index.ts` | ✅ Complete | All interfaces defined |
-| Updated `lib/api.ts` | ✅ Complete | All page functions added |
-| Updated page files | 🟡 In Progress | 1/5 pages updated |
-| `docs/ACF-FIELD-MAP.md` | ✅ Complete | Comprehensive mapping |
-| All 5 pages return 200 | 🟡 Partial | Homepage tested, others pending |
-
----
-
-## 🔧 Technical Notes
-
-### Data Already Abstracted
-These API functions are already in use and don't need changes:
-- `getJobs()` - Jobs listings
-- `getMembershipPlans()` - Membership plan cards
-- `getTestimonials()` - Testimonial cards
-- `getLocations()` - Location cards (with amenities)
-- `getPrograms()` - Program cards
-
-### Components That Mix Data Sources
-Some components use BOTH page-level content (for headers) AND structured data (for cards):
-- LocationsSection: header from `HomepageContent.locations`, cards from `getLocations()`
-- ProgramsSection: header from `HomepageContent.programs`, cards from `getPrograms()`
-- HomeSubscriptionsSection: header from `HomepageContent.subscriptions`, cards from `getMembershipPlans()`
-- TestimonialsSection: header from `HomepageContent.testimonials`, cards from `getTestimonials()`
-
-### Visual Safety
-- All refactored components maintain exact same HTML/CSS structure
-- No animation/styling changes
-- No layout changes
-- Client/server component boundaries unchanged
+| Сервіс | URL |
+|--------|-----|
+| GitHub | https://github.com/Slava12212/racqueteer |
+| Vercel (Next.js) | https://racqueteer.vercel.app |
+| WordPress | https://racqueteer.websplash.pro |
+| WP Admin | https://racqueteer.websplash.pro/wp-admin/ |
+| WP GraphQL | https://racqueteer.websplash.pro/graphql |
+| WP Settings | https://racqueteer.websplash.pro/wp-admin/options-general.php?page=racqueteer-settings |
 
 ---
 
-## 🚀 Estimated Remaining Work
+## 📦 Deliverables — Фінальний стан
 
-- **Component refactoring**: ~3-4 hours (14 components × 15-20 min each)
-- **Page file updates**: ~30 minutes (4 pages)
-- **Testing**: ~1 hour (all pages, visual regression, TypeScript)
-- **Total**: ~5 hours
-
----
-
-## ✨ Quality Checklist
-
-Before marking complete:
-- [ ] All components accept content props (no hardcoded text)
-- [ ] All page files fetch & pass content
-- [ ] TypeScript compiles with no errors
-- [ ] All 5 pages return 200 status
-- [ ] Visual appearance identical to original
-- [ ] ACF-FIELD-MAP.md is complete and accurate
-- [ ] All TODO comments in api.ts show WP REST endpoints
-- [ ] No broken references to removed hardcoded data
+| Deliverable | Статус |
+|-------------|--------|
+| TypeScript interfaces | ✅ Complete |
+| lib/api.ts (hardcoded fallback) | ✅ Complete |
+| lib/wp-api.ts (WP GraphQL client) | ✅ Complete |
+| lib/graphql/queries.ts | ✅ Complete |
+| 20 Block components | ✅ Complete |
+| BlockRenderer | ✅ Complete |
+| All 5 page.tsx + layout.tsx | ✅ Complete |
+| [slug]/page.tsx (dynamic pages) | ✅ Complete |
+| API revalidate route | ✅ Complete |
+| wp/ PHP files (all 6) | ✅ Complete |
+| Demo content importer | ✅ Complete |
+| TypeScript compilation | ✅ 0 errors |
+| WP deployment | ⏳ Manual action needed |
+| End-to-end test | ⏳ After WP deployment |
