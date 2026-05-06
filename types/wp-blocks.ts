@@ -79,8 +79,8 @@ export interface WPMembershipHeroAttributes {
   description: string;
   priceStarting: string;
   priceUnit: string;
-  ctaText: string;
-  ctaUrl: string;
+  ctaText?: string;
+  ctaUrl?: string;
   videoUrl: string;
 }
 
@@ -94,8 +94,8 @@ export interface WPPriceCompareAttributes {
   label: string;
   title: string;
   description: string;
-  ctaText: string;
-  ctaUrl: string;
+  ctaText?: string;
+  ctaUrl?: string;
 }
 
 export interface WPPrivateEventsHeroAttributes {

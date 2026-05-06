@@ -10,8 +10,8 @@ export default function MembershipHeroBlock(attrs: WPMembershipHeroAttributes) {
         description: attrs.description,
         priceStarting: attrs.priceStarting,
         priceUnit: attrs.priceUnit,
-        ctaText: attrs.ctaText,
-        ctaUrl: attrs.ctaUrl,
+        ctaText: attrs.ctaText ?? 'View plans',
+        ctaUrl: attrs.ctaUrl ?? '#memberships-plans',
         videoUrl: attrs.videoUrl,
       }}
     />
