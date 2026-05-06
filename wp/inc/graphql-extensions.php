@@ -1,6 +1,6 @@
 <?php
 /**
- * GraphQL Extensions — v22
+ * GraphQL Extensions — v23
  * Racqueteer headless тема — кастомізації схеми WPGraphQL.
  *
  * Changelog v18:
@@ -570,25 +570,54 @@ add_action( 'graphql_register_types', function () {
     try {
         register_graphql_enum_type( 'RqDeployVersion', array(
             'description' => 'Sentinel версії деплою',
-            'values'      => array( 'v22' => array( 'value' => 'v22' ) ),
+            'values'      => array( 'v23' => array( 'value' => 'v23' ) ),
         ) );
     } catch ( \Throwable $e ) {}
 } );
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Location Status — прямий резолвер (v20)
+// Location Status — нормалізація (v23)
 //
-// WPGraphQL for ACF v2.6.0 може повертати select-поле як PHP array ([0] => 'available')
-// або рядок. Коли GraphQL серіалізує масив як String, PHP видає "Array".
+// Проблема: WPGraphQL for ACF v2.6.0 зчитує ACF select через get_post_meta()
+// напряму. WordPress повертає PHP-масив ['available'] для серіалізованого мета.
+// У PHP 8.x оператор (string)['available'] кидає TypeError → Internal server error
+// до того, як наш graphql_resolve_field фільтр взагалі запускається.
 //
-// Рівень 1 (ACF): acf/format_value нормалізує значення до рядка ще до WPGraphQL.
-// Рівень 2 (GraphQL): graphql_resolve_field перехоплює вже нормалізоване або
-//   масивне $result і приводить його до lowercase рядка.
+// Рівень 0 (найнижчий): get_post_metadata перехоплює читання мета ще до ACF/WPGraphQL.
+//   Прямий $wpdb-запит уникає рекурсії. Нормалізує масив → рядок.
+//
+// Рівень 1 (ACF): acf/format_value — підстраховка для ACF-розбору.
+// Рівень 2 (GraphQL): graphql_resolve_field — підстраховка для GraphQL-резолвера.
 // ═════════════════════════════════════════════════════════════════════════════
 
+// ── Рівень 0: get_post_metadata (пріоритет 0) ────────────────────────────────
+// Найраніше перехоплення. Нормалізує значення ключа 'status'
+// для location-постів до того, як будь-який код його прочитає.
+// Уникає рекурсії через прямий SQL-запит замість get_post_meta().
+add_filter( 'get_post_metadata', function ( $null, $object_id, $meta_key, $single ) {
+    if ( 'status' !== $meta_key ) {
+        return $null;
+    }
+    // get_post_type() читає з wp_posts (не з postmeta) → немає рекурсії
+    if ( get_post_type( (int) $object_id ) !== 'location' ) {
+        return $null;
+    }
+    // Пряма SQL-вибірка уникає будь-яких WP-хуків → немає рекурсії
+    global $wpdb;
+    $raw = $wpdb->get_var( $wpdb->prepare(
+        "SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = 'status' LIMIT 1",
+        (int) $object_id
+    ) );
+    if ( null === $raw ) {
+        return $null; // мета ще не збережена → WordPress продовжує стандартну обробку
+    }
+    $val = maybe_unserialize( $raw );          // рядок або масив ['available']
+    if ( is_array( $val ) ) { $val = $val[0] ?? ''; }
+    $normalized = strtolower( trim( (string) $val ) );
+    return $single ? $normalized : array( $normalized );
+}, 0, 4 );
+
 // ── Рівень 1: ACF format_value hook ─────────────────────────────────────────
-// Нормалізує значення поля 'status' локації ДО того як WPGraphQL for ACF його зчитає.
-// Виконується кожного разу, коли ACF форматує це поле для виводу.
 add_filter( 'acf/format_value/key=field_loc_status', function ( $value, $post_id, $field ) {
     if ( is_array( $value ) ) {
         $value = $value[0] ?? '';
@@ -597,7 +626,7 @@ add_filter( 'acf/format_value/key=field_loc_status', function ( $value, $post_id
         $value = (string) $value;
     }
     return strtolower( trim( $value ) );
-}, 20, 3 );
+}, 1, 3 );
 
 // ── Рівень 2: graphql_resolve_field hook ─────────────────────────────────────
 // Підстраховка: якщо $result все ще є масивом (наприклад, WPGraphQL for ACF обійшов

@@ -465,10 +465,12 @@ function rq_verify_graphql(): array {
     if ( $ok_v && ! empty( $data_v['__type'] ) ) {
         $enum_vals = array_column( $data_v['__type']['enumValues'] ?? [], 'name' );
         $ver = implode( ', ', $enum_vals );
-        if ( in_array( 'v22', $enum_vals ) ) {
-            $log[] = '  ✅ RqDeployVersion ' . $ver . ' — graphql-extensions.php v22 (locationAmenities manual resolver: АКТИВНИЙ)';
+        if ( in_array( 'v23', $enum_vals ) ) {
+            $log[] = '  ✅ RqDeployVersion ' . $ver . ' — graphql-extensions.php v23 (get_post_metadata status fix: АКТИВНИЙ)';
+        } elseif ( in_array( 'v22', $enum_vals ) ) {
+            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v22 (status Internal Server Error). Задеплой v23.';
         } elseif ( in_array( 'v21', $enum_vals ) ) {
-            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v21 (locations Internal Server Error). Задеплой v22.';
+            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v21 (status Internal Server Error). Задеплой v23.';
         } elseif ( in_array( 'v20', $enum_vals ) ) {
             $log[] = '  ✅ RqDeployVersion ' . $ver . ' — graphql-extensions.php v20 (location status direct resolver: АКТИВНИЙ)';
         } elseif ( in_array( 'v19', $enum_vals ) ) {
