@@ -5,7 +5,7 @@ import LocationsSection from "@/components/LocationsSection";
 import ContactSection from "@/components/about/ContactSection";
 import BlockRenderer from "@/components/blocks/BlockRenderer";
 import { getPageBlocks } from "@/lib/wp-api";
-import { getAboutPageContent, getHomepageContent } from "@/lib/api";
+import { getAboutPageContent, getHomepageContent, getLocations } from "@/lib/api";
 
 export const revalidate = 3600;
 
@@ -26,13 +26,16 @@ export default async function AboutPage() {
   }
 
   // Fallback — hardcoded content
-  const pageContent = await getAboutPageContent();
-  const homepageContent = await getHomepageContent();
+  const [pageContent, homepageContent, locations] = await Promise.all([
+    getAboutPageContent(),
+    getHomepageContent(),
+    getLocations(),
+  ]);
   return (
     <div className="overflow-x-hidden">
       <HeroAbout content={pageContent.hero} />
       <MissionSection content={pageContent.mission} />
-      <LocationsSection content={homepageContent.locations} />
+      <LocationsSection content={homepageContent.locations} locations={locations} />
       <ContactSection content={pageContent.contact} />
     </div>
   );

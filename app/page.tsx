@@ -8,7 +8,7 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import EventsSection from "@/components/EventsSection";
 import BlockRenderer from "@/components/blocks/BlockRenderer";
 import { getPageBlocks } from "@/lib/wp-api";
-import { getHomepageContent } from "@/lib/api";
+import { getHomepageContent, getLocations } from "@/lib/api";
 
 export const revalidate = 3600;
 
@@ -30,12 +30,15 @@ export default async function HomePage() {
   }
 
   // Fallback — hardcoded content while WP isn't configured yet
-  const content = await getHomepageContent();
+  const [content, locations] = await Promise.all([
+    getHomepageContent(),
+    getLocations(),
+  ]);
   return (
     <div className="overflow-x-hidden">
       <HeroSection content={content.hero} />
       <AboutSection content={content.about} />
-      <LocationsSection content={content.locations} />
+      <LocationsSection content={content.locations} locations={locations} />
       <ProgramsSection content={content.programs} />
       {/* Hidden per Alex's request */}
       {/* <MembershipSection content={content.membership} /> */}
