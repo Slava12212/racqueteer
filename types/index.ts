@@ -57,7 +57,9 @@ export interface Testimonial {
 // Locations
 export interface LocationAmenity {
   label: string;
-  icon: ReactNode;
+  icon?: ReactNode;
+  /** Icon name from WordPress (maps to SVG in the component) */
+  iconName?: string;
 }
 
 export interface Location {
