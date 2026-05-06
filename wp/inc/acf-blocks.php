@@ -409,15 +409,20 @@ add_action( 'acf/init', function () {
             [ 'key' => 'field_loc_location_id',     'label' => 'Location ID',  'name' => 'location_id',  'type' => 'text' ],
             [ 'key' => 'field_loc_name',            'label' => 'Name',         'name' => 'name',         'type' => 'text' ],
             [
-                'key'           => 'field_loc_status',
-                'label'         => 'Status',
-                'name'          => 'status',
-                'type'          => 'select',
-                'choices'       => [ 'available' => 'Available', 'coming_soon' => 'Coming Soon' ],
-                'default_value' => 'available',
-                'allow_null'    => 0,
-                'multiple'      => 0,
-                'return_format' => 'value',
+                'key'             => 'field_loc_status',
+                'label'           => 'Status',
+                'name'            => 'status',
+                'type'            => 'select',
+                'choices'         => [ 'available' => 'Available', 'coming_soon' => 'Coming Soon' ],
+                'default_value'   => 'available',
+                'allow_null'      => 0,
+                'multiple'        => 0,
+                'return_format'   => 'value',
+                // Excluded from WPGraphQL for ACF auto-generation — WPGraphQL for ACF v2.6.x
+                // stores select values serialized (PHP array), causing TypeError in PHP 8.x.
+                // Exposed manually via register_graphql_field('Location','locationStatus',…)
+                // in graphql-extensions.php → uses get_field() which formats properly.
+                'show_in_graphql' => false,
             ],
             [
                 'key'          => 'field_loc_address',

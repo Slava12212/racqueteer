@@ -263,6 +263,7 @@ export const GET_LOCATIONS = `
     locations(first: 100) {
       nodes {
         databaseId
+        locationStatus
         locationAmenities {
           icon
           label
@@ -270,7 +271,6 @@ export const GET_LOCATIONS = `
         locationFields {
           locationId
           name
-          status
           address
           description
           image { node { sourceUrl } }

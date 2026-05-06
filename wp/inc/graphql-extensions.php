@@ -1,6 +1,6 @@
 <?php
 /**
- * GraphQL Extensions — v23
+ * GraphQL Extensions — v24
  * Racqueteer headless тема — кастомізації схеми WPGraphQL.
  *
  * Changelog v18:
@@ -570,158 +570,52 @@ add_action( 'graphql_register_types', function () {
     try {
         register_graphql_enum_type( 'RqDeployVersion', array(
             'description' => 'Sentinel версії деплою',
-            'values'      => array( 'v23' => array( 'value' => 'v23' ) ),
+            'values'      => array( 'v24' => array( 'value' => 'v24' ) ),
         ) );
     } catch ( \Throwable $e ) {}
 } );
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Location Status — нормалізація (v23)
+// Location Status + Amenities — ручна реєстрація (v24)
 //
-// Проблема: WPGraphQL for ACF v2.6.0 зчитує ACF select через get_post_meta()
-// напряму. WordPress повертає PHP-масив ['available'] для серіалізованого мета.
-// У PHP 8.x оператор (string)['available'] кидає TypeError → Internal server error
-// до того, як наш graphql_resolve_field фільтр взагалі запускається.
+// Проблема (коренева причина):
+//   WPGraphQL for ACF v2.6.x для ACF select-полів читає сирий post_meta,
+//   який WordPress зберігає серіалізованим масивом ['available']. Всі спроби
+//   перехопити це через acf/format_value, graphql_resolve_field або
+//   get_post_metadata НЕ спрацювали, бо WPGraphQL for ACF обходить стандартні
+//   WordPress-хуки для select-підтипів через власний data-loader.
+//   У PHP 8.x спроба (string)['available'] кидає TypeError → Internal server error.
 //
-// Рівень 0 (найнижчий): get_post_metadata перехоплює читання мета ще до ACF/WPGraphQL.
-//   Прямий $wpdb-запит уникає рекурсії. Нормалізує масив → рядок.
+// Рішення (v24): show_in_graphql=false на status та amenities в acf-blocks.php;
+//   обидва поля реєструються ВРУЧНУ тут з власними резолверами,
+//   які використовують get_field() — ACF-функцію, що коректно форматує значення.
 //
-// Рівень 1 (ACF): acf/format_value — підстраховка для ACF-розбору.
-// Рівень 2 (GraphQL): graphql_resolve_field — підстраховка для GraphQL-резолвера.
-// ═════════════════════════════════════════════════════════════════════════════
-
-// ── Рівень 0: get_post_metadata (пріоритет 0) ────────────────────────────────
-// Найраніше перехоплення. Нормалізує значення ключа 'status'
-// для location-постів до того, як будь-який код його прочитає.
-// Уникає рекурсії через прямий SQL-запит замість get_post_meta().
-add_filter( 'get_post_metadata', function ( $null, $object_id, $meta_key, $single ) {
-    if ( 'status' !== $meta_key ) {
-        return $null;
-    }
-    // get_post_type() читає з wp_posts (не з postmeta) → немає рекурсії
-    if ( get_post_type( (int) $object_id ) !== 'location' ) {
-        return $null;
-    }
-    // Пряма SQL-вибірка уникає будь-яких WP-хуків → немає рекурсії
-    global $wpdb;
-    $raw = $wpdb->get_var( $wpdb->prepare(
-        "SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = 'status' LIMIT 1",
-        (int) $object_id
-    ) );
-    if ( null === $raw ) {
-        return $null; // мета ще не збережена → WordPress продовжує стандартну обробку
-    }
-    $val = maybe_unserialize( $raw );          // рядок або масив ['available']
-    if ( is_array( $val ) ) { $val = $val[0] ?? ''; }
-    $normalized = strtolower( trim( (string) $val ) );
-    return $single ? $normalized : array( $normalized );
-}, 0, 4 );
-
-// ── Рівень 1: ACF format_value hook ─────────────────────────────────────────
-add_filter( 'acf/format_value/key=field_loc_status', function ( $value, $post_id, $field ) {
-    if ( is_array( $value ) ) {
-        $value = $value[0] ?? '';
-    }
-    if ( ! is_string( $value ) ) {
-        $value = (string) $value;
-    }
-    return strtolower( trim( $value ) );
-}, 1, 3 );
-
-// ── Рівень 2: graphql_resolve_field hook ─────────────────────────────────────
-// Підстраховка: якщо $result все ще є масивом (наприклад, WPGraphQL for ACF обійшов
-// ACF format_value і читав метадані напряму), нормалізуємо тут.
-// Також читає значення напряму через get_field(), коли вдалося визначити post_id.
-add_filter( 'graphql_resolve_field', function ( $result, $source, $args, $context, $info, $type_name, $field_key, $type, $field ) {
-
-    if ( 'status' !== $field_key ) {
-        return $result;
-    }
-
-    // ── Швидке виправлення: якщо $result — масив, нормалізуємо негайно ────────────
-    // Це виключає "Array" у відповіді GraphQL без потреби знати post_id.
-    if ( is_array( $result ) ) {
-        $val = $result[0] ?? '';
-        return strtolower( trim( is_string( $val ) ? $val : (string) $val ) );
-    }
-
-    // ── Якщо $result вже є рядком — лише lowercase нормалізація ─────────────────
-    if ( is_string( $result ) && '' !== $result ) {
-        return strtolower( trim( $result ) );
-    }
-
-    // ── Спроба прочитати напряму через get_field() ───────────────────────────────
-    $post_id = null;
-
-    if ( is_object( $source ) ) {
-        // WPGraphQL Post model або WPGraphQL for ACF context object
-        foreach ( array( 'databaseId', 'ID', 'post_id' ) as $prop ) {
-            if ( isset( $source->$prop ) && is_numeric( $source->$prop ) ) {
-                $post_id = (int) $source->$prop;
-                break;
-            }
-        }
-        // WPGraphQL for ACF v2 може зберігати пост у вкладеному 'node' або 'post'
-        if ( ! $post_id ) {
-            foreach ( array( 'node', 'post', 'object' ) as $nested ) {
-                if ( isset( $source->$nested ) && is_object( $source->$nested ) ) {
-                    $n = $source->$nested;
-                    foreach ( array( 'databaseId', 'ID' ) as $prop ) {
-                        if ( isset( $n->$prop ) && is_numeric( $n->$prop ) ) {
-                            $post_id = (int) $n->$prop;
-                            break 2;
-                        }
-                    }
-                }
-            }
-        }
-    } elseif ( is_array( $source ) ) {
-        foreach ( array( 'databaseId', 'ID', 'post_id' ) as $key ) {
-            if ( isset( $source[ $key ] ) && is_numeric( $source[ $key ] ) ) {
-                $post_id = (int) $source[ $key ];
-                break;
-            }
-        }
-    }
-
-    if ( ! $post_id ) {
-        return $result;
-    }
-
-    // Діяти лише для CPT 'location'
-    if ( get_post_type( $post_id ) !== 'location' ) {
-        return $result;
-    }
-
-    if ( ! function_exists( 'get_field' ) ) {
-        return $result;
-    }
-
-    $raw = get_field( 'field_loc_status', $post_id );
-    if ( null === $raw ) {
-        return $result;
-    }
-    if ( is_array( $raw ) ) {
-        $raw = $raw[0] ?? '';
-    }
-
-    return strtolower( trim( (string) $raw ) );
-
-}, 10, 9 );
-
-// ═════════════════════════════════════════════════════════════════════════════
-// Location Amenities — ручна реєстрація (v22)
-//
-// WPGraphQL for ACF v2.6.x генерує некоректний тип для select-субполя всередині
-// repeater, що спричиняє Internal Server Error у запиті locations.
-//
-// Рішення: show_in_graphql на repeater/sub-fields вимкнено в acf-blocks.php,
-// а типи та резолвер реєструються тут вручну.
-//   • LocationAmenityItem { icon: String, label: String }
+//   • Location.locationStatus  : String
 //   • Location.locationAmenities: [LocationAmenityItem]
 // ═════════════════════════════════════════════════════════════════════════════
 add_action( 'graphql_register_types', function () {
-    // Тип одного запису amenity
+
+    // ── locationStatus ──────────────────────────────────────────────────────
+    // Повністю обходить WPGraphQL for ACF select-резолвер.
+    // get_field() повертає відформатований рядок (через ACF format_value).
+    // Якщо get_field() поверне масив (legacy data), нормалізуємо тут.
+    try {
+        register_graphql_field( 'Location', 'locationStatus', array(
+            'type'        => 'String',
+            'description' => 'Статус локації: available або coming_soon',
+            'resolve'     => function ( $post ) {
+                if ( ! function_exists( 'get_field' ) ) { return 'available'; }
+                $post_id = is_object( $post ) ? ( $post->databaseId ?? $post->ID ?? null ) : null;
+                if ( ! $post_id ) { return 'available'; }
+                $val = get_field( 'field_loc_status', $post_id );
+                if ( is_array( $val ) ) { $val = $val[0] ?? ''; }
+                $val = strtolower( trim( (string) $val ) );
+                return $val ?: 'available';
+            },
+        ) );
+    } catch ( \Throwable $e ) {}
+
+    // ── LocationAmenityItem type ─────────────────────────────────────────────
     try {
         register_graphql_object_type( 'LocationAmenityItem', array(
             'description' => 'Один запис Club Amenity локації',
@@ -732,29 +626,22 @@ add_action( 'graphql_register_types', function () {
         ) );
     } catch ( \Throwable $e ) {}
 
-    // Поле locationAmenities на типі Location (CPT)
+    // ── locationAmenities ────────────────────────────────────────────────────
     try {
         register_graphql_field( 'Location', 'locationAmenities', array(
             'type'        => array( 'list_of' => 'LocationAmenityItem' ),
             'description' => 'Club Amenities (repeater) — icon + label',
             'resolve'     => function ( $post ) {
-                if ( ! function_exists( 'get_field' ) ) {
-                    return array();
-                }
+                if ( ! function_exists( 'get_field' ) ) { return array(); }
                 $post_id = is_object( $post ) ? ( $post->databaseId ?? $post->ID ?? null ) : null;
-                if ( ! $post_id ) {
-                    return array();
-                }
+                if ( ! $post_id ) { return array(); }
                 $rows = get_field( 'amenities', $post_id );
-                if ( ! is_array( $rows ) || empty( $rows ) ) {
-                    return array();
-                }
+                if ( ! is_array( $rows ) || empty( $rows ) ) { return array(); }
                 $result = array();
                 foreach ( $rows as $row ) {
                     if ( ! is_array( $row ) ) { continue; }
                     $icon  = $row['icon']  ?? '';
                     $label = $row['label'] ?? '';
-                    // Select може повертати масив навіть з return_format='value'
                     if ( is_array( $icon ) )  { $icon  = $icon[0]  ?? ''; }
                     if ( is_array( $label ) ) { $label = $label[0] ?? ''; }
                     $result[] = array(
@@ -766,7 +653,15 @@ add_action( 'graphql_register_types', function () {
             },
         ) );
     } catch ( \Throwable $e ) {}
+
 }, 5 );
+
+// ── Залишкові safety-net фільтри (не шкодять, але вже не критичні) ──────────
+add_filter( 'acf/format_value/key=field_loc_status', function ( $value, $post_id, $field ) {
+    if ( is_array( $value ) ) { $value = $value[0] ?? ''; }
+    return strtolower( trim( is_string( $value ) ? $value : (string) $value ) );
+}, 1, 3 );
+
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Плоскі типи Rq*Fields + плоске ACF-поле на кожному типі блоку

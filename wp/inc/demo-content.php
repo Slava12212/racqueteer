@@ -465,10 +465,10 @@ function rq_verify_graphql(): array {
     if ( $ok_v && ! empty( $data_v['__type'] ) ) {
         $enum_vals = array_column( $data_v['__type']['enumValues'] ?? [], 'name' );
         $ver = implode( ', ', $enum_vals );
-        if ( in_array( 'v23', $enum_vals ) ) {
-            $log[] = '  ✅ RqDeployVersion ' . $ver . ' — graphql-extensions.php v23 (get_post_metadata status fix: АКТИВНИЙ)';
-        } elseif ( in_array( 'v22', $enum_vals ) ) {
-            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v22 (status Internal Server Error). Задеплой v23.';
+        if ( in_array( 'v24', $enum_vals ) ) {
+            $log[] = '  ✅ RqDeployVersion ' . $ver . ' — graphql-extensions.php v24 (locationStatus manual resolver: АКТИВНИЙ)';
+        } elseif ( in_array( 'v23', $enum_vals ) ) {
+            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v23 (status Internal Server Error). Задеплой v24.';
         } elseif ( in_array( 'v21', $enum_vals ) ) {
             $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v21 (status Internal Server Error). Задеплой v23.';
         } elseif ( in_array( 'v20', $enum_vals ) ) {
@@ -765,7 +765,7 @@ function rq_verify_graphql(): array {
     }
 
     // ── 5. CPT: Локації ───────────────────────────────────────────────────────
-    [ $ok, $data ] = $query( '{ locations(first:3) { nodes { locationAmenities { icon label } locationFields { name status locationId } } } }' );
+    [ $ok, $data ] = $query( '{ locations(first:3) { nodes { locationStatus locationAmenities { icon label } locationFields { name locationId } } } }' );
     if ( ! $ok ) {
         $log[] = "  ❌ Locations: {$data}";
     } else {
@@ -778,12 +778,11 @@ function rq_verify_graphql(): array {
             $first_acf  = $first_node['locationFields'] ?? null;
             $has_data   = $first_acf && ! empty( $first_acf['name'] );
             $amenities  = $first_node['locationAmenities'] ?? [];
-            $status_val = $first_acf['status'] ?? '(null)';
-            // Detect the infamous "Array" serialization bug
-            $status_ok  = is_string( $status_val ) && in_array( $status_val, array( 'available', 'coming_soon' ), true );
+            $status_val = $first_node['locationStatus'] ?? '(null)';
+            $status_ok  = in_array( $status_val, array( 'available', 'coming_soon' ), true );
             $status_msg = $status_ok
                 ? "status: \"{$status_val}\" ✅"
-                : "status: \"{$status_val}\" ❌ (очікується 'available' або 'coming_soon' — задеплой graphql-extensions.php v22)";
+                : "status: \"{$status_val}\" ❌ (задеплой v24 PHP + Re-import)";
             $amen_msg   = count( $amenities ) > 0
                 ? count( $amenities ) . ' amenities (first icon: ' . ( $amenities[0]['icon'] ?? '?' ) . ', label: ' . ( $amenities[0]['label'] ?? '?' ) . ')'
                 : '⚠ 0 amenities — перезапусти Demo Import';

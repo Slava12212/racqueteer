@@ -336,11 +336,11 @@ export async function getLocations(): Promise<Location[]> {
       locations: {
         nodes: Array<{
           databaseId: number;
+          locationStatus?: string | null;
           locationAmenities?: Array<{ icon?: string; label?: string }> | null;
           locationFields: {
             locationId: string;
             name: string;
-            status: unknown; // may be string or array depending on WPGraphQL for ACF version
             address: string;
             description: string;
             image: { node: { sourceUrl: string } };
@@ -352,13 +352,11 @@ export async function getLocations(): Promise<Location[]> {
     return data.locations.nodes.map((node) => {
       const lf = node.locationFields ?? {};
 
-      // Normalise status: ACF select can return a plain string, a single-element
-      // array, or a GraphQL enum value in UPPER_CASE — handle all variants.
-      const rawStatus = lf.status;
-      const statusRaw = Array.isArray(rawStatus) ? rawStatus[0] : rawStatus;
-      const statusStr = String(statusRaw ?? '').toLowerCase().replace(/-/g, '_');
+      // locationStatus comes from Location.locationStatus (manual resolver, v24).
+      // Resolver already normalises to lowercase 'available' | 'coming_soon'.
+      const rawSt = node.locationStatus ?? '';
       const status: 'available' | 'coming_soon' =
-        statusStr === 'coming_soon' ? 'coming_soon' : 'available';
+        rawSt === 'coming_soon' ? 'coming_soon' : 'available';
 
       // Map amenities from WP repeater rows to LocationAmenity objects.
       // The icon SVG is resolved by the component via LOCATION_ICON_MAP.
