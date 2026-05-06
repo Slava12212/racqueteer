@@ -122,7 +122,8 @@ add_action( 'acf/init', function () {
             ['key'=>'field_mhero_description','label'=>'Description','name'=>'description','type'=>'textarea'],
             ['key'=>'field_mhero_price_starting','label'=>'Price Starting','name'=>'price_starting','type'=>'text'],
             ['key'=>'field_mhero_price_unit','label'=>'Price Unit','name'=>'price_unit','type'=>'text'],
-            ['key'=>'field_mhero_cta_text','label'=>'CTA Text','name'=>'cta_text','type'=>'text'],
+            ['key'=>'field_mhero_cta_text','label'=>'CTA Button Text','name'=>'cta_text','type'=>'text'],
+            ['key'=>'field_mhero_cta_url','label'=>'CTA Button URL','name'=>'cta_url','type'=>'text','instructions'=>'e.g. /memberships or https://...'],
             ['key'=>'field_mhero_video','label'=>'Video URL','name'=>'video_url','type'=>'text','instructions'=>'Full URL to the video file'],
         ]],
         ['name'=>'racqueteer-subscriptions-detail','title'=>'Subscriptions Detail','icon'=>'tag','keywords'=>['subscriptions','plans'],'fields'=>[
@@ -134,6 +135,8 @@ add_action( 'acf/init', function () {
             ['key'=>'field_pc_label','label'=>'Label','name'=>'label','type'=>'text'],
             ['key'=>'field_pc_title','label'=>'Title','name'=>'title','type'=>'text'],
             ['key'=>'field_pc_description','label'=>'Description','name'=>'description','type'=>'textarea'],
+            ['key'=>'field_pc_cta_text','label'=>'CTA Button Text','name'=>'cta_text','type'=>'text','instructions'=>'e.g. Join Now'],
+            ['key'=>'field_pc_cta_url','label'=>'CTA Button URL','name'=>'cta_url','type'=>'text','instructions'=>'e.g. /memberships or https://...'],
         ]],
         // Сторінка Private Events
         ['name'=>'racqueteer-private-events-hero','title'=>'Private Events Hero','icon'=>'cover-image','keywords'=>['private events'],'fields'=>[
@@ -529,6 +532,21 @@ add_action( 'acf/init', function () {
             [ 'key' => 'field_mem_border_class', 'label' => 'Border Class', 'name' => 'border_class',  'type' => 'text'       ],
             [ 'key' => 'field_mem_has_image',    'label' => 'Has Image',    'name' => 'has_image',     'type' => 'true_false' ],
             [ 'key' => 'field_mem_values',       'label' => 'Values (comma-separated)', 'name' => 'values', 'type' => 'text'  ],
+            [
+                'key'          => 'field_mem_cta_text',
+                'label'        => 'CTA Button Text',
+                'name'         => 'cta_text',
+                'type'         => 'text',
+                'instructions' => 'e.g. Join Now',
+                'default_value'=> 'JOIN NOW',
+            ],
+            [
+                'key'          => 'field_mem_cta_url',
+                'label'        => 'CTA Button URL',
+                'name'         => 'cta_url',
+                'type'         => 'text',
+                'instructions' => 'Link for this plan\'s JOIN NOW button. e.g. /memberships or https://checkout.example.com/starter',
+            ],
         ],
         'location' => [ [ [ 'param' => 'post_type', 'operator' => '==', 'value' => 'membership' ] ] ],
     ] );

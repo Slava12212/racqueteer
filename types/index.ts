@@ -21,6 +21,8 @@ export interface MembershipPlan {
   bgClass: string;
   borderClass: string;
   values: FeatureValue[];
+  ctaText?: string;
+  ctaUrl?: string;
 }
 
 export interface PriceCompareFeature {
@@ -172,6 +174,7 @@ export interface MembershipHeroContent {
   priceStarting: string;
   priceUnit: string;
   ctaText: string;
+  ctaUrl: string;
   videoUrl: string;
 }
 

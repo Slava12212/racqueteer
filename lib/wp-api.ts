@@ -257,6 +257,8 @@ export async function getMembershipPlans(): Promise<MembershipPlan[]> {
             borderClass: string;
             hasImage: boolean;
             values: string | string[];
+            ctaText?: string | null;
+            ctaUrl?: string | null;
           };
         }>;
       };
@@ -281,6 +283,8 @@ export async function getMembershipPlans(): Promise<MembershipPlan[]> {
         borderClass: acf.borderClass ?? 'border-[#E5E7EB]',
         hasImage: acf.hasImage ?? false,
         values,
+        ctaText: acf.ctaText ?? 'JOIN NOW',
+        ctaUrl: acf.ctaUrl ?? '#',
       };
     });
   } catch (err) {

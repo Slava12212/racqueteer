@@ -99,10 +99,10 @@ export default function HeroMembership({ content }: HeroMembershipProps) {
                 </svg>
               </div>
               <div className="block sm:hidden w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <button className="btn-cta btn-cta-red flex items-center justify-center gap-3 text-white font-bold text-sm uppercase tracking-wider px-10 py-4 rounded-sm w-full sm:w-auto whitespace-nowrap transition-colors">
+              <a href={content.ctaUrl || '#'} className="btn-cta btn-cta-red flex items-center justify-center gap-3 text-white font-bold text-sm uppercase tracking-wider px-10 py-4 rounded-sm w-full sm:w-auto whitespace-nowrap transition-colors">
                 {content.ctaText}
                 <ButtonArrow color="white" />
-              </button>
+              </a>
             </div>
           </div>
           </ScrollReveal>

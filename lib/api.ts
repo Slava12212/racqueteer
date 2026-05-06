@@ -594,6 +594,7 @@ export async function getMembershipsPageContent(): Promise<MembershipsPageConten
       priceStarting: "$89",
       priceUnit: "/month",
       ctaText: "View plans",
+      ctaUrl: "/memberships",
       videoUrl: "/private-events-hero.mp4",
     },
     subscriptionsHeader: {

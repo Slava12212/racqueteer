@@ -87,6 +87,7 @@ export const GET_PAGE_BY_SLUG = `
             priceStarting
             priceUnit
             ctaText
+            ctaUrl
             videoUrl
           }
         }
@@ -102,6 +103,8 @@ export const GET_PAGE_BY_SLUG = `
             label
             title
             description
+            ctaText
+            ctaUrl
           }
         }
         ... on AcfRacqueteerPrivateEventsHeroBlock {
@@ -215,6 +218,8 @@ export const GET_MEMBERSHIP_PLANS = `
           borderClass
           hasImage
           values
+          ctaText
+          ctaUrl
         }
       }
     }

@@ -34,6 +34,8 @@ interface Plan {
   bgClass: string;
   borderClass: string;
   values: FeatureValue[];
+  ctaText?: string;
+  ctaUrl?: string;
 }
 
 const features = [
@@ -111,10 +113,10 @@ function MobilePlanCard({ plan }: { plan: Plan }) {
           <span className="text-[28px] font-bold text-black">{plan.price}</span>
           <span className="text-xs text-[#6B7280]"> / per month</span>
         </div>
-        <button className={`btn-cta flex items-center justify-center gap-3 w-full py-4 rounded-sm font-bold text-sm uppercase tracking-wider text-white transition-colors ${plan.buttonVariant === "red" ? "btn-cta-red" : "btn-cta-blue"}`}>
-          <span>JOIN NOW</span>
+        <a href={plan.ctaUrl || '#'} className={`btn-cta flex items-center justify-center gap-3 w-full py-4 rounded-sm font-bold text-sm uppercase tracking-wider text-white transition-colors ${plan.buttonVariant === "red" ? "btn-cta-red" : "btn-cta-blue"}`}>
+          <span>{plan.ctaText || 'JOIN NOW'}</span>
           <ButtonArrow color="white" />
-        </button>
+        </a>
       </div>
       {/* Features list */}
       <div className="p-6 pt-4">
@@ -226,10 +228,10 @@ export default function SubscriptionsSection({ content, plans: plansProp }: Subs
                       <span className="text-[24px] font-bold text-black">{plan.price}</span>
                       <span className="text-[12px] text-[#6B7280]"> / per month</span>
                     </div>
-                    <button className={`btn-cta flex items-center justify-center gap-3 w-full py-4 rounded-sm font-bold text-sm uppercase tracking-wider text-white transition-colors ${plan.buttonVariant === "red" ? "btn-cta-red" : "btn-cta-blue"}`}>
-                      <span>JOIN NOW</span>
+                    <a href={plan.ctaUrl || '#'} className={`btn-cta flex items-center justify-center gap-3 w-full py-4 rounded-sm font-bold text-sm uppercase tracking-wider text-white transition-colors ${plan.buttonVariant === "red" ? "btn-cta-red" : "btn-cta-blue"}`}>
+                      <span>{plan.ctaText || 'JOIN NOW'}</span>
                       <ButtonArrow color="white" />
-                    </button>
+                    </a>
                   </div>
                 </div>
               ))}

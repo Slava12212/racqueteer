@@ -12,6 +12,10 @@ interface PriceCompareSectionProps {
   features?: PriceCompareFeature[];
   /** Membership plans from WordPress (optional). Used as column headers. */
   plans?: MembershipPlan[];
+  /** CTA button text from WP block (optional, defaults to "Join Now") */
+  ctaText?: string;
+  /** CTA button URL from WP block (optional, defaults to "#") */
+  ctaUrl?: string;
 }
 
 const programs = [
@@ -38,7 +42,7 @@ const tiers: Record<TierKey, { label: string; prices: string[] }> = {
 
 const tierKeys: TierKey[] = ["STARTER", "LIGHT", "PRO", "PRO+"];
 
-export default function PriceCompareSection({ features, plans }: PriceCompareSectionProps) {
+export default function PriceCompareSection({ features, plans, ctaText, ctaUrl }: PriceCompareSectionProps) {
   const [activeTier] = useState<TierKey>("PRO+");
   const currentTier = tiers[activeTier];
 
@@ -144,8 +148,8 @@ export default function PriceCompareSection({ features, plans }: PriceCompareSec
               <div className="flex">
                 <div className="flex-1 hidden lg:block" />
                 <div className="w-full lg:w-[520px] bg-[rgba(0,0,64,0.35)] backdrop-blur-[50px] lg:bg-transparent">
-                  <a href="#" className="btn-cta btn-cta-lightblue flex items-center justify-center gap-3 text-[#265090] text-sm font-bold uppercase tracking-wider py-4 px-10 w-full rounded-sm">
-                    <span>join now</span>
+                  <a href={ctaUrl || '#'} className="btn-cta btn-cta-lightblue flex items-center justify-center gap-3 text-[#265090] text-sm font-bold uppercase tracking-wider py-4 px-10 w-full rounded-sm">
+                    <span>{ctaText || 'join now'}</span>
                     <ButtonArrow color="#265090" />
                   </a>
                 </div>
@@ -196,8 +200,8 @@ export default function PriceCompareSection({ features, plans }: PriceCompareSec
 
             {/* CTA button — full width below table */}
             <div className="px-6 pt-8 pb-6">
-              <a href="#" className="btn-cta btn-cta-lightblue flex items-center justify-center gap-3 text-[#265090] text-sm font-bold uppercase tracking-wider py-4 px-10 w-full rounded-sm">
-                <span>join now</span>
+              <a href={ctaUrl || '#'} className="btn-cta btn-cta-lightblue flex items-center justify-center gap-3 text-[#265090] text-sm font-bold uppercase tracking-wider py-4 px-10 w-full rounded-sm">
+                <span>{ctaText || 'join now'}</span>
                 <ButtonArrow color="#265090" />
               </a>
             </div>
