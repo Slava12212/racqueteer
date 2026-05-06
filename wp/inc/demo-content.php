@@ -465,7 +465,13 @@ function rq_verify_graphql(): array {
     if ( $ok_v && ! empty( $data_v['__type'] ) ) {
         $enum_vals = array_column( $data_v['__type']['enumValues'] ?? [], 'name' );
         $ver = implode( ', ', $enum_vals );
-        if ( in_array( 'v19', $enum_vals ) ) {
+        if ( in_array( 'v22', $enum_vals ) ) {
+            $log[] = '  ✅ RqDeployVersion ' . $ver . ' — graphql-extensions.php v22 (locationAmenities manual resolver: АКТИВНИЙ)';
+        } elseif ( in_array( 'v21', $enum_vals ) ) {
+            $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v21 (locations Internal Server Error). Задеплой v22.';
+        } elseif ( in_array( 'v20', $enum_vals ) ) {
+            $log[] = '  ✅ RqDeployVersion ' . $ver . ' — graphql-extensions.php v20 (location status direct resolver: АКТИВНИЙ)';
+        } elseif ( in_array( 'v19', $enum_vals ) ) {
             $log[] = '  ✅ RqDeployVersion ' . $ver . ' — graphql-extensions.php v19 (image ID→URL fix: АКТИВНИЙ)';
         } elseif ( in_array( 'v18', $enum_vals ) ) {
             $log[] = '  ✅ RqDeployVersion ' . $ver . ' — graphql-extensions.php v18 (Strategy G+H: АКТИВНИЙ)';
@@ -757,7 +763,7 @@ function rq_verify_graphql(): array {
     }
 
     // ── 5. CPT: Локації ───────────────────────────────────────────────────────
-    [ $ok, $data ] = $query( '{ locations(first:3) { nodes { locationFields { name status locationId } } } }' );
+    [ $ok, $data ] = $query( '{ locations(first:3) { nodes { locationAmenities { icon label } locationFields { name status locationId } } } }' );
     if ( ! $ok ) {
         $log[] = "  ❌ Locations: {$data}";
     } else {
@@ -766,10 +772,21 @@ function rq_verify_graphql(): array {
         if ( $count === 0 ) {
             $log[] = '  ⚠ Locations: 0 results';
         } else {
-            $first_acf = $nodes[0]['locationFields'] ?? null;
-            $has_data  = $first_acf && ! empty( $first_acf['name'] );
-            $log[]     = $has_data
-                ? "  ✅ Locations: {$count} results — ACF OK (name: \"{$first_acf['name']}\")"
+            $first_node = $nodes[0];
+            $first_acf  = $first_node['locationFields'] ?? null;
+            $has_data   = $first_acf && ! empty( $first_acf['name'] );
+            $amenities  = $first_node['locationAmenities'] ?? [];
+            $status_val = $first_acf['status'] ?? '(null)';
+            // Detect the infamous "Array" serialization bug
+            $status_ok  = is_string( $status_val ) && in_array( $status_val, array( 'available', 'coming_soon' ), true );
+            $status_msg = $status_ok
+                ? "status: \"{$status_val}\" ✅"
+                : "status: \"{$status_val}\" ❌ (очікується 'available' або 'coming_soon' — задеплой graphql-extensions.php v22)";
+            $amen_msg   = count( $amenities ) > 0
+                ? count( $amenities ) . ' amenities (first icon: ' . ( $amenities[0]['icon'] ?? '?' ) . ', label: ' . ( $amenities[0]['label'] ?? '?' ) . ')'
+                : '⚠ 0 amenities — перезапусти Demo Import';
+            $log[] = $has_data
+                ? "  ✅ Locations: {$count} results — ACF OK (name: \"{$first_acf['name']}\", {$status_msg}, {$amen_msg})"
                 : "  ⚠ Locations: {$count} results but locationFields empty";
         }
     }
@@ -1307,15 +1324,32 @@ function rq_create_locations( array $media, array &$log ): void {
             'Homebush Club', 'available',
             [ 'Homebush, Sydney', 'New South Wales 2140, Australia' ],
             'Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.',
+            [
+                // Repeater rows MUST use sub-field NAMES (not field keys) as array keys
+                [ 'icon' => 'courts',    'label' => '12 Courts'     ],
+                [ 'icon' => 'lounge',    'label' => 'Lounge Zones'  ],
+                [ 'icon' => 'coworking', 'label' => 'Coworking'     ],
+                [ 'icon' => 'proshop',   'label' => 'Pro-Shop'      ],
+                [ 'icon' => 'cafe',      'label' => 'Cafe'          ],
+                [ 'icon' => 'fitness',   'label' => 'Fitness Areas' ],
+            ],
         ],
         [
             'Alexandria Club', 'coming_soon',
             [ 'Alexandria, Sydney', 'New South Wales 2015, Australia' ],
             'Our newest location coming soon to Alexandria. A world-class facility designed for serious players and casual enthusiasts alike.',
+            [
+                [ 'icon' => 'courts',    'label' => '12 Courts'     ],
+                [ 'icon' => 'lounge',    'label' => 'Lounge Zones'  ],
+                [ 'icon' => 'coworking', 'label' => 'Coworking'     ],
+                [ 'icon' => 'proshop',   'label' => 'Pro-Shop'      ],
+                [ 'icon' => 'cafe',      'label' => 'Cafe'          ],
+                [ 'icon' => 'fitness',   'label' => 'Fitness Areas' ],
+            ],
         ],
     ];
 
-    foreach ( $locations as [ $title, $status, $address, $desc ] ) {
+    foreach ( $locations as [ $title, $status, $address, $desc, $amenities ] ) {
         $acf = [
             'field_loc_location_id'     => sanitize_title( $title ),
             'field_loc_name'            => $title,
@@ -1324,12 +1358,14 @@ function rq_create_locations( array $media, array &$log ): void {
             'field_loc_address'         => implode( "\n", $address ),
             // field_cpt_loc_description уникає конфлікту ключів з блоком racqueteer-locations
             'field_cpt_loc_description' => $desc,
+            // amenities: repeater — масив рядків з ключами sub-fields
+            'field_loc_amenities'       => $amenities,
         ];
         if ( ! empty( $media['about_hero'] ) ) {
             $acf['field_loc_image'] = $media['about_hero'];
         }
         $id = rq_upsert_cpt( 'location', $title, $acf );
-        $log[] = "  ✔ Location: {$title} (ID {$id})";
+        $log[] = "  ✔ Location: {$title} (ID {$id}, amenities: " . count( $amenities ) . ')';
     }
 }
 

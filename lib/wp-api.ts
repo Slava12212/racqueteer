@@ -336,10 +336,11 @@ export async function getLocations(): Promise<Location[]> {
       locations: {
         nodes: Array<{
           databaseId: number;
+          locationAmenities?: Array<{ icon?: string; label?: string }> | null;
           locationFields: {
             locationId: string;
             name: string;
-            status: 'available' | 'coming_soon';
+            status: unknown; // may be string or array depending on WPGraphQL for ACF version
             address: string;
             description: string;
             image: { node: { sourceUrl: string } };
@@ -348,15 +349,38 @@ export async function getLocations(): Promise<Location[]> {
       };
     }>(GET_LOCATIONS);
 
-    return data.locations.nodes.map((node) => ({
-      id:          node.locationFields?.locationId ?? String(node.databaseId),
-      name:        node.locationFields?.name        ?? '',
-      status:      node.locationFields?.status      ?? 'available',
-      address:     (node.locationFields?.address ?? '').split('\n').filter(Boolean),
-      description: node.locationFields?.description ?? '',
-      amenities:   [], // icons are added in the component
-      image:       node.locationFields?.image?.node?.sourceUrl ?? '',
-    }));
+    return data.locations.nodes.map((node) => {
+      const lf = node.locationFields ?? {};
+
+      // Normalise status: ACF select can return a plain string, a single-element
+      // array, or a GraphQL enum value in UPPER_CASE — handle all variants.
+      const rawStatus = lf.status;
+      const statusRaw = Array.isArray(rawStatus) ? rawStatus[0] : rawStatus;
+      const statusStr = String(statusRaw ?? '').toLowerCase().replace(/-/g, '_');
+      const status: 'available' | 'coming_soon' =
+        statusStr === 'coming_soon' ? 'coming_soon' : 'available';
+
+      // Map amenities from WP repeater rows to LocationAmenity objects.
+      // The icon SVG is resolved by the component via LOCATION_ICON_MAP.
+      const amenities = Array.isArray(node.locationAmenities)
+        ? node.locationAmenities
+            .filter((a) => a && a.label)
+            .map((a) => ({
+              label: a.label ?? '',
+              iconName: Array.isArray(a.icon) ? (a.icon[0] ?? '') : (a.icon ?? ''),
+            }))
+        : [];
+
+      return {
+        id:          lf.locationId ?? String(node.databaseId),
+        name:        lf.name        ?? '',
+        status,
+        address:     (lf.address ?? '').split('\n').filter(Boolean),
+        description: lf.description ?? '',
+        amenities,   // icons are resolved in LocationsSection via LOCATION_ICON_MAP
+        image:       lf.image?.node?.sourceUrl ?? '',
+      };
+    });
   } catch (err) {
     console.error('getLocations() failed, falling back to hardcoded data:', err);
     const { getLocations: getFallback } = await import('./api');

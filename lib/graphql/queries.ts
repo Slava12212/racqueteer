@@ -263,6 +263,10 @@ export const GET_LOCATIONS = `
     locations(first: 100) {
       nodes {
         databaseId
+        locationAmenities {
+          icon
+          label
+        }
         locationFields {
           locationId
           name
