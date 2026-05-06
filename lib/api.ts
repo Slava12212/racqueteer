@@ -141,6 +141,8 @@ export async function getMembershipPlans(): Promise<MembershipPlan[]> {
       bgClass: "bg-[#F4F6F9]",
       borderClass: "border-[#E5E7EB]",
       values: ["check", "check", "check", "cross", "cross", "cross", "cross", "0", "2 days"],
+      ctaText: "Join Now",
+      ctaUrl: "/memberships#starter",
     },
     {
       name: "LIGHT",
@@ -150,6 +152,8 @@ export async function getMembershipPlans(): Promise<MembershipPlan[]> {
       bgClass: "bg-white",
       borderClass: "border-[#E5E7EB]",
       values: ["check", "check", "check", "check", "check", "cross", "cross", "4", "4 days"],
+      ctaText: "Join Now",
+      ctaUrl: "/memberships#light",
     },
     {
       name: "PRO",
@@ -160,6 +164,8 @@ export async function getMembershipPlans(): Promise<MembershipPlan[]> {
       bgClass: "bg-white",
       borderClass: "border-[#E5E7EB]",
       values: ["check", "check", "check", "check", "check", "check", "cross", "10", "7 days"],
+      ctaText: "Join Now",
+      ctaUrl: "/memberships#pro",
     },
     {
       name: "PRO+",
@@ -169,6 +175,8 @@ export async function getMembershipPlans(): Promise<MembershipPlan[]> {
       bgClass: "bg-white",
       borderClass: "border-[#E5E7EB]",
       values: ["check", "check", "check", "check", "check", "check", "check", "12", "14 days"],
+      ctaText: "Join Now",
+      ctaUrl: "/memberships#pro-plus",
     },
   ];
 }
@@ -594,7 +602,7 @@ export async function getMembershipsPageContent(): Promise<MembershipsPageConten
       priceStarting: "$89",
       priceUnit: "/month",
       ctaText: "View plans",
-      ctaUrl: "/memberships",
+      ctaUrl: "#memberships-plans",
       videoUrl: "/private-events-hero.mp4",
     },
     subscriptionsHeader: {
@@ -606,6 +614,8 @@ export async function getMembershipsPageContent(): Promise<MembershipsPageConten
       label: "compare plans",
       title: "Compare Membership Features",
       description: "See all the benefits side-by-side to help you choose the right membership level for your needs.",
+      ctaText: "Join Now",
+      ctaUrl: "/memberships",
     },
   };
 }

@@ -1402,13 +1402,13 @@ function rq_create_programs( array &$log ): void {
 
 function rq_create_membership_plans( array &$log ): void {
     $plans = [
-        [ 'STARTER', 'Perfect for getting started',       '$89',  'blue', 'bg-[#F4F6F9]', 'border-[#E5E7EB]', false, 'check,check,check,cross,cross,cross,cross,0,2 days'  ],
-        [ 'LIGHT',   'Great choice to begin your journey', '$135', 'blue', 'bg-white',     'border-[#E5E7EB]', false, 'check,check,check,check,check,cross,cross,4,4 days'  ],
-        [ 'PRO',     'Ideal for launching your experience','$189', 'red',  'bg-white',     'border-[#E5E7EB]', true,  'check,check,check,check,check,check,cross,10,7 days' ],
-        [ 'PRO+',    'Best suited for serious players',    '$397', 'red',  'bg-white',     'border-[#E5E7EB]', false, 'check,check,check,check,check,check,check,12,14 days'],
+        [ 'STARTER', 'Perfect for getting started',       '$89',  'blue', 'bg-[#F4F6F9]', 'border-[#E5E7EB]', false, 'check,check,check,cross,cross,cross,cross,0,2 days',  'Join Now', '/memberships#starter'  ],
+        [ 'LIGHT',   'Great choice to begin your journey', '$135', 'blue', 'bg-white',     'border-[#E5E7EB]', false, 'check,check,check,check,check,cross,cross,4,4 days',  'Join Now', '/memberships#light'    ],
+        [ 'PRO',     'Ideal for launching your experience','$189', 'red',  'bg-white',     'border-[#E5E7EB]', true,  'check,check,check,check,check,check,cross,10,7 days', 'Join Now', '/memberships#pro'      ],
+        [ 'PRO+',    'Best suited for serious players',    '$397', 'red',  'bg-white',     'border-[#E5E7EB]', false, 'check,check,check,check,check,check,check,12,14 days','Join Now', '/memberships#pro-plus' ],
     ];
 
-    foreach ( $plans as [ $title, $desc, $price, $btnVariant, $bgClass, $borderClass, $hasImage, $values ] ) {
+    foreach ( $plans as [ $title, $desc, $price, $btnVariant, $bgClass, $borderClass, $hasImage, $values, $ctaText, $ctaUrl ] ) {
         $id = rq_upsert_cpt( 'membership', $title, [
             'field_mem_description'    => $desc,
             'field_mem_price'          => $price,
@@ -1417,6 +1417,8 @@ function rq_create_membership_plans( array &$log ): void {
             'field_mem_border_class'   => $borderClass,
             'field_mem_has_image'      => $hasImage ? '1' : '0',
             'field_mem_values'         => $values,
+            'field_mem_cta_text'       => $ctaText,
+            'field_mem_cta_url'        => $ctaUrl,
         ] );
         $log[] = "  ✔ Membership plan: {$title} (ID {$id})";
     }
@@ -1536,6 +1538,8 @@ function rq_create_page_memberships( string $nextjs, array $media, array &$log )
         '_price_unit'     => 'field_mhero_price_unit',
         'cta_text'        => 'View Plans',
         '_cta_text'       => 'field_mhero_cta_text',
+        'cta_url'         => '#memberships-plans',
+        '_cta_url'        => 'field_mhero_cta_url',
         'video_url'       => $nextjs . 'private-events-hero.mp4',
         '_video_url'      => 'field_mhero_video',
     ] );
@@ -1556,6 +1560,10 @@ function rq_create_page_memberships( string $nextjs, array $media, array &$log )
         '_title'       => 'field_pc_title',
         'description'  => 'See all the benefits side-by-side to help you choose the right membership level.',
         '_description' => 'field_pc_description',
+        'cta_text'     => 'Join Now',
+        '_cta_text'    => 'field_pc_cta_text',
+        'cta_url'      => '/memberships',
+        '_cta_url'     => 'field_pc_cta_url',
     ] );
 
     $page_id = rq_upsert_page( 'Memberships', 'memberships', $content );

@@ -188,6 +188,8 @@ export interface PriceCompareHeaderContent {
   label: string;
   title: string;
   description: string;
+  ctaText?: string;
+  ctaUrl?: string;
 }
 
 export interface MembershipsPageContent {
