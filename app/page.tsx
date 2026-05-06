@@ -6,6 +6,7 @@ import ProgramsSection from "@/components/ProgramsSection";
 import HomeSubscriptionsSection from "@/components/HomeSubscriptionsSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import EventsSection from "@/components/EventsSection";
+import { AmenitiesSection } from "@/components/amenities/AmenitiesSection";
 import BlockRenderer from "@/components/blocks/BlockRenderer";
 import { getPageBlocks } from "@/lib/wp-api";
 import { getHomepageContent, getLocations } from "@/lib/api";
@@ -39,6 +40,7 @@ export default async function HomePage() {
       <HeroSection content={content.hero} />
       <AboutSection content={content.about} />
       <LocationsSection content={content.locations} locations={locations} />
+      <AmenitiesSection />
       <ProgramsSection content={content.programs} />
       {/* Hidden per Alex's request */}
       {/* <MembershipSection content={content.membership} /> */}
