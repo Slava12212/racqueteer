@@ -10,6 +10,20 @@ Local working copy: `projects/racqueteer-fresh/`
 
 ---
 
+### 2026-05-07 — site-developer / MiniMax M2.5
+- Files touched: `wp/inc/acf-blocks.php`, `lib/graphql/queries.ts`, `types/wp-blocks.ts`, `components/amenities/amenitiesData.tsx`, `components/amenities/AmenitiesSection.tsx`, `components/blocks/AmenitiesBlock.tsx`, `components/blocks/BlockRenderer.tsx`, `wp/inc/demo-content.php`
+- What changed: Added new ACF block `racqueteer-amenities` with label, title, and repeater field for amenities items. Added GraphQL fragment, TypeScript interfaces, refactored AmenitiesSection to accept optional content/amenities props for WP integration. Falls back to hardcoded data when WP repeater is empty. Added to demo-content homepage between Locations and Programs blocks.
+- Commit SHA: `658f8fd`
+- Push status: ✅ pushed
+
+### 2026-05-07 — site-developer / MiniMax M2.5
+- Files touched: `components/ProgramsSection.tsx`, `wp/inc/demo-content.php`, `lib/api.ts`
+- What changed: Changed ProgramsSection headline copy to "Discover Our Programs, Coaching, Events, and Clinics". Removed tabs entirely (both desktop and mobile). Moved headline to left side with max-w-[840px] and text-wrap:balance to prevent orphan words. Updated demo-content and api.ts defaults.
+- Commit SHA: `658f8fd` (combined with amenities commit)
+- Push status: ✅ pushed
+
+---
+
 ## Repo map (so we never push to the wrong place again)
 
 | Local folder | Remote | Status |
