@@ -1476,10 +1476,17 @@ function rq_create_page_home( string $nextjs, array $media, array &$log ): void 
         '_description' => 'field_loc_description',
     ] );
 
+    $content .= rq_acf_block( 'acf/racqueteer-amenities', [
+        'label'        => 'amenities',
+        '_label'       => 'field_amen_label',
+        'title'        => 'Our Amenities',
+        '_title'       => 'field_amen_title',
+    ] );
+
     $content .= rq_acf_block( 'acf/racqueteer-programs', [
         'label'        => 'programming',
         '_label'       => 'field_prog_label',
-        'title'        => 'Find the Perfect Program for You',
+        'title'        => 'Discover Our Programs, Coaching, Events, and Clinics',
         '_title'       => 'field_prog_title',
         'description'  => 'Whether you\'re a complete beginner or an advanced player, we have programs tailored to your skill level and goals.',
         '_description' => 'field_prog_description',

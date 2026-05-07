@@ -150,59 +150,27 @@ function ProgramRow({
 
 export default function ProgramsSection({ content, programs: programsProp }: ProgramsSectionProps) {
   const programs = programsProp && programsProp.length > 0 ? programsProp : FALLBACK_PROGRAMS;
-  const [activeTab, setActiveTab] = useState(content.tabs[0] || "Programming");
   const { ctaText, ctaUrl } = useCta();
+
+  // The new headline with text-wrap:balance to prevent orphan words
+  const displayTitle = content.title;
 
   return (
     <section data-header-theme="light" className="min-h-screen bg-brand-bg">
-      {/* Top header section */}
-      <div className="flex flex-col lg:flex-row max-w-[1920px] mx-auto px-5 md:px-10 lg:px-[80px] pt-16 lg:pt-20 pb-0 gap-6 lg:gap-0">
-        {/* Tag - always first on mobile */}
-        <div className="lg:hidden">
-          <ScrollReveal>
-            <span
-              className="text-brand-blue text-xs font-medium tracking-[2.4px] uppercase"
-              style={{ fontFamily: '"Mona Sans", sans-serif' }}
-            >
-              {content.label}
-            </span>
-          </ScrollReveal>
-        </div>
+      {/* Top header section - simplified layout: label + title + button all left-aligned */}
+      <div className="flex flex-col max-w-[1920px] mx-auto px-5 md:px-10 lg:px-[80px] pt-16 lg:pt-20 pb-0 gap-6">
+        {/* Label */}
+        <ScrollReveal>
+          <span
+            className="text-brand-blue text-xs font-medium tracking-[2.4px] uppercase"
+            style={{ fontFamily: '"Mona Sans", sans-serif' }}
+          >
+            {content.label}
+          </span>
+        </ScrollReveal>
 
-        {/* Left column - desktop only shows tag + tabs */}
-        <div className="hidden lg:flex lg:w-1/2 flex-col">
-          <ScrollReveal>
-            <span
-              className="text-brand-blue text-xs font-medium tracking-[2.4px] uppercase"
-              style={{ fontFamily: '"Mona Sans", sans-serif' }}
-            >
-              {content.label}
-            </span>
-          </ScrollReveal>
-
-          {/* Tab filters — pushed to bottom on desktop */}
-          <div className="mt-8 lg:mt-auto lg:pt-40 pb-8 lg:pb-10">
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/40 p-[5px]">
-              {content.tabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-5 py-0.5 rounded-full text-xs font-semibold leading-6 tracking-[1.08px] uppercase transition-colors duration-200 ${
-                    activeTab === tab
-                      ? "bg-brand-blue text-[#F4F4ED]"
-                      : "text-brand-blue hover:bg-brand-blue/10"
-                  }`}
-                  style={{ fontFamily: '"Mona Sans", sans-serif' }}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Title */}
-        <div className="lg:w-1/2 flex flex-col gap-8 lg:gap-10">
+        {/* Title - using text-wrap:balance to prevent orphan words */}
+        <div className="max-w-[840px]">
           <h2
             className="text-brand-blue text-[20px] md:text-3xl lg:text-[32px] xl:text-[40px] uppercase leading-tight"
             style={{
@@ -210,43 +178,36 @@ export default function ProgramsSection({ content, programs: programsProp }: Pro
               fontWeight: 800,
               fontStretch: '125%',
               lineHeight: '120%',
-              letterSpacing: '0.05em'
+              letterSpacing: '0.05em',
+              textWrap: 'balance',
             }}
           >
-            {content.title}
+            {displayTitle}
           </h2>
-
-          {/* Button - desktop only */}
-          <div className="hidden lg:block">
-            <a
-              href={ctaUrl}
-              className="btn-cta btn-cta-red inline-flex items-center justify-center gap-3 text-white px-10 py-4 rounded-sm font-bold text-sm uppercase tracking-wider transition-colors w-fit"
-              style={{ fontFamily: '"Mona Sans", sans-serif' }}
-            >
-              {ctaText}
-              <ButtonArrow color="white" />
-            </a>
-          </div>
         </div>
 
-        {/* Tabs - mobile only, after title */}
+        {/* Button - desktop only */}
+        <div className="hidden lg:block">
+          <a
+            href={ctaUrl}
+            className="btn-cta btn-cta-red inline-flex items-center justify-center gap-3 text-white px-10 py-4 rounded-sm font-bold text-sm uppercase tracking-wider transition-colors w-fit"
+            style={{ fontFamily: '"Mona Sans", sans-serif' }}
+          >
+            {ctaText}
+            <ButtonArrow color="white" />
+          </a>
+        </div>
+
+        {/* Mobile button after title on mobile */}
         <div className="lg:hidden">
-          <div className="inline-flex items-center gap-1 rounded-full border border-brand-blue/40 p-[5px]">
-            {content.tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-3 py-0.5 rounded-full text-[10px] whitespace-nowrap font-semibold leading-6 tracking-[1.08px] uppercase transition-colors duration-200 ${
-                  activeTab === tab
-                    ? "bg-brand-blue text-[#F4F4ED]"
-                    : "text-brand-blue hover:bg-brand-blue/10"
-                }`}
-                style={{ fontFamily: '"Mona Sans", sans-serif' }}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
+          <a
+            href={ctaUrl}
+            className="btn-cta btn-cta-red flex items-center justify-center gap-3 text-white w-full py-4 rounded-sm font-bold text-sm uppercase tracking-wider transition-colors"
+            style={{ fontFamily: '"Mona Sans", sans-serif' }}
+          >
+            {ctaText}
+            <ButtonArrow color="white" />
+          </a>
         </div>
       </div>
 
@@ -257,18 +218,6 @@ export default function ProgramsSection({ content, programs: programsProp }: Pro
             <ProgramRow program={program} />
           </ScrollReveal>
         ))}
-      </div>
-
-      {/* Mobile button after programs list */}
-      <div className="lg:hidden px-5 md:px-10 py-8">
-        <a
-          href={ctaUrl}
-          className="btn-cta btn-cta-red flex items-center justify-center gap-3 text-white w-full py-4 rounded-sm font-bold text-sm uppercase tracking-wider transition-colors"
-          style={{ fontFamily: '"Mona Sans", sans-serif' }}
-        >
-          {ctaText}
-          <ButtonArrow color="white" />
-        </a>
       </div>
     </section>
   );

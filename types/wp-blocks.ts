@@ -37,6 +37,23 @@ export interface WPLocationsAttributes {
   description: string;
 }
 
+export interface WPAmenityItem {
+  title: string;
+  number: string;
+  imageLayout: 'single' | 'split';
+  images: unknown;
+  feature1Icon: string;
+  feature1Text: string;
+  feature2Icon: string;
+  feature2Text: string;
+}
+
+export interface WPAmenitiesAttributes {
+  label: string;
+  title: string;
+  amenities: unknown;
+}
+
 export interface WPProgramsAttributes {
   label: string;
   title: string;

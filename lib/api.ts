@@ -556,7 +556,7 @@ export async function getHomepageContent(): Promise<HomepageContent> {
     },
     programs: {
       label: "programming",
-      title: "Find the Perfect Program for You",
+      title: "Discover Our Programs, Coaching, Events, and Clinics",
       description: "Whether you're a complete beginner or an advanced player, we have programs tailored to your skill level and goals. Our expert coaches will help you improve your game in a fun and supportive environment.",
       tabs: ["Programming", "Coaching", "Events"],
     },

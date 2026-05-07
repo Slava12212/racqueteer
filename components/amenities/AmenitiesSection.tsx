@@ -4,13 +4,29 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 
-import { amenities, TOTAL } from "./amenitiesData";
+import { amenities as defaultAmenities, TOTAL } from "./amenitiesData";
+
+import type { Amenity } from "./amenitiesData";
 
 import { AmenityCard } from "./AmenityCard";
 
 import ScrollReveal from "../ScrollReveal";
 
-export function AmenitiesSection() {
+interface ContentProps {
+  label?: string;
+  title?: string;
+}
+
+interface AmenitiesSectionProps {
+  content?: ContentProps;
+  amenities?: Amenity[];
+}
+
+export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) {
+  // Use provided amenities or fall back to default
+  const amenitiesList = amenities && amenities.length > 0 ? amenities : defaultAmenities;
+  const itemCount = amenitiesList.length;
+  
   const [currentIndex, setCurrentIndex] = useState(0);
   const [cardStep, setCardStep] = useState(596);
   const firstCardRef = useRef<HTMLDivElement>(null);
@@ -42,7 +58,7 @@ export function AmenitiesSection() {
     return () => window.removeEventListener("resize", measure);
   }, []);
   
-  const totalCardsWidth = TOTAL * cardStep;
+  const totalCardsWidth = itemCount * cardStep;
   const visibleWidth = containerWidth;
   const maxScrollPx = Math.max(0, totalCardsWidth - visibleWidth + 16); // 16 = gap compensation
   const maxIndex = Math.max(0, Math.ceil(maxScrollPx / cardStep));
@@ -57,6 +73,9 @@ export function AmenitiesSection() {
     if (canGoForward) setCurrentIndex((prev) => prev + 1);
   };
 
+  const displayLabel = content?.label || 'amenities';
+  const displayTitle = content?.title || 'our amenities';
+
   return (
     <section data-header-theme="light" className="min-h-screen bg-[#F4F6F9] flex flex-col justify-center py-12 xl:py-16 overflow-hidden">
       {/* Header row */}
@@ -67,7 +86,7 @@ export function AmenitiesSection() {
               className="text-[#265090] font-medium uppercase"
               style={{ fontSize: "12px", letterSpacing: "2.4px", lineHeight: "120%" }}
             >
-              amenities
+              {displayLabel}
             </p>
             <h2
               className="text-[#265090] uppercase"
@@ -80,7 +99,7 @@ export function AmenitiesSection() {
                 lineHeight: "120%",
               }}
             >
-              our amenities
+              {displayTitle}
             </h2>
           </div>
 
@@ -168,13 +187,13 @@ export function AmenitiesSection() {
             className="flex gap-4 items-stretch transition-transform duration-500 ease-in-out"
             style={{ transform: `translateX(-${currentIndex * cardStep}px)` }}
           >
-            {amenities.map((amenity, index) => (
+            {amenitiesList.map((amenity, index) => (
               <div
                 key={amenity.id}
                 ref={index === 0 ? firstCardRef : undefined}
                 className="flex-shrink-0 self-stretch snap-center"
               >
-                <AmenityCard amenity={amenity} total={TOTAL} />
+                <AmenityCard amenity={amenity} total={itemCount} />
               </div>
             ))}
           </div>

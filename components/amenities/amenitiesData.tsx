@@ -2,7 +2,7 @@
 import type { ReactNode } from "react";
 
 export interface AmenityFeature {
-  icon: ReactNode;
+  icon: ReactNode | string;
   text: string;
 }
 

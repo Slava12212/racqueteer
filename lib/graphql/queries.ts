@@ -38,6 +38,22 @@ export const GET_PAGE_BY_SLUG = `
             description
           }
         }
+        ... on AcfRacqueteerAmenitiesBlock {
+          racqueteerAmenities {
+            label
+            title
+            amenities {
+              title
+              number
+              imageLayout
+              images
+              feature1Icon
+              feature1Text
+              feature2Icon
+              feature2Text
+            }
+          }
+        }
         ... on AcfRacqueteerProgramsBlock {
           racqueteerPrograms {
             label
