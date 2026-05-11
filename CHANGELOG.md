@@ -9,6 +9,12 @@ Local working copy: `projects/racqueteer-fresh/`
 > **Rule going forward:** EVERY change made to this project must be appended to this file with date, author (which agent + model), files touched, what changed, and the resulting git commit SHA + push status. No silent edits.
 
 ---
+### 2026-05-11 — site-developer / MiniMax M2.5
+- Files touched: `components/BookModal.tsx` (new), `lib/booking-urls.ts` (new), `lib/navbar-cta.ts`, `app/layout.tsx`, `components/HeroSection.tsx`, `components/Navbar.tsx`, `components/Footer.tsx`, `components/LocationsSection.tsx`, `components/ProgramsSection.tsx`, `components/about/MissionSection.tsx`, `public/book-modal-padel.webp`, `public/book-modal-pickleball.webp`
+- What changed: Added "Choose Your Sport" booking modal that appears when clicking any Book CTA. Modal shows two side-by-side panels for Padel and Pickleball with clickable images. Opens external booking URLs in new tab. Converted all Book CTAs from `<a href>` to `<button onClick=openBookModal>`. Dummy URLs in booking-urls.ts (TODO: replace with real URLs).
+- Commit SHA: `14a274a`
+- Push status: ✅ pushed
+
 
 ### 2026-05-07 — site-developer / MiniMax M2.5
 - Files touched: `wp/inc/acf-blocks.php`, `lib/graphql/queries.ts`, `types/wp-blocks.ts`, `components/amenities/amenitiesData.tsx`, `components/amenities/AmenitiesSection.tsx`, `components/blocks/AmenitiesBlock.tsx`, `components/blocks/BlockRenderer.tsx`, `wp/inc/demo-content.php`
