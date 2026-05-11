@@ -107,7 +107,6 @@ export default async function RootLayout({
           <Navbar content={navbarContent} />
           {children}
           <Footer content={footerContent} />
-          <BookModal />
         </CtaProvider>
       </body>
     </html>

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import type { FooterContent } from "@/types";
 import ScrollReveal from "./ScrollReveal";

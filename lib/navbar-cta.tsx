@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
+import BookModal from "@/components/BookModal";
 
 export interface CtaData {
   ctaText: string;
@@ -29,13 +30,19 @@ export function CtaProvider({
 }) {
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
 
-  const openBookModal = () => setIsBookModalOpen(true);
-  const closeBookModal = () => setIsBookModalOpen(false);
+  const openBookModal = useCallback(() => {
+    setIsBookModalOpen(true);
+  }, []);
 
-  return React.createElement(
-    CtaContext.Provider,
-    { value: { ctaText, ctaUrl, isBookModalOpen, openBookModal, closeBookModal } },
-    children
+  const closeBookModal = useCallback(() => {
+    setIsBookModalOpen(false);
+  }, []);
+
+  return (
+    <CtaContext.Provider value={{ ctaText, ctaUrl, isBookModalOpen, openBookModal, closeBookModal }}>
+      {children}
+      <BookModal />
+    </CtaContext.Provider>
   );
 }
 
