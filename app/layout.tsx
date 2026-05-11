@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import BookModal from "@/components/BookModal";
 import { getSiteOptions } from "@/lib/wp-api";
 import { getNavbarContent, getFooterContent } from "@/lib/api";
 import type { NavbarContent, FooterContent } from "@/types";
 import { CtaProvider } from "@/lib/navbar-cta";
+import BookModal from "@/components/BookModal";
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://racqueteer.vercel.app'),
