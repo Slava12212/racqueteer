@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { NavbarContent } from "@/types";
 import ButtonArrow from "./ButtonArrow";
+import { useCta } from "@/lib/navbar-cta";
 
 interface NavbarProps {
   content: NavbarContent;
@@ -62,6 +63,7 @@ export default function Navbar({ content }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const lastScrollY = useRef(0);
   const pathname = usePathname();
+  const { openBookModal } = useCta();
 
   // Close menu on route change
   useEffect(() => {
@@ -175,10 +177,14 @@ export default function Navbar({ content }: NavbarProps) {
           {/* Mobile: Centered CTA button */}
           <div className="md:hidden absolute left-1/2 -translate-x-1/2 z-[60]">
             {!menuOpen && (
-              <a href={content.ctaUrl} className={`btn-cta flex items-center gap-2 ${ctaBg} text-[11px] font-bold uppercase tracking-[1.4px] px-4 py-2 rounded-sm transition-all duration-300`}>
+              <button
+                type="button"
+                onClick={openBookModal}
+                className={`btn-cta flex items-center gap-2 ${ctaBg} text-[11px] font-bold uppercase tracking-[1.4px] px-4 py-2 rounded-sm transition-all duration-300`}
+              >
                 {content.ctaText}
                 <ButtonArrow color={ctaArrowColor} />
-              </a>
+              </button>
             )}
           </div>
 
@@ -192,10 +198,14 @@ export default function Navbar({ content }: NavbarProps) {
                 </LinkEl>
               );
             })}
-            <a href={content.ctaUrl} className={`btn-cta flex items-center gap-3 ${ctaBg} text-[11px] lg:text-[14px] font-bold uppercase px-4 lg:px-6 py-2 rounded-sm transition-all duration-300`}>
+            <button
+              type="button"
+              onClick={openBookModal}
+              className={`btn-cta flex items-center gap-3 ${ctaBg} text-[11px] lg:text-[14px] font-bold uppercase px-4 lg:px-6 py-2 rounded-sm transition-all duration-300`}
+            >
               {content.ctaText}
               <ButtonArrow color={ctaArrowColor} />
-            </a>
+            </button>
           </div>
 
           {/* Mobile: Burger / Close button */}
@@ -268,14 +278,17 @@ export default function Navbar({ content }: NavbarProps) {
 
         {/* Bottom: Book a Court button */}
         <div className="px-6 pb-10">
-          <a
-            href={content.ctaUrl}
+          <button
+            type="button"
+            onClick={() => {
+              openBookModal();
+              setMenuOpen(false);
+            }}
             className="btn-cta btn-cta-red flex items-center justify-center gap-3 text-white text-sm font-bold uppercase tracking-wider px-10 py-4 rounded-sm w-full transition-colors"
-            onClick={() => setMenuOpen(false)}
           >
             {content.ctaText}
             <ButtonArrow color="white" />
-          </a>
+          </button>
         </div>
       </div>
     </>

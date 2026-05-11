@@ -150,7 +150,7 @@ function ProgramRow({
 
 export default function ProgramsSection({ content, programs: programsProp }: ProgramsSectionProps) {
   const programs = programsProp && programsProp.length > 0 ? programsProp : FALLBACK_PROGRAMS;
-  const { ctaText, ctaUrl } = useCta();
+  const { ctaText, ctaUrl, openBookModal } = useCta();
 
   // The new headline with text-wrap:balance to prevent orphan words
   const displayTitle = content.title;
@@ -188,26 +188,28 @@ export default function ProgramsSection({ content, programs: programsProp }: Pro
 
         {/* Button - desktop only */}
         <div className="hidden lg:block">
-          <a
-            href={ctaUrl}
+          <button
+            type="button"
+            onClick={openBookModal}
             className="btn-cta btn-cta-red inline-flex items-center justify-center gap-3 text-white px-10 py-4 rounded-sm font-bold text-sm uppercase tracking-wider transition-colors w-fit"
             style={{ fontFamily: '"Mona Sans", sans-serif' }}
           >
             {ctaText}
             <ButtonArrow color="white" />
-          </a>
+          </button>
         </div>
 
         {/* Mobile button after title on mobile */}
         <div className="lg:hidden">
-          <a
-            href={ctaUrl}
+          <button
+            type="button"
+            onClick={openBookModal}
             className="btn-cta btn-cta-red flex items-center justify-center gap-3 text-white w-full py-4 rounded-sm font-bold text-sm uppercase tracking-wider transition-colors"
             style={{ fontFamily: '"Mona Sans", sans-serif' }}
           >
             {ctaText}
             <ButtonArrow color="white" />
-          </a>
+          </button>
         </div>
       </div>
 

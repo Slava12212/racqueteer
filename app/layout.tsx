@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BookModal from "@/components/BookModal";
 import { getSiteOptions } from "@/lib/wp-api";
 import { getNavbarContent, getFooterContent } from "@/lib/api";
 import type { NavbarContent, FooterContent } from "@/types";
@@ -106,6 +107,7 @@ export default async function RootLayout({
           <Navbar content={navbarContent} />
           {children}
           <Footer content={footerContent} />
+          <BookModal />
         </CtaProvider>
       </body>
     </html>

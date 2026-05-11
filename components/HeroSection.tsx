@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { HeroContent } from "@/types";
 import ButtonArrow from "./ButtonArrow";
 import ScrollReveal from "./ScrollReveal";
+import { useCta } from "@/lib/navbar-cta";
 
 interface HeroSectionProps {
   content: HeroContent;
@@ -57,6 +58,7 @@ const ContentProgressiveBlur = () => (
 
 export default function HeroSection({ content }: HeroSectionProps) {
   const [videoReady, setVideoReady] = useState(false);
+  const { openBookModal } = useCta();
 
   return (
     <section data-header-theme="dark" className="relative w-full min-h-screen overflow-hidden font-mona-sans flex flex-col">
@@ -116,13 +118,14 @@ export default function HeroSection({ content }: HeroSectionProps) {
 
               <ScrollReveal delay={600} from="bottom" distance={20} duration={700}>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <a
-                    href={content.ctaPrimaryUrl}
+                  <button
+                    type="button"
+                    onClick={openBookModal}
                     className="btn-cta btn-cta-red flex flex-1 items-center justify-center gap-3 text-white text-sm font-bold uppercase tracking-wider px-6 xl:px-10 py-4 rounded-sm transition-colors"
                   >
                     {content.ctaPrimaryText}
                     <ButtonArrow color="white" />
-                  </a>
+                  </button>
                   <a
                     href={content.ctaSecondaryUrl}
                     className="btn-cta flex flex-1 items-center justify-center gap-3 border border-white/50 bg-white/[0.03] text-white text-sm font-bold uppercase tracking-wider px-6 xl:px-10 py-4 rounded-sm hover:bg-white/10 transition-colors"

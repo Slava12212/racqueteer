@@ -1,12 +1,15 @@
 import Link from "next/link";
 import type { FooterContent } from "@/types";
 import ScrollReveal from "./ScrollReveal";
+import { useCta } from "@/lib/navbar-cta";
 
 interface FooterProps {
   content: FooterContent;
 }
 
 export default function Footer({ content }: FooterProps) {
+  const { openBookModal } = useCta();
+
   return (
     <footer data-header-theme="dark" className="w-full bg-[#003E6B]">
       {/* Main footer content — 580px height, max-width 1920px */}
@@ -51,12 +54,16 @@ export default function Footer({ content }: FooterProps) {
             </ScrollReveal>
             <ScrollReveal from="bottom" delay={200}>
               <div className="mt-2">
-                <a href={content.ctaUrl} className="btn-cta btn-cta-white inline-flex items-center justify-center gap-3 text-[#003E6B] text-sm font-bold uppercase tracking-wider px-10 py-4 rounded-sm transition-colors">
+                <button
+                  type="button"
+                  onClick={openBookModal}
+                  className="btn-cta btn-cta-white inline-flex items-center justify-center gap-3 text-[#003E6B] text-sm font-bold uppercase tracking-wider px-10 py-4 rounded-sm transition-colors"
+                >
                   {content.ctaText}
                   <svg className="btn-arrow shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M7 17L17 7M17 7L16.9993 16.0526M17 7L7 7" stroke="#003E6B" strokeWidth="2" strokeLinejoin="round"/>
                   </svg>
-                </a>
+                </button>
               </div>
             </ScrollReveal>
           </div>
