@@ -31,16 +31,34 @@ export default async function HomePage() {
   }
 
   // Fallback — hardcoded content while WP isn't configured yet
-  const [content, locations] = await Promise.all([
+  const [content, locations, wpAmenities] = await Promise.all([
     getHomepageContent(),
     getLocations(),
+    getAmenities(),
   ]);
+
+  // Convert WP CPT amenities → Amenity[] with resolved icons.
+  // Falls back to undefined so AmenitiesSection uses its hardcoded static data.
+  const amenities: Amenity[] | undefined = wpAmenities.length > 0
+    ? wpAmenities.map((item) => ({
+        id:          item.id,
+        title:       item.title,
+        number:      item.number,
+        imageLayout: item.imageLayout,
+        images:      item.images,
+        features: [
+          { icon: resolveAmenityIcon(item.feature1Icon), text: item.feature1Text },
+          { icon: resolveAmenityIcon(item.feature2Icon), text: item.feature2Text },
+        ],
+      } as Amenity))
+    : undefined;
+
   return (
     <div className="overflow-x-hidden">
       <HeroSection content={content.hero} />
       <AboutSection content={content.about} />
       <LocationsSection content={content.locations} locations={locations} />
-      <AmenitiesSection />
+      <AmenitiesSection amenities={amenities} />
       <ProgramsSection content={content.programs} />
       {/* Hidden per Alex's request */}
       {/* <MembershipSection content={content.membership} /> */}
