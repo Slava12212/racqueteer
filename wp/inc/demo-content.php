@@ -242,7 +242,7 @@ function rq_run_import(): array {
     rq_create_locations( $media, $log );
 
     $log[] = '— Creating Amenities…';
-    rq_create_amenities( $log );
+    rq_create_amenities( $media, $log );
 
     $log[] = '— Creating Programs…';
     rq_create_programs( $log );
@@ -1524,21 +1524,72 @@ function rq_save_location_amenities( int $post_id, array $amenities ): void {
  * uses its own inline data. These CPT entries allow querying via
  * GET_AMENITIES GraphQL query (amenities { nodes { amenityFields { … } } }).
  */
-function rq_create_amenities( array &$log ): void {
+function rq_create_amenities( array $media, array &$log ): void {
+    // Map of amenity key → image keys in $media (or fallback URLs).
+    // Each entry: [ title, number, layout, media_keys[], feat1_icon, feat1_text, feat2_icon, feat2_text ]
+    $img = function ( string $key, string $fallback ) use ( $media ): int {
+        if ( ! empty( $media[ $key ] ) && is_numeric( $media[ $key ] ) ) {
+            return (int) $media[ $key ];
+        }
+        // Sideload from fallback URL on-the-fly if not in $media
+        if ( $fallback ) {
+            $id = rq_sideload_image( $fallback, $key );
+            return $id > 0 ? $id : 0;
+        }
+        return 0;
+    };
+
     $items = [
-        // [ title, number, layout, feat1_icon, feat1_text, feat2_icon, feat2_text ]
-        [ 'State-of-the-Art Courts', '01', 'split',  'courts',  '11 pickleball and 6 premium panoramic padel courts for top-level play',       'jumprope', 'Tournament-quality surfaces, lighting, and spacious layouts'                             ],
-        [ 'Premium Locker Rooms',    '02', 'single', 'locker',  'Spacious changing rooms with lockers, private showers, and saunas',            'sauna',    'Elevated finishes with hotel-style toiletries'                                           ],
-        [ 'Members Lounge',          '03', 'split',  'lounge',  'Comfortable lounge spaces to relax and connect between matches',               'member',   'Exclusive members-only access with social seating areas'                                 ],
-        [ 'Café & Coffee Bar',       '04', 'single', 'coffee',  'Specialty coffee by Wood Roasters, an award-winning Australian roaster',       'drink',    'Coffee, drinks, and light bites to fuel your game or your workday'                      ],
-        [ 'Coworking Spaces',        '05', 'single', 'laptop',  'Dedicated workspaces with comfortable seating and TVs',                        'video',    'Private call booths for meetings or focused work'                                       ],
-        [ 'Pro Shop',                '06', 'single', 'shop',    'Premium paddles, rackets, and apparel from leading brands like Wilson and JOOL', 'shop',  'Expertly curated equipment to help players of all levels elevate their game'            ],
+        [
+            'State-of-the-Art Courts', '01', 'split',
+            [
+                $img( 'amenity_courts_1', 'https://api.builder.io/api/v1/image/assets/TEMP/990ef1551fbb5f0b888274af1c845d648fe5fb94?width=712' ),
+                $img( 'amenity_courts_2', 'https://api.builder.io/api/v1/image/assets/TEMP/702da1f17f07301d52908f1d5474582d68de8bbb?width=440' ),
+            ],
+            'courts',  '11 pickleball and 6 premium panoramic padel courts for top-level play',
+            'jumprope','Tournament-quality surfaces, lighting, and spacious layouts',
+        ],
+        [
+            'Premium Locker Rooms', '02', 'single',
+            [ $img( 'amenity_locker', 'https://api.builder.io/api/v1/image/assets/TEMP/d8de9b0fdcd157a095ecfe9d6bcb38d05a4539a4?width=1160' ) ],
+            'locker', 'Spacious changing rooms with lockers, private showers, and saunas',
+            'sauna',  'Elevated finishes with hotel-style toiletries',
+        ],
+        [
+            'Members Lounge', '03', 'split',
+            [
+                $img( 'amenity_lounge_1', 'https://api.builder.io/api/v1/image/assets/TEMP/5dc4829ab10a10d5399e066cd74a5dd26e919756?width=712' ),
+                $img( 'amenity_lounge_2', 'https://api.builder.io/api/v1/image/assets/TEMP/563bb083dd31ed4c310f35e5be2ca1eec4222bfa?width=440' ),
+            ],
+            'lounge', 'Comfortable lounge spaces to relax and connect between matches',
+            'member', 'Exclusive members-only access with social seating areas',
+        ],
+        [
+            'Café & Coffee Bar', '04', 'single',
+            [ $img( 'amenity_cafe', 'https://api.builder.io/api/v1/image/assets/TEMP/8c587701b3d240e76568b31e8f3e84279ddc6620?width=1160' ) ],
+            'coffee', 'Specialty coffee by Wood Roasters, an award-winning Australian roaster',
+            'drink',  'Coffee, drinks, and light bites to fuel your game or your workday',
+        ],
+        [
+            'Coworking Spaces', '05', 'single',
+            [ $img( 'amenity_coworking', 'https://api.builder.io/api/v1/image/assets/TEMP/d5e3ebf476e768cf5cc81776480eff8860606e0f?width=1160' ) ],
+            'laptop', 'Dedicated workspaces with comfortable seating and TVs',
+            'video',  'Private call booths for meetings or focused work',
+        ],
+        [
+            'Pro Shop', '06', 'single',
+            [ $img( 'amenity_proshop', 'https://api.builder.io/api/v1/image/assets/TEMP/9685279b5497611f63b0e790190851bd747fd9c0?width=1160' ) ],
+            'shop', 'Premium paddles, rackets, and apparel from leading brands like Wilson and JOOL',
+            'shop', 'Expertly curated equipment to help players of all levels elevate their game',
+        ],
     ];
 
-    foreach ( $items as $order => [ $title, $num, $layout, $icon1, $text1, $icon2, $text2 ] ) {
+    foreach ( $items as $order => [ $title, $num, $layout, $images, $icon1, $text1, $icon2, $text2 ] ) {
+        $image_ids = array_values( array_filter( $images, fn( $id ) => $id > 0 ) );
         $id = rq_upsert_cpt( 'amenity', $title, [
             'field_amenity_number'       => $num,
             'field_amenity_image_layout' => $layout,
+            'field_amenity_images'       => $image_ids,
             'field_amenity_feat1_icon'   => $icon1,
             'field_amenity_feat1_text'   => $text1,
             'field_amenity_feat2_icon'   => $icon2,
@@ -1548,7 +1599,7 @@ function rq_create_amenities( array &$log ): void {
         if ( $id ) {
             wp_update_post( [ 'ID' => $id, 'menu_order' => $order + 1 ] );
         }
-        $log[] = "  ✔ Amenity: {$title} (ID {$id})";
+        $log[] = "  ✔ Amenity: {$title} (ID {$id}, images: " . count( $image_ids ) . ")";
     }
 }
 
@@ -1663,7 +1714,7 @@ function rq_create_page_home( string $nextjs, array $media, array &$log ): void 
         '_label' => 'field_amen_label',
         'title'  => 'Our Amenities',
         '_title' => 'field_amen_title',
-    ], rq_amenities_block_data() ) );
+    ], rq_amenities_block_data( $media ) ) );
 
     $content .= rq_acf_block( 'acf/racqueteer-programs', [
         'label'        => 'programming',
@@ -1914,15 +1965,61 @@ function rq_create_page_careers( string $nextjs, array $media, array &$log ): vo
  *   _amenities_0_title => field_key sub-поля
  *   ...
  */
-function rq_amenities_block_data(): array {
+function rq_amenities_block_data( array $media = [] ): array {
+    // Image URLs → prefer uploaded WP attachment IDs (from $media), fallback to hosted URLs.
+    // The graphql-extensions.php resolver handles both: numeric IDs → wp_get_attachment_url(),
+    // strings → passed through as-is.
+    $img = function ( string $key, string $fallback ) use ( $media ): string {
+        return ( ! empty( $media[ $key ] ) && is_numeric( $media[ $key ] ) )
+            ? (string) $media[ $key ]
+            : $fallback;
+    };
+
+    // Hosted fallback URLs (from the original amenitiesData.tsx design)
     $items = [
-        // [ title, number, layout, feat1_icon, feat1_text, feat2_icon, feat2_text ]
-        [ 'State-of-the-Art Courts', '01', 'split',  'courts', '11 pickleball and 6 premium panoramic padel courts for top-level play',       'jumprope', 'Tournament-quality surfaces, lighting, and spacious layouts'                             ],
-        [ 'Premium Locker Rooms',    '02', 'single', 'locker', 'Spacious changing rooms with lockers, private showers, and saunas',            'sauna',    'Elevated finishes with hotel-style toiletries'                                           ],
-        [ 'Members Lounge',          '03', 'split',  'lounge', 'Comfortable lounge spaces to relax and connect between matches',               'member',   'Exclusive members-only access with social seating areas'                                 ],
-        [ 'Café & Coffee Bar',       '04', 'single', 'coffee', 'Specialty coffee by Wood Roasters, an award-winning Australian roaster',       'drink',    'Coffee, drinks, and light bites to fuel your game or your workday'                      ],
-        [ 'Coworking Spaces',        '05', 'single', 'laptop', 'Dedicated workspaces with comfortable seating and TVs',                        'video',    'Private call booths for meetings or focused work'                                       ],
-        [ 'Pro Shop',                '06', 'single', 'shop',   'Premium paddles, rackets, and apparel from leading brands like Wilson and JOOL','shop',    'Expertly curated equipment to help players of all levels elevate their game'            ],
+        // [ title, number, layout, images[], feat1_icon, feat1_text, feat2_icon, feat2_text ]
+        [
+            'State-of-the-Art Courts', '01', 'split',
+            [
+                $img( 'amenity_courts_1', 'https://api.builder.io/api/v1/image/assets/TEMP/990ef1551fbb5f0b888274af1c845d648fe5fb94?width=712' ),
+                $img( 'amenity_courts_2', 'https://api.builder.io/api/v1/image/assets/TEMP/702da1f17f07301d52908f1d5474582d68de8bbb?width=440' ),
+            ],
+            'courts',  '11 pickleball and 6 premium panoramic padel courts for top-level play',
+            'jumprope','Tournament-quality surfaces, lighting, and spacious layouts',
+        ],
+        [
+            'Premium Locker Rooms', '02', 'single',
+            [ $img( 'amenity_locker', 'https://api.builder.io/api/v1/image/assets/TEMP/d8de9b0fdcd157a095ecfe9d6bcb38d05a4539a4?width=1160' ) ],
+            'locker', 'Spacious changing rooms with lockers, private showers, and saunas',
+            'sauna',  'Elevated finishes with hotel-style toiletries',
+        ],
+        [
+            'Members Lounge', '03', 'split',
+            [
+                $img( 'amenity_lounge_1', 'https://api.builder.io/api/v1/image/assets/TEMP/5dc4829ab10a10d5399e066cd74a5dd26e919756?width=712' ),
+                $img( 'amenity_lounge_2', 'https://api.builder.io/api/v1/image/assets/TEMP/563bb083dd31ed4c310f35e5be2ca1eec4222bfa?width=440' ),
+            ],
+            'lounge', 'Comfortable lounge spaces to relax and connect between matches',
+            'member', 'Exclusive members-only access with social seating areas',
+        ],
+        [
+            'Café & Coffee Bar', '04', 'single',
+            [ $img( 'amenity_cafe', 'https://api.builder.io/api/v1/image/assets/TEMP/8c587701b3d240e76568b31e8f3e84279ddc6620?width=1160' ) ],
+            'coffee', 'Specialty coffee by Wood Roasters, an award-winning Australian roaster',
+            'drink',  'Coffee, drinks, and light bites to fuel your game or your workday',
+        ],
+        [
+            'Coworking Spaces', '05', 'single',
+            [ $img( 'amenity_coworking', 'https://api.builder.io/api/v1/image/assets/TEMP/d5e3ebf476e768cf5cc81776480eff8860606e0f?width=1160' ) ],
+            'laptop', 'Dedicated workspaces with comfortable seating and TVs',
+            'video',  'Private call booths for meetings or focused work',
+        ],
+        [
+            'Pro Shop', '06', 'single',
+            [ $img( 'amenity_proshop', 'https://api.builder.io/api/v1/image/assets/TEMP/9685279b5497611f63b0e790190851bd747fd9c0?width=1160' ) ],
+            'shop', 'Premium paddles, rackets, and apparel from leading brands like Wilson and JOOL',
+            'shop', 'Expertly curated equipment to help players of all levels elevate their game',
+        ],
     ];
 
     $data = [
@@ -1930,14 +2027,14 @@ function rq_amenities_block_data(): array {
         '_amenities' => 'field_amen_amenities',
     ];
 
-    foreach ( $items as $i => [ $title, $num, $layout, $icon1, $text1, $icon2, $text2 ] ) {
+    foreach ( $items as $i => [ $title, $num, $layout, $images, $icon1, $text1, $icon2, $text2 ] ) {
         $data[ "amenities_{$i}_title" ]            = $title;
         $data[ "_amenities_{$i}_title" ]           = 'field_amen_item_title';
         $data[ "amenities_{$i}_number" ]           = $num;
         $data[ "_amenities_{$i}_number" ]          = 'field_amen_item_number';
         $data[ "amenities_{$i}_image_layout" ]     = $layout;
         $data[ "_amenities_{$i}_image_layout" ]    = 'field_amen_item_layout';
-        $data[ "amenities_{$i}_images" ]           = [];
+        $data[ "amenities_{$i}_images" ]           = $images;  // array of URL strings or attachment IDs
         $data[ "_amenities_{$i}_images" ]          = 'field_amen_item_images';
         $data[ "amenities_{$i}_feature_1_icon" ]   = $icon1;
         $data[ "_amenities_{$i}_feature_1_icon" ]  = 'field_amen_item_feat1_icon';
