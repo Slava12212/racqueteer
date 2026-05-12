@@ -428,19 +428,19 @@ export async function getAmenities(): Promise<WPCptAmenity[]> {
     }>(GET_AMENITIES);
 
     return data.amenities.nodes.map((node, index) => {
-      const af = node.amenityFields ?? {};
+      const af = node.amenityFields;
       return {
         id:           node.databaseId,
         title:        node.title,
-        number:       af.number ?? String(index + 1).padStart(2, '0'),
-        imageLayout:  (af.imageLayout === 'split' ? 'split' : 'single') as 'single' | 'split',
-        images:       Array.isArray(af.images)
-                        ? af.images.map((img) => img.sourceUrl).filter(Boolean)
+        number:       af?.number ?? String(index + 1).padStart(2, '0'),
+        imageLayout:  (af?.imageLayout === 'split' ? 'split' : 'single') as 'single' | 'split',
+        images:       Array.isArray(af?.images)
+                        ? af!.images!.map((img) => img.sourceUrl).filter(Boolean)
                         : [],
-        feature1Icon: af.feature1Icon ?? '',
-        feature1Text: af.feature1Text ?? '',
-        feature2Icon: af.feature2Icon ?? '',
-        feature2Text: af.feature2Text ?? '',
+        feature1Icon: af?.feature1Icon ?? '',
+        feature1Text: af?.feature1Text ?? '',
+        feature2Icon: af?.feature2Icon ?? '',
+        feature2Text: af?.feature2Text ?? '',
       };
     });
   } catch (err) {
