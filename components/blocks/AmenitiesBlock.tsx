@@ -2,7 +2,7 @@
 // Can be async and call getAmenities() directly for CPT fallback.
 import { AmenitiesSection } from "@/components/amenities/AmenitiesSection";
 import { getAmenities } from "@/lib/wp-api";
-import { resolveAmenityIcon } from "@/lib/amenity-icons";
+import { resolveAmenityIcon } from "@/lib/amenity-resolver";
 import type { WPAmenitiesAttributes, WPAmenityItem } from "@/types/wp-blocks";
 import type { Amenity } from "@/components/amenities/amenitiesData";
 

@@ -1335,28 +1335,28 @@ function rq_sideload_asset( string $filename, string $remote_url, string $title 
 // ─────────────────────────────────────────────
 
 function rq_import_media( string $nextjs, array &$log ): array {
-    // [ key => [ filename_in_assets_images, remote_fallback_url ] ]
-    $assets = [
-        'logo'                  => [ 'logo2.svg',                       $nextjs . 'logo2.svg'                       ],
-        'logo_icon'             => [ 'logo-icon.png',                   $nextjs . 'logo-icon.png'                   ],
-        'racket_pickleball'     => [ 'racket-pickleball.png',           $nextjs . 'racket-pickleball.png'           ],
-        'racket_padel'          => [ 'racket-padel.png',                $nextjs . 'racket-padel.png'                ],
-        'rackets_mobile'        => [ 'rackets-mobile.png',              $nextjs . 'rackets-mobile.png'              ],
-        'membership_bg'         => [ 'membership-bg.png',               $nextjs . 'membership-bg.png'               ],
-        'membership_pickleball' => [ 'membership-racket-pickleball.png',$nextjs . 'membership-racket-pickleball.png'],
-        'membership_padel'      => [ 'membership-racket-padel.png',     $nextjs . 'membership-racket-padel.png'     ],
-        'about_hero'            => [ 'about-hero.png',                  $nextjs . 'about-hero.png'                  ],
-        'contact_bg'            => [ 'contact-bg.png',                  $nextjs . 'contact-bg.png'                  ],
-        'book_modal_padel'      => [ 'book-modal-padel-v2.webp',        $nextjs . 'book-modal-padel-v2.webp'        ],
-        'book_modal_pickleball' => [ 'book-modal-pickleball-v2.webp',   $nextjs . 'book-modal-pickleball-v2.webp'   ],
+    $media = [];
+
+    // ── 1. Required assets: try local file first, then remote (Next.js / Vercel) ──
+    $required = [
+        'logo'                  => [ 'logo2.svg',                        $nextjs . 'logo2.svg'                        ],
+        'logo_icon'             => [ 'logo-icon.png',                    $nextjs . 'logo-icon.png'                    ],
+        'racket_pickleball'     => [ 'racket-pickleball.png',            $nextjs . 'racket-pickleball.png'            ],
+        'racket_padel'          => [ 'racket-padel.png',                 $nextjs . 'racket-padel.png'                 ],
+        'rackets_mobile'        => [ 'rackets-mobile.png',               $nextjs . 'rackets-mobile.png'               ],
+        'membership_bg'         => [ 'membership-bg.png',                $nextjs . 'membership-bg.png'                ],
+        'membership_pickleball' => [ 'membership-racket-pickleball.png', $nextjs . 'membership-racket-pickleball.png' ],
+        'membership_padel'      => [ 'membership-racket-padel.png',      $nextjs . 'membership-racket-padel.png'      ],
+        'about_hero'            => [ 'about-hero.png',                   $nextjs . 'about-hero.png'                   ],
+        'contact_bg'            => [ 'contact-bg.png',                   $nextjs . 'contact-bg.png'                   ],
+        'book_modal_padel'      => [ 'book-modal-padel-v2.webp',         $nextjs . 'book-modal-padel-v2.webp'         ],
+        'book_modal_pickleball' => [ 'book-modal-pickleball-v2.webp',    $nextjs . 'book-modal-pickleball-v2.webp'    ],
     ];
 
-    $media = [];
-    foreach ( $assets as $key => [ $filename, $remote_url ] ) {
+    foreach ( $required as $key => [ $filename, $remote_url ] ) {
         $local_path = RACQUETEER_DIR . '/assets/images/' . $filename;
         $source     = file_exists( $local_path ) ? "local:{$filename}" : $remote_url;
-
-        $id = rq_sideload_asset( $filename, $remote_url, $key );
+        $id         = rq_sideload_asset( $filename, $remote_url, $key );
         if ( $id ) {
             $media[ $key ] = $id;
             $log[] = "  ✔ Media: {$key} (ID {$id}) [{$source}]";
@@ -1365,6 +1365,37 @@ function rq_import_media( string $nextjs, array &$log ): array {
             $log[] = "  ⚠ Media пропущено: {$filename} (локальний файл відсутній і remote недоступний)";
         }
     }
+
+    // ── 2. Optional local-only amenity images ─────────────────────────────────────
+    // Only imported when the file physically exists in wp/assets/images/.
+    // If absent — silently skipped; rq_create_amenities() falls back to already-imported
+    // theme images (racket_pickleball, racket_padel, about_hero, etc.).
+    $optional_local = [
+        'amenity_courts_1' => 'amenity-courts-1.jpg',
+        'amenity_courts_2' => 'amenity-courts-2.jpg',
+        'amenity_locker'   => 'amenity-locker-rooms.jpg',
+        'amenity_lounge_1' => 'amenity-lounge-1.jpg',
+        'amenity_lounge_2' => 'amenity-lounge-2.jpg',
+        'amenity_cafe'     => 'amenity-cafe.jpg',
+        'amenity_coworking'=> 'amenity-coworking.jpg',
+        'amenity_proshop'  => 'amenity-pro-shop.jpg',
+    ];
+
+    foreach ( $optional_local as $key => $filename ) {
+        $local_path = RACQUETEER_DIR . '/assets/images/' . $filename;
+        if ( ! file_exists( $local_path ) ) {
+            $media[ $key ] = 0; // fallback handled downstream
+            continue;
+        }
+        $id = rq_sideload_local_image( $local_path, $key );
+        if ( $id ) {
+            $media[ $key ] = $id;
+            $log[] = "  ✔ Media: {$key} (ID {$id}) [local:{$filename}]";
+        } else {
+            $media[ $key ] = 0;
+        }
+    }
+
     return $media;
 }
 
@@ -1525,16 +1556,16 @@ function rq_save_location_amenities( int $post_id, array $amenities ): void {
  * GET_AMENITIES GraphQL query (amenities { nodes { amenityFields { … } } }).
  */
 function rq_create_amenities( array $media, array &$log ): void {
-    // Map of amenity key → image keys in $media (or fallback URLs).
-    // Each entry: [ title, number, layout, media_keys[], feat1_icon, feat1_text, feat2_icon, feat2_text ]
-    $img = function ( string $key, string $fallback ) use ( $media ): int {
-        if ( ! empty( $media[ $key ] ) && is_numeric( $media[ $key ] ) ) {
+    // Image IDs are pre-loaded by rq_import_media().
+    // $img( $key, $fallback_key ) — tries the dedicated amenity image first, then falls back
+    // to another already-imported media item (ensures Images field is never empty even when
+    // the server cannot reach picsum.photos or local amenity files are absent).
+    $img = function ( string $key, string $fallback_key = '' ) use ( $media ): int {
+        if ( ! empty( $media[ $key ] ) && is_numeric( $media[ $key ] ) && (int) $media[ $key ] > 0 ) {
             return (int) $media[ $key ];
         }
-        // Sideload from fallback URL on-the-fly if not in $media
-        if ( $fallback ) {
-            $id = rq_sideload_image( $fallback, $key );
-            return $id > 0 ? $id : 0;
+        if ( $fallback_key && ! empty( $media[ $fallback_key ] ) && (int) $media[ $fallback_key ] > 0 ) {
+            return (int) $media[ $fallback_key ];
         }
         return 0;
     };
@@ -1543,42 +1574,42 @@ function rq_create_amenities( array $media, array &$log ): void {
         [
             'State-of-the-Art Courts', '01', 'split',
             [
-                $img( 'amenity_courts_1', 'https://api.builder.io/api/v1/image/assets/TEMP/990ef1551fbb5f0b888274af1c845d648fe5fb94?width=712' ),
-                $img( 'amenity_courts_2', 'https://api.builder.io/api/v1/image/assets/TEMP/702da1f17f07301d52908f1d5474582d68de8bbb?width=440' ),
+                $img( 'amenity_courts_1', 'racket_pickleball' ),
+                $img( 'amenity_courts_2', 'racket_padel' ),
             ],
             'courts',  '11 pickleball and 6 premium panoramic padel courts for top-level play',
             'jumprope','Tournament-quality surfaces, lighting, and spacious layouts',
         ],
         [
             'Premium Locker Rooms', '02', 'single',
-            [ $img( 'amenity_locker', 'https://api.builder.io/api/v1/image/assets/TEMP/d8de9b0fdcd157a095ecfe9d6bcb38d05a4539a4?width=1160' ) ],
+            [ $img( 'amenity_locker', 'about_hero' ) ],
             'locker', 'Spacious changing rooms with lockers, private showers, and saunas',
             'sauna',  'Elevated finishes with hotel-style toiletries',
         ],
         [
             'Members Lounge', '03', 'split',
             [
-                $img( 'amenity_lounge_1', 'https://api.builder.io/api/v1/image/assets/TEMP/5dc4829ab10a10d5399e066cd74a5dd26e919756?width=712' ),
-                $img( 'amenity_lounge_2', 'https://api.builder.io/api/v1/image/assets/TEMP/563bb083dd31ed4c310f35e5be2ca1eec4222bfa?width=440' ),
+                $img( 'amenity_lounge_1', 'membership_bg' ),
+                $img( 'amenity_lounge_2', 'about_hero' ),
             ],
             'lounge', 'Comfortable lounge spaces to relax and connect between matches',
             'member', 'Exclusive members-only access with social seating areas',
         ],
         [
             'Café & Coffee Bar', '04', 'single',
-            [ $img( 'amenity_cafe', 'https://api.builder.io/api/v1/image/assets/TEMP/8c587701b3d240e76568b31e8f3e84279ddc6620?width=1160' ) ],
+            [ $img( 'amenity_cafe', 'contact_bg' ) ],
             'coffee', 'Specialty coffee by Wood Roasters, an award-winning Australian roaster',
             'drink',  'Coffee, drinks, and light bites to fuel your game or your workday',
         ],
         [
             'Coworking Spaces', '05', 'single',
-            [ $img( 'amenity_coworking', 'https://api.builder.io/api/v1/image/assets/TEMP/d5e3ebf476e768cf5cc81776480eff8860606e0f?width=1160' ) ],
+            [ $img( 'amenity_coworking', 'membership_bg' ) ],
             'laptop', 'Dedicated workspaces with comfortable seating and TVs',
             'video',  'Private call booths for meetings or focused work',
         ],
         [
             'Pro Shop', '06', 'single',
-            [ $img( 'amenity_proshop', 'https://api.builder.io/api/v1/image/assets/TEMP/9685279b5497611f63b0e790190851bd747fd9c0?width=1160' ) ],
+            [ $img( 'amenity_proshop', 'racket_padel' ) ],
             'shop', 'Premium paddles, rackets, and apparel from leading brands like Wilson and JOOL',
             'shop', 'Expertly curated equipment to help players of all levels elevate their game',
         ],
@@ -1586,17 +1617,28 @@ function rq_create_amenities( array $media, array &$log ): void {
 
     foreach ( $items as $order => [ $title, $num, $layout, $images, $icon1, $text1, $icon2, $text2 ] ) {
         $image_ids = array_values( array_filter( $images, fn( $id ) => $id > 0 ) );
+        // NOTE: field_amenity_images (gallery) is saved separately via direct post meta
+        // because update_field() for ACF gallery fields can silently fail when local
+        // field groups have not yet fully registered at the time upsert runs.
         $id = rq_upsert_cpt( 'amenity', $title, [
             'field_amenity_number'       => $num,
             'field_amenity_image_layout' => $layout,
-            'field_amenity_images'       => $image_ids,
             'field_amenity_feat1_icon'   => $icon1,
             'field_amenity_feat1_text'   => $text1,
             'field_amenity_feat2_icon'   => $icon2,
             'field_amenity_feat2_text'   => $text2,
         ] );
-        // Set menu_order so amenities return in correct sequence
+        // Save gallery images directly via post meta (reliable ACF gallery format).
+        // WordPress serialises the array automatically; _images key tells ACF which field it is.
         if ( $id ) {
+            // Remove stale values first so re-import clears old data
+            delete_post_meta( $id, 'images' );
+            delete_post_meta( $id, '_images' );
+            if ( ! empty( $image_ids ) ) {
+                update_post_meta( $id, 'images',  $image_ids );
+                update_post_meta( $id, '_images', 'field_amenity_images' );
+            }
+            // Set menu_order so amenities return in correct sequence
             wp_update_post( [ 'ID' => $id, 'menu_order' => $order + 1 ] );
         }
         $log[] = "  ✔ Amenity: {$title} (ID {$id}, images: " . count( $image_ids ) . ")";
@@ -1966,57 +2008,63 @@ function rq_create_page_careers( string $nextjs, array $media, array &$log ): vo
  *   ...
  */
 function rq_amenities_block_data( array $media = [] ): array {
-    // Image URLs → prefer uploaded WP attachment IDs (from $media), fallback to hosted URLs.
-    // The graphql-extensions.php resolver handles both: numeric IDs → wp_get_attachment_url(),
-    // strings → passed through as-is.
-    $img = function ( string $key, string $fallback ) use ( $media ): string {
-        return ( ! empty( $media[ $key ] ) && is_numeric( $media[ $key ] ) )
-            ? (string) $media[ $key ]
-            : $fallback;
+    // $img( $key, $fallback_key ) — tries dedicated amenity image (ID or URL),
+    // then falls back to another already-imported media ID (avoids empty images when
+    // the server cannot reach picsum.photos). The graphql-extensions.php resolver
+    // handles both: numeric IDs → wp_get_attachment_url(), strings → passed through.
+    $img = function ( string $key, string $fallback_key = '', string $picsum_url = '' ) use ( $media ): string {
+        if ( ! empty( $media[ $key ] ) && is_numeric( $media[ $key ] ) && (int) $media[ $key ] > 0 ) {
+            return (string) $media[ $key ];
+        }
+        if ( $fallback_key && ! empty( $media[ $fallback_key ] ) && (int) $media[ $fallback_key ] > 0 ) {
+            return (string) $media[ $fallback_key ];
+        }
+        // Last-resort: external URL (may not be reachable on all servers)
+        return $picsum_url;
     };
 
-    // Hosted fallback URLs (from the original amenitiesData.tsx design)
+    // Stable demo fallback URLs (picsum.photos with fixed seeds = always the same image)
     $items = [
         // [ title, number, layout, images[], feat1_icon, feat1_text, feat2_icon, feat2_text ]
         [
             'State-of-the-Art Courts', '01', 'split',
             [
-                $img( 'amenity_courts_1', 'https://api.builder.io/api/v1/image/assets/TEMP/990ef1551fbb5f0b888274af1c845d648fe5fb94?width=712' ),
-                $img( 'amenity_courts_2', 'https://api.builder.io/api/v1/image/assets/TEMP/702da1f17f07301d52908f1d5474582d68de8bbb?width=440' ),
+                $img( 'amenity_courts_1', 'racket_pickleball', 'https://picsum.photos/seed/rq-courts1/800/600' ),
+                $img( 'amenity_courts_2', 'racket_padel',      'https://picsum.photos/seed/rq-courts2/500/600' ),
             ],
             'courts',  '11 pickleball and 6 premium panoramic padel courts for top-level play',
             'jumprope','Tournament-quality surfaces, lighting, and spacious layouts',
         ],
         [
             'Premium Locker Rooms', '02', 'single',
-            [ $img( 'amenity_locker', 'https://api.builder.io/api/v1/image/assets/TEMP/d8de9b0fdcd157a095ecfe9d6bcb38d05a4539a4?width=1160' ) ],
+            [ $img( 'amenity_locker', 'about_hero', 'https://picsum.photos/seed/rq-locker/1200/600' ) ],
             'locker', 'Spacious changing rooms with lockers, private showers, and saunas',
             'sauna',  'Elevated finishes with hotel-style toiletries',
         ],
         [
             'Members Lounge', '03', 'split',
             [
-                $img( 'amenity_lounge_1', 'https://api.builder.io/api/v1/image/assets/TEMP/5dc4829ab10a10d5399e066cd74a5dd26e919756?width=712' ),
-                $img( 'amenity_lounge_2', 'https://api.builder.io/api/v1/image/assets/TEMP/563bb083dd31ed4c310f35e5be2ca1eec4222bfa?width=440' ),
+                $img( 'amenity_lounge_1', 'membership_bg', 'https://picsum.photos/seed/rq-lounge1/800/600' ),
+                $img( 'amenity_lounge_2', 'about_hero',    'https://picsum.photos/seed/rq-lounge2/500/600' ),
             ],
             'lounge', 'Comfortable lounge spaces to relax and connect between matches',
             'member', 'Exclusive members-only access with social seating areas',
         ],
         [
             'Café & Coffee Bar', '04', 'single',
-            [ $img( 'amenity_cafe', 'https://api.builder.io/api/v1/image/assets/TEMP/8c587701b3d240e76568b31e8f3e84279ddc6620?width=1160' ) ],
+            [ $img( 'amenity_cafe', 'contact_bg', 'https://picsum.photos/seed/rq-cafe/1200/600' ) ],
             'coffee', 'Specialty coffee by Wood Roasters, an award-winning Australian roaster',
             'drink',  'Coffee, drinks, and light bites to fuel your game or your workday',
         ],
         [
             'Coworking Spaces', '05', 'single',
-            [ $img( 'amenity_coworking', 'https://api.builder.io/api/v1/image/assets/TEMP/d5e3ebf476e768cf5cc81776480eff8860606e0f?width=1160' ) ],
+            [ $img( 'amenity_coworking', 'membership_bg', 'https://picsum.photos/seed/rq-cowork/1200/600' ) ],
             'laptop', 'Dedicated workspaces with comfortable seating and TVs',
             'video',  'Private call booths for meetings or focused work',
         ],
         [
             'Pro Shop', '06', 'single',
-            [ $img( 'amenity_proshop', 'https://api.builder.io/api/v1/image/assets/TEMP/9685279b5497611f63b0e790190851bd747fd9c0?width=1160' ) ],
+            [ $img( 'amenity_proshop', 'racket_padel', 'https://picsum.photos/seed/rq-proshop/1200/600' ) ],
             'shop', 'Premium paddles, rackets, and apparel from leading brands like Wilson and JOOL',
             'shop', 'Expertly curated equipment to help players of all levels elevate their game',
         ],

@@ -1,3 +1,4 @@
+"use client";
 /**
  * Shared amenity icon map — used by AmenitiesBlock (WP server path)
  * and page.tsx (CPT fallback path).
@@ -5,6 +6,7 @@
  * Each key is the ACF icon field value (e.g. "courts", "jumprope").
  * resolveAmenityIcon() converts that string to a ReactNode.
  */
+import React from "react";
 import type { ReactNode } from "react";
 
 // ─── Icon components ─────────────────────────────────────────────────────────
@@ -95,19 +97,20 @@ const ShopIcon = () => (
 
 // ─── Icon map ────────────────────────────────────────────────────────────────
 // Keys must match ACF select values in acf-blocks.php (case-insensitive).
+// Stores component types (not JSX instances) to avoid JSX at module scope.
 
-export const AMENITY_ICON_MAP: Record<string, ReactNode> = {
-  courts:   <CourtsIcon />,
-  jumprope: <JumpRopeIcon />,
-  locker:   <LockerIcon />,
-  sauna:    <SaunaIcon />,
-  lounge:   <LoungeIcon />,
-  member:   <MemberIcon />,
-  coffee:   <CoffeeIcon />,
-  drink:    <DrinkIcon />,
-  laptop:   <LaptopIcon />,
-  video:    <VideoIcon />,
-  shop:     <ShopIcon />,
+const AMENITY_ICON_MAP: Record<string, React.ComponentType> = {
+  courts:   CourtsIcon,
+  jumprope: JumpRopeIcon,
+  locker:   LockerIcon,
+  sauna:    SaunaIcon,
+  lounge:   LoungeIcon,
+  member:   MemberIcon,
+  coffee:   CoffeeIcon,
+  drink:    DrinkIcon,
+  laptop:   LaptopIcon,
+  video:    VideoIcon,
+  shop:     ShopIcon,
 };
 
 /**
@@ -116,6 +119,8 @@ export const AMENITY_ICON_MAP: Record<string, ReactNode> = {
  */
 export function resolveAmenityIcon(key: unknown): ReactNode {
   if (!key || typeof key !== 'string') return null;
-  return AMENITY_ICON_MAP[key.trim().toLowerCase()] ?? null;
+  const Icon = AMENITY_ICON_MAP[key.trim().toLowerCase()];
+  if (!Icon) return null;
+  return React.createElement(Icon);
 }
 

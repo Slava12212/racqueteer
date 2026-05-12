@@ -50,7 +50,7 @@ const BLOCK_MAP: Record<string, React.ComponentType<any>> = {
   'acf/racqueteer-hero':           dynamic(() => import('./HeroBlock')),
   'acf/racqueteer-about':          dynamic(() => import('./AboutBlock')),
   'acf/racqueteer-locations':      dynamic(() => import('./LocationsBlock')),
-  'acf/racqueteer-amenities':   AmenitiesBlock as React.ComponentType<any>,
+  'acf/racqueteer-amenities':   dynamic(() => import('./AmenitiesBlock')),
   'acf/racqueteer-programs':       dynamic(() => import('./ProgramsBlock')),
   'acf/racqueteer-membership-cta': dynamic(() => import('./MembershipCtaBlock')),
   'acf/racqueteer-subscriptions':  dynamic(() => import('./SubscriptionsBlock')),

@@ -8,8 +8,10 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import EventsSection from "@/components/EventsSection";
 import { AmenitiesSection } from "@/components/amenities/AmenitiesSection";
 import BlockRenderer from "@/components/blocks/BlockRenderer";
-import { getPageBlocks } from "@/lib/wp-api";
+import { getPageBlocks, getAmenities } from "@/lib/wp-api";
 import { getHomepageContent, getLocations } from "@/lib/api";
+import { resolveAmenityIcon } from "@/lib/amenity-resolver";
+import type { Amenity } from "@/components/amenities/amenitiesData";
 
 export const revalidate = 3600;
 

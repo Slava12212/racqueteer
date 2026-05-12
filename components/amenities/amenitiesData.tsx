@@ -106,8 +106,8 @@ export const amenities: Amenity[] = [
     number: "01",
     imageLayout: "split",
     images: [
-      "https://api.builder.io/api/v1/image/assets/TEMP/990ef1551fbb5f0b888274af1c845d648fe5fb94?width=712",
-      "https://api.builder.io/api/v1/image/assets/TEMP/702da1f17f07301d52908f1d5474582d68de8bbb?width=440",
+      "/amenity-courts-1.jpg",
+      "/amenity-courts-2.jpg",
     ],
     features: [
       {
@@ -126,7 +126,7 @@ export const amenities: Amenity[] = [
     number: "02",
     imageLayout: "single",
     images: [
-      "https://api.builder.io/api/v1/image/assets/TEMP/d8de9b0fdcd157a095ecfe9d6bcb38d05a4539a4?width=1160",
+      "/amenity-locker-rooms.jpg",
     ],
     features: [
       {
@@ -145,8 +145,8 @@ export const amenities: Amenity[] = [
     number: "03",
     imageLayout: "split",
     images: [
-      "https://api.builder.io/api/v1/image/assets/TEMP/5dc4829ab10a10d5399e066cd74a5dd26e919756?width=712",
-      "https://api.builder.io/api/v1/image/assets/TEMP/563bb083dd31ed4c310f35e5be2ca1eec4222bfa?width=440",
+      "/amenity-lounge-1.jpg",
+      "/amenity-lounge-2.jpg",
     ],
     features: [
       {
@@ -165,7 +165,7 @@ export const amenities: Amenity[] = [
     number: "04",
     imageLayout: "single",
     images: [
-      "https://api.builder.io/api/v1/image/assets/TEMP/8c587701b3d240e76568b31e8f3e84279ddc6620?width=1160",
+      "/amenity-cafe.jpg",
     ],
     features: [
       {
@@ -184,7 +184,7 @@ export const amenities: Amenity[] = [
     number: "05",
     imageLayout: "single",
     images: [
-      "https://api.builder.io/api/v1/image/assets/TEMP/d5e3ebf476e768cf5cc81776480eff8860606e0f?width=1160",
+      "/amenity-coworking.jpg",
     ],
     features: [
       {
@@ -203,7 +203,7 @@ export const amenities: Amenity[] = [
     number: "06",
     imageLayout: "single",
     images: [
-      "https://api.builder.io/api/v1/image/assets/TEMP/9685279b5497611f63b0e790190851bd747fd9c0?width=1160",
+      "/amenity-pro-shop.jpg",
     ],
     features: [
       {
