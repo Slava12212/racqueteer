@@ -1,6 +1,6 @@
 <?php
 /**
- * GraphQL Extensions — v24
+ * GraphQL Extensions — v25
  * Racqueteer headless тема — кастомізації схеми WPGraphQL.
  *
  * Changelog v18:
@@ -133,6 +133,7 @@ $rq_acf_block_names = array(
     'AcfRacqueteerHeroBlock',
     'AcfRacqueteerAboutBlock',
     'AcfRacqueteerLocationsBlock',
+    'AcfRacqueteerAmenitiesBlock',
     'AcfRacqueteerProgramsBlock',
     'AcfRacqueteerMembershipCtaBlock',
     'AcfRacqueteerSubscriptionsBlock',
@@ -570,7 +571,7 @@ add_action( 'graphql_register_types', function () {
     try {
         register_graphql_enum_type( 'RqDeployVersion', array(
             'description' => 'Sentinel версії деплою',
-            'values'      => array( 'v24' => array( 'value' => 'v24' ) ),
+            'values'      => array( 'v25' => array( 'value' => 'v25' ) ),
         ) );
     } catch ( \Throwable $e ) {}
 } );
@@ -662,6 +663,55 @@ add_filter( 'acf/format_value/key=field_loc_status', function ( $value, $post_id
     return strtolower( trim( is_string( $value ) ? $value : (string) $value ) );
 }, 1, 3 );
 
+// ── Amenity.imageLayout — ручна реєстрація (select → String) ─────────────────────────
+// show_in_graphql=false в acf-blocks.php; реєструємо вручну щоб уникнути
+// WPGraphQL for ACF v2.6.x serialized-array TypeError на select-полях.
+// Реєструємо і на Amenity (post node), і на AmenityFields (ACF field group wrapper),
+// щоб підтримати обидва варіанти запиту:
+//   amenities { nodes { imageLayout } }          — через Amenity
+//   amenities { nodes { amenityFields { imageLayout } } } — через AmenityFields
+add_action( 'graphql_register_types', function () {
+    $image_layout_resolver = function ( $source ) {
+        if ( ! function_exists( 'get_field' ) ) { return 'single'; }
+        // $source може бути або WPGraphQL post model object, або масивом з post_id
+        $post_id = null;
+        if ( is_object( $source ) ) {
+            $post_id = isset( $source->databaseId ) ? (int) $source->databaseId
+                     : ( isset( $source->ID ) ? (int) $source->ID : null );
+        } elseif ( is_array( $source ) ) {
+            $post_id = isset( $source['databaseId'] ) ? (int) $source['databaseId']
+                     : ( isset( $source['ID'] ) ? (int) $source['ID'] : null );
+        }
+        if ( ! $post_id ) { return 'single'; }
+        $val = get_field( 'field_amenity_image_layout', $post_id );
+        if ( is_array( $val ) ) { $val = $val[0] ?? ''; }
+        $val = strtolower( trim( (string) $val ) );
+        return $val ?: 'single';
+    };
+
+    // На post node (Amenity)
+    try {
+        register_graphql_field( 'Amenity', 'imageLayout', array(
+            'type'        => 'String',
+            'description' => 'Image layout: single or split',
+            'resolve'     => $image_layout_resolver,
+        ) );
+    } catch ( \Throwable $e ) {}
+
+    // На AmenityFields (ACF field group wrapper type), щоб підтримати
+    // запит amenityFields { imageLayout }
+    try {
+        register_graphql_field( 'AmenityFields', 'imageLayout', array(
+            'type'        => 'String',
+            'description' => 'Image layout: single or split',
+            'resolve'     => function ( $source ) use ( $image_layout_resolver ) {
+                // AmenityFields resolver receives the post object as root
+                return $image_layout_resolver( $source );
+            },
+        ) );
+    } catch ( \Throwable $e ) {}
+}, 5 );
+
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Плоскі типи Rq*Fields + плоске ACF-поле на кожному типі блоку
@@ -676,6 +726,7 @@ add_action( 'graphql_register_types', function () {
         'RqRacqueteerHeroFields'                => array( 'title', 'description', 'ctaPrimaryText', 'ctaPrimaryUrl', 'ctaSecondaryText', 'ctaSecondaryUrl', 'videoUrl' ),
         'RqRacqueteerAboutFields'               => array( 'label', 'title', 'description', 'stat1Number', 'stat1Label', 'stat2Number', 'stat2Label', 'leftImage', 'rightImage' ),
         'RqRacqueteerLocationsFields'           => array( 'label', 'title', 'description' ),
+        'RqRacqueteerAmenitiesFields'           => array( 'label', 'title', 'amenities' ),
         'RqRacqueteerProgramsFields'            => array( 'label', 'title', 'description', 'tabs' ),
         'RqRacqueteerMembershipCtaFields'       => array( 'label', 'title', 'description', 'ctaText', 'ctaUrl', 'bgImage' ),
         'RqRacqueteerSubscriptionsFields'       => array( 'label', 'title', 'description' ),
@@ -715,6 +766,7 @@ add_action( 'graphql_register_types', function () {
         'AcfRacqueteerHeroBlock'                => array( 'field' => 'racqueteerHero',                'type' => 'RqRacqueteerHeroFields' ),
         'AcfRacqueteerAboutBlock'               => array( 'field' => 'racqueteerAbout',               'type' => 'RqRacqueteerAboutFields' ),
         'AcfRacqueteerLocationsBlock'           => array( 'field' => 'racqueteerLocations',           'type' => 'RqRacqueteerLocationsFields' ),
+        // NOTE: AcfRacqueteerAmenitiesBlock uses a custom resolver below (repeater) — skip here
         'AcfRacqueteerProgramsBlock'            => array( 'field' => 'racqueteerPrograms',            'type' => 'RqRacqueteerProgramsFields' ),
         'AcfRacqueteerMembershipCtaBlock'       => array( 'field' => 'racqueteerMembershipCta',       'type' => 'RqRacqueteerMembershipCtaFields' ),
         'AcfRacqueteerSubscriptionsBlock'       => array( 'field' => 'racqueteerSubscriptions',       'type' => 'RqRacqueteerSubscriptionsFields' ),
@@ -822,6 +874,67 @@ add_action( 'graphql_register_types', function () {
         } catch ( \Throwable $e ) {
             // Поле вже існує (зареєстровано WPGraphQL for ACF) — ігнорувати
         }
+    }
+
+    // ── AcfRacqueteerAmenitiesBlock — custom resolver (repeater rebuild) ─────────────────
+    // The standard resolver cannot reconstruct an ACF repeater stored as numbered keys
+    // (amenities_0_title, amenities_1_number, …). This custom resolver rebuilds the array
+    // and JSON-encodes it so AmenitiesBlock.tsx can parse it via JSON.parse(attrs.amenities).
+    try {
+        register_graphql_field( 'AcfRacqueteerAmenitiesBlock', 'racqueteerAmenities', array(
+            'type'    => 'RqRacqueteerAmenitiesFields',
+            'resolve' => function ( $source ) {
+                $raw = isset( $source['attrs']['data'] ) ? $source['attrs']['data']
+                     : ( isset( $source['attrs'] ) ? $source['attrs']
+                     : ( isset( $source['data']  ) ? $source['data']  : $source ) );
+
+                if ( ! is_array( $raw ) ) {
+                    return array( 'label' => '', 'title' => '', 'amenities' => '[]' );
+                }
+
+                $label = isset( $raw['label'] ) ? (string) $raw['label'] : '';
+                $title = isset( $raw['title'] ) ? (string) $raw['title'] : '';
+
+                // Rebuild ACF repeater from numbered inline-block keys
+                $count = (int) ( isset( $raw['amenities'] ) ? $raw['amenities'] : 0 );
+                $items = array();
+
+                for ( $i = 0; $i < $count; $i++ ) {
+                    // Images: array of attachment IDs → resolve to URLs
+                    $raw_images = isset( $raw[ "amenities_{$i}_images" ] ) ? $raw[ "amenities_{$i}_images" ] : array();
+                    $images     = array();
+                    if ( is_array( $raw_images ) ) {
+                        foreach ( $raw_images as $img_id ) {
+                            if ( is_numeric( $img_id ) && (int) $img_id > 0 ) {
+                                $url = wp_get_attachment_url( (int) $img_id );
+                                if ( $url ) { $images[] = $url; }
+                            } elseif ( is_string( $img_id ) && '' !== $img_id ) {
+                                $images[] = $img_id;
+                            }
+                        }
+                    }
+
+                    $items[] = array(
+                        'title'        => isset( $raw[ "amenities_{$i}_title" ]            ) ? (string) $raw[ "amenities_{$i}_title" ]            : '',
+                        'number'       => isset( $raw[ "amenities_{$i}_number" ]           ) ? (string) $raw[ "amenities_{$i}_number" ]           : '',
+                        'imageLayout'  => isset( $raw[ "amenities_{$i}_image_layout" ]     ) ? (string) $raw[ "amenities_{$i}_image_layout" ]     : 'single',
+                        'images'       => $images,
+                        'feature1Icon' => isset( $raw[ "amenities_{$i}_feature_1_icon" ]   ) ? (string) $raw[ "amenities_{$i}_feature_1_icon" ]   : '',
+                        'feature1Text' => isset( $raw[ "amenities_{$i}_feature_1_text" ]   ) ? (string) $raw[ "amenities_{$i}_feature_1_text" ]   : '',
+                        'feature2Icon' => isset( $raw[ "amenities_{$i}_feature_2_icon" ]   ) ? (string) $raw[ "amenities_{$i}_feature_2_icon" ]   : '',
+                        'feature2Text' => isset( $raw[ "amenities_{$i}_feature_2_text" ]   ) ? (string) $raw[ "amenities_{$i}_feature_2_text" ]   : '',
+                    );
+                }
+
+                return array(
+                    'label'     => $label,
+                    'title'     => $title,
+                    'amenities' => json_encode( $items, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ),
+                );
+            },
+        ) );
+    } catch ( \Throwable $e ) {
+        // Ignore duplicate registration
     }
 
 }, 5 );
@@ -986,6 +1099,83 @@ add_action( 'graphql_register_types', function () {
         ) );
     } catch ( \Throwable $e ) {}
 
+    // ── Book Modal options ────────────────────────────────────────────────────
+    if ( ! $type_exists( 'RqBookModalSportImage' ) ) {
+        register_graphql_object_type( 'RqBookModalSportImage', array(
+            'description' => 'Зображення спорту для Book Modal',
+            'fields'      => array(
+                'sourceUrl' => array( 'type' => 'String' ),
+            ),
+        ) );
+    }
+    if ( ! $type_exists( 'RqBookModalFields' ) ) {
+        register_graphql_object_type( 'RqBookModalFields', array(
+            'description' => 'Поля ACF Book Modal options',
+            'fields'      => array(
+                'modalTitle'       => array( 'type' => 'String' ),
+                'modalSubtitle'    => array( 'type' => 'String' ),
+                'sport1Title'      => array( 'type' => 'String' ),
+                'sport1Image'      => array( 'type' => 'RqBookModalSportImage' ),
+                'sport1ButtonText' => array( 'type' => 'String' ),
+                'sport1BookingUrl' => array( 'type' => 'String' ),
+                'sport2Title'      => array( 'type' => 'String' ),
+                'sport2Image'      => array( 'type' => 'RqBookModalSportImage' ),
+                'sport2ButtonText' => array( 'type' => 'String' ),
+                'sport2BookingUrl' => array( 'type' => 'String' ),
+            ),
+        ) );
+    }
+    if ( ! $type_exists( 'RqBookModalWrapper' ) ) {
+        register_graphql_object_type( 'RqBookModalWrapper', array(
+            'description' => 'Обгортка для acfOptionsBookModal',
+            'fields'      => array(
+                'bookModal' => array(
+                    'type'    => 'RqBookModalFields',
+                    'resolve' => function () {
+                        if ( ! function_exists( 'get_field' ) ) { return null; }
+                        $resolve_sport_image = function ( $field_key ) {
+                            $img = get_field( $field_key, 'options' );
+                            if ( ! $img ) { return null; }
+                            // return_format: array → has 'url' key
+                            if ( is_array( $img ) ) {
+                                return array( 'sourceUrl' => isset( $img['url'] ) ? $img['url'] : ( isset( $img['sourceUrl'] ) ? $img['sourceUrl'] : '' ) );
+                            }
+                            // return_format: url → plain string
+                            if ( is_string( $img ) && '' !== $img ) {
+                                return array( 'sourceUrl' => $img );
+                            }
+                            // attachment ID
+                            if ( is_numeric( $img ) && (int) $img > 0 ) {
+                                $url = wp_get_attachment_url( (int) $img );
+                                return $url ? array( 'sourceUrl' => $url ) : null;
+                            }
+                            return null;
+                        };
+                        return array(
+                            'modalTitle'       => (string) get_field( 'field_bm_modal_title',     'options' ),
+                            'modalSubtitle'    => (string) get_field( 'field_bm_modal_subtitle',  'options' ),
+                            'sport1Title'      => (string) get_field( 'field_bm_sport1_title',    'options' ),
+                            'sport1Image'      => $resolve_sport_image( 'field_bm_sport1_image' ),
+                            'sport1ButtonText' => (string) get_field( 'field_bm_sport1_btn_text', 'options' ),
+                            'sport1BookingUrl' => (string) get_field( 'field_bm_sport1_url',      'options' ),
+                            'sport2Title'      => (string) get_field( 'field_bm_sport2_title',    'options' ),
+                            'sport2Image'      => $resolve_sport_image( 'field_bm_sport2_image' ),
+                            'sport2ButtonText' => (string) get_field( 'field_bm_sport2_btn_text', 'options' ),
+                            'sport2BookingUrl' => (string) get_field( 'field_bm_sport2_url',      'options' ),
+                        );
+                    },
+                ),
+            ),
+        ) );
+    }
+    try {
+        register_graphql_field( 'RootQuery', 'acfOptionsBookModal', array(
+            'type'        => 'RqBookModalWrapper',
+            'description' => 'ACF Book Modal options',
+            'resolve'     => function () { return array(); },
+        ) );
+    } catch ( \Throwable $e ) {}
+
 }, 5 );
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -1033,6 +1223,7 @@ add_filter( 'graphql_resolve_field', function ( $result, $source, $args, $contex
             'acf/racqueteer-hero'                  => 'AcfRacqueteerHeroBlock',
             'acf/racqueteer-about'                 => 'AcfRacqueteerAboutBlock',
             'acf/racqueteer-locations'             => 'AcfRacqueteerLocationsBlock',
+            'acf/racqueteer-amenities'             => 'AcfRacqueteerAmenitiesBlock',
             'acf/racqueteer-programs'              => 'AcfRacqueteerProgramsBlock',
             'acf/racqueteer-membership-cta'        => 'AcfRacqueteerMembershipCtaBlock',
             'acf/racqueteer-subscriptions'         => 'AcfRacqueteerSubscriptionsBlock',

@@ -84,4 +84,15 @@ add_action( 'acf/init', function () {
         'show_in_graphql'    => true,
         'graphql_field_name' => 'footer',  // → acfOptionsFooter { footer { ... } }
     ] );
+
+    // Підсторінка Book Modal
+    acf_add_options_sub_page( [
+        'page_title'         => 'Book Modal Settings',
+        'menu_title'         => 'Book Modal',
+        'parent_slug'        => 'racqueteer-site-settings',
+        'menu_slug'          => 'acf-options-book-modal',
+        'capability'         => 'manage_options',
+        'show_in_graphql'    => true,
+        'graphql_field_name' => 'bookModal', // → acfOptionsBookModal { bookModal { ... } }
+    ] );
 }, 5 );

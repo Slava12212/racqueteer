@@ -100,9 +100,51 @@ add_action( 'acf/init', function () {
                     ['key'=>'field_amen_item_number','label'=>'Number','name'=>'number','type'=>'text'],
                     ['key'=>'field_amen_item_layout','label'=>'Image Layout','name'=>'image_layout','type'=>'select','choices'=>['single'=>'Single','split'=>'Split'],'default_value'=>'single'],
                     ['key'=>'field_amen_item_images','label'=>'Images','name'=>'images','type'=>'gallery','return_format'=>'url'],
-                    ['key'=>'field_amen_item_feat1_icon','label'=>'Feature 1 Icon','name'=>'feature_1_icon','type'=>'image','return_format'=>'url'],
+                    [
+                        'key'           => 'field_amen_item_feat1_icon',
+                        'label'         => 'Feature 1 Icon',
+                        'name'          => 'feature_1_icon',
+                        'type'          => 'select',
+                        'instructions'  => 'Select the icon that matches this feature',
+                        'allow_null'    => 1,
+                        'return_format' => 'value',
+                        'choices'       => [
+                            'courts'   => '🎾 Courts',
+                            'jumprope' => '🪢 Jump Rope / Fitness',
+                            'locker'   => '🔒 Locker Room',
+                            'sauna'    => '🧖 Sauna',
+                            'lounge'   => '🛋 Lounge',
+                            'member'   => '🏃 Member / Coaching',
+                            'coffee'   => '☕ Coffee / Café',
+                            'drink'    => '🍹 Drinks / Bar',
+                            'laptop'   => '💻 Coworking / Laptop',
+                            'video'    => '📹 Video / Call Booth',
+                            'shop'     => '🛍 Pro Shop',
+                        ],
+                    ],
                     ['key'=>'field_amen_item_feat1_text','label'=>'Feature 1 Text','name'=>'feature_1_text','type'=>'text'],
-                    ['key'=>'field_amen_item_feat2_icon','label'=>'Feature 2 Icon','name'=>'feature_2_icon','type'=>'image','return_format'=>'url'],
+                    [
+                        'key'           => 'field_amen_item_feat2_icon',
+                        'label'         => 'Feature 2 Icon',
+                        'name'          => 'feature_2_icon',
+                        'type'          => 'select',
+                        'instructions'  => 'Select the icon that matches this feature',
+                        'allow_null'    => 1,
+                        'return_format' => 'value',
+                        'choices'       => [
+                            'courts'   => '🎾 Courts',
+                            'jumprope' => '🪢 Jump Rope / Fitness',
+                            'locker'   => '🔒 Locker Room',
+                            'sauna'    => '🧖 Sauna',
+                            'lounge'   => '🛋 Lounge',
+                            'member'   => '🏃 Member / Coaching',
+                            'coffee'   => '☕ Coffee / Café',
+                            'drink'    => '🍹 Drinks / Bar',
+                            'laptop'   => '💻 Coworking / Laptop',
+                            'video'    => '📹 Video / Call Booth',
+                            'shop'     => '🛍 Pro Shop',
+                        ],
+                    ],
                     ['key'=>'field_amen_item_feat2_text','label'=>'Feature 2 Text','name'=>'feature_2_text','type'=>'text'],
                 ],
             ],
@@ -388,6 +430,29 @@ add_action( 'acf/init', function () {
     ] );
 
     // ======================================================
+    // Phase 8 — Поля Book Modal Options
+    // ======================================================
+    acf_add_local_field_group( [
+        'key'                => 'group_book_modal_options',
+        'title'              => 'Book Modal Settings',
+        'show_in_graphql'    => true,
+        'graphql_field_name' => 'bookModal', // → acfOptionsBookModal { bookModal { ... } }
+        'fields' => [
+            [ 'key' => 'field_bm_modal_title',     'label' => 'Modal Title',          'name' => 'modal_title',          'type' => 'text'  ],
+            [ 'key' => 'field_bm_modal_subtitle',  'label' => 'Modal Subtitle',       'name' => 'modal_subtitle',       'type' => 'text'  ],
+            [ 'key' => 'field_bm_sport1_title',    'label' => 'Sport 1 Title',        'name' => 'sport1_title',         'type' => 'text'  ],
+            [ 'key' => 'field_bm_sport1_image',    'label' => 'Sport 1 Image',        'name' => 'sport1_image',         'type' => 'image', 'return_format' => 'array', 'instructions' => 'Return format must be Array for WPGraphQL sourceUrl' ],
+            [ 'key' => 'field_bm_sport1_btn_text', 'label' => 'Sport 1 Button Text', 'name' => 'sport1_button_text',   'type' => 'text'  ],
+            [ 'key' => 'field_bm_sport1_url',      'label' => 'Sport 1 Booking URL', 'name' => 'sport1_booking_url',   'type' => 'url',   'instructions' => 'External booking URL for Padel' ],
+            [ 'key' => 'field_bm_sport2_title',    'label' => 'Sport 2 Title',        'name' => 'sport2_title',         'type' => 'text'  ],
+            [ 'key' => 'field_bm_sport2_image',    'label' => 'Sport 2 Image',        'name' => 'sport2_image',         'type' => 'image', 'return_format' => 'array', 'instructions' => 'Return format must be Array for WPGraphQL sourceUrl' ],
+            [ 'key' => 'field_bm_sport2_btn_text', 'label' => 'Sport 2 Button Text', 'name' => 'sport2_button_text',   'type' => 'text'  ],
+            [ 'key' => 'field_bm_sport2_url',      'label' => 'Sport 2 Booking URL', 'name' => 'sport2_booking_url',   'type' => 'url',   'instructions' => 'External booking URL for Pickleball' ],
+        ],
+        'location' => [ [ [ 'param' => 'options_page', 'operator' => '==', 'value' => 'acf-options-book-modal' ] ] ],
+    ] );
+
+    // ======================================================
     // Групи полів CPT (Вакансії, Відгуки, Локації, Програми, Плани членства)
     // ======================================================
 
@@ -511,9 +576,72 @@ add_action( 'acf/init', function () {
         'location' => [ [ [ 'param' => 'post_type', 'operator' => '==', 'value' => 'location' ] ] ],
     ] );
 
+    // CPT Amenities
+    acf_add_local_field_group( [
+        'key'                => 'group_cpt_amenity',
+        'title'              => 'Amenity Details',
+        'show_in_graphql'    => true,
+        'graphql_field_name' => 'amenityFields', // → amenities { nodes { amenityFields { number imageLayout … } } }
+        'fields' => [
+            [
+                'key'          => 'field_amenity_number',
+                'label'        => 'Number',
+                'name'         => 'number',
+                'type'         => 'text',
+                'instructions' => 'Display number, e.g. 01, 02…',
+            ],
+            [
+                'key'          => 'field_amenity_image_layout',
+                'label'        => 'Image Layout',
+                'name'         => 'image_layout',
+                'type'         => 'select',
+                'choices'      => [ 'single' => 'Single', 'split' => 'Split' ],
+                'default_value'=> 'single',
+                'return_format'=> 'value',
+                // Exposed manually as imageLayout via graphql-extensions.php to avoid
+                // WPGraphQL for ACF v2.6.x serialized-array TypeError on select fields.
+                'show_in_graphql' => false,
+            ],
+            [
+                'key'           => 'field_amenity_images',
+                'label'         => 'Images',
+                'name'          => 'images',
+                'type'          => 'gallery',
+                'return_format' => 'array',
+                'instructions'  => 'Upload 1 image for single layout, 2 for split. Exposed as images { sourceUrl } in GraphQL.',
+            ],
+            [
+                'key'          => 'field_amenity_feat1_icon',
+                'label'        => 'Feature 1 Icon Key',
+                'name'         => 'feature_1_icon',
+                'type'         => 'text',
+                'instructions' => 'Icon key: courts, jumprope, locker, sauna, lounge, member, coffee, drink, laptop, video, shop',
+            ],
+            [
+                'key'   => 'field_amenity_feat1_text',
+                'label' => 'Feature 1 Text',
+                'name'  => 'feature_1_text',
+                'type'  => 'text',
+            ],
+            [
+                'key'          => 'field_amenity_feat2_icon',
+                'label'        => 'Feature 2 Icon Key',
+                'name'         => 'feature_2_icon',
+                'type'         => 'text',
+                'instructions' => 'Icon key: courts, jumprope, locker, sauna, lounge, member, coffee, drink, laptop, video, shop',
+            ],
+            [
+                'key'   => 'field_amenity_feat2_text',
+                'label' => 'Feature 2 Text',
+                'name'  => 'feature_2_text',
+                'type'  => 'text',
+            ],
+        ],
+        'location' => [ [ [ 'param' => 'post_type', 'operator' => '==', 'value' => 'amenity' ] ] ],
+    ] );
+
     // CPT Програми (Programs)
-    // Використовує 'programFields' (НЕ 'acf'), щоб уникнути конфлікту типів з полем 'acf' для Membership.
-    // Загальний тип 'Acf', будований для membershipів, не включав би 'title' → помилки схеми.
+    // Використовує 'programFields' (НЕ 'acf'), щоб уникнути конфлікту типів з полем 'acf' для Membership.    // Загальний тип 'Acf', будований для membershipів, не включав би 'title' → помилки схеми.
     acf_add_local_field_group( [
         'key'                => 'group_cpt_program',
         'title'              => 'Program Details',

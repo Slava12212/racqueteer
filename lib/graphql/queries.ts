@@ -42,16 +42,7 @@ export const GET_PAGE_BY_SLUG = `
           racqueteerAmenities {
             label
             title
-            amenities {
-              title
-              number
-              imageLayout
-              images
-              feature1Icon
-              feature1Text
-              feature2Icon
-              feature2Text
-            }
+            amenities
           }
         }
         ... on AcfRacqueteerProgramsBlock {
@@ -258,17 +249,18 @@ export const GET_TESTIMONIALS = `
 
 export const GET_AMENITIES = `
   query GetAmenities {
-    amenities(first: 100) {
+    amenities(first: 100, where: { orderby: { field: MENU_ORDER, order: ASC } }) {
       nodes {
         databaseId
         title
-        acf {
+        amenityFields {
           number
           imageLayout
           images { sourceUrl }
-          features {
-            text
-          }
+          feature1Icon
+          feature1Text
+          feature2Icon
+          feature2Text
         }
       }
     }
@@ -329,6 +321,13 @@ export const GET_PRICE_COMPARE = `
 `;
 
 // Phase 8 — Site Options (Navbar + Footer from ACF Options Pages)
+// Phase 9 — Book Modal options added to acfOptionsBookModal options page
+// WordPress ACF setup required:
+//   Options page: "Book Modal" (slug: book-modal, menu slug: acf-options-book-modal)
+//   Field group attached to that options page with fields:
+//     modal_title (text), modal_subtitle (text),
+//     sport1_title (text), sport1_image (image, return: array), sport1_button_text (text), sport1_booking_url (url),
+//     sport2_title (text), sport2_image (image, return: array), sport2_button_text (text), sport2_booking_url (url)
 export const GET_SITE_OPTIONS = `
   query GetSiteOptions {
     acfOptionsNavbar {
@@ -351,6 +350,20 @@ export const GET_SITE_OPTIONS = `
         footerLocations { name address }
         footerCopyright
         footerLegalLinks { label url }
+      }
+    }
+    acfOptionsBookModal {
+      bookModal {
+        modalTitle
+        modalSubtitle
+        sport1Title
+        sport1Image { sourceUrl }
+        sport1ButtonText
+        sport1BookingUrl
+        sport2Title
+        sport2Image { sourceUrl }
+        sport2ButtonText
+        sport2BookingUrl
       }
     }
   }

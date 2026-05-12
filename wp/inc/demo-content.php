@@ -144,6 +144,7 @@ function rq_demo_admin_page(): void {
             <li><strong>Вакансії (8)</strong> — оголошення про вакансії для сторінки Careers</li>
             <li><strong>Відгуки (6)</strong> — відгуки учасників</li>
             <li><strong>Локації (2)</strong> — Homebush &amp; Alexandria</li>
+            <li><strong>Amenities (6)</strong> — Courts, Locker Rooms, Members Lounge, Café &amp; Coffee Bar, Coworking, Pro Shop (CPT записи)</li>
             <li><strong>Програми (4)</strong> — тренувальні програми</li>
             <li><strong>Плани членства (4)</strong> — Starter, Light, Pro, Pro+</li>
             <li><strong>Navbar &amp; Footer ACF Options</strong> — посилання, CTA, контакти</li>
@@ -240,6 +241,9 @@ function rq_run_import(): array {
     $log[] = '— Creating Locations…';
     rq_create_locations( $media, $log );
 
+    $log[] = '— Creating Amenities…';
+    rq_create_amenities( $log );
+
     $log[] = '— Creating Programs…';
     rq_create_programs( $log );
 
@@ -263,6 +267,9 @@ function rq_run_import(): array {
 
     $log[] = '— Setting site options (Navbar / Footer)…';
     rq_set_site_options( $media, $log );
+
+    $log[] = '— Setting Book Modal options…';
+    rq_set_book_modal_options( $media, $log );
 
     update_option( 'rq_demo_imported', current_time( 'mysql' ) );
     $log[] = '✅ All done!';
@@ -465,7 +472,9 @@ function rq_verify_graphql(): array {
     if ( $ok_v && ! empty( $data_v['__type'] ) ) {
         $enum_vals = array_column( $data_v['__type']['enumValues'] ?? [], 'name' );
         $ver = implode( ', ', $enum_vals );
-        if ( in_array( 'v24', $enum_vals ) ) {
+        if ( in_array( 'v25', $enum_vals ) ) {
+            $log[] = '  ✅ RqDeployVersion ' . $ver . ' — graphql-extensions.php v25 (AmenityFields.imageLayout + acfOptionsBookModal: АКТИВНІ)';
+        } elseif ( in_array( 'v24', $enum_vals ) ) {
             $log[] = '  ✅ RqDeployVersion ' . $ver . ' — graphql-extensions.php v24 (locationStatus manual resolver: АКТИВНИЙ)';
         } elseif ( in_array( 'v23', $enum_vals ) ) {
             $log[] = '  ⚠ RqDeployVersion ' . $ver . ' — v23 (status Internal Server Error). Задеплой v24.';
@@ -765,7 +774,7 @@ function rq_verify_graphql(): array {
     }
 
     // ── 5. CPT: Локації ───────────────────────────────────────────────────────
-    [ $ok, $data ] = $query( '{ locations(first:3) { nodes { locationStatus locationAmenities { icon label } locationFields { name locationId } } } }' );
+    [ $ok, $data ] = $query( '{ locations(first:10) { nodes { locationStatus locationAmenities { icon label } locationFields { name locationId } } } }' );
     if ( ! $ok ) {
         $log[] = "  ❌ Locations: {$data}";
     } else {
@@ -774,27 +783,65 @@ function rq_verify_graphql(): array {
         if ( $count === 0 ) {
             $log[] = '  ⚠ Locations: 0 results';
         } else {
-            $first_node = $nodes[0];
-            $first_acf  = $first_node['locationFields'] ?? null;
-            $has_data   = $first_acf && ! empty( $first_acf['name'] );
-            $amenities  = $first_node['locationAmenities'] ?? [];
-            $status_val = $first_node['locationStatus'] ?? '(null)';
-            $status_ok  = in_array( $status_val, array( 'available', 'coming_soon' ), true );
-            $status_msg = $status_ok
-                ? "status: \"{$status_val}\" ✅"
-                : "status: \"{$status_val}\" ❌ (задеплой v24 PHP + Re-import)";
-            $amen_msg   = count( $amenities ) > 0
-                ? count( $amenities ) . ' amenities (first icon: ' . ( $amenities[0]['icon'] ?? '?' ) . ', label: ' . ( $amenities[0]['label'] ?? '?' ) . ')'
-                : '⚠ 0 amenities — перезапусти Demo Import';
-            $log[] = $has_data
-                ? "  ✅ Locations: {$count} results — ACF OK (name: \"{$first_acf['name']}\", {$status_msg}, {$amen_msg})"
-                : "  ⚠ Locations: {$count} results but locationFields empty";
+            // Перебрати всі локації, повідомити про кожну окремо
+            $any_with_amenities = false;
+            $first_acf          = null;
+            foreach ( $nodes as $node ) {
+                $loc_name   = $node['locationFields']['name'] ?? '(no name)';
+                $status_val = $node['locationStatus'] ?? '(null)';
+                $status_ok  = in_array( $status_val, [ 'available', 'coming_soon' ], true );
+                $amenities  = $node['locationAmenities'] ?? [];
+                $amen_count = count( $amenities );
+
+                if ( $first_acf === null ) {
+                    $first_acf = $node['locationFields'] ?? null;
+                }
+
+                $status_msg = $status_ok
+                    ? "status: \"{$status_val}\" ✅"
+                    : "status: \"{$status_val}\" ❌ (задеплой v24 PHP + Re-import)";
+
+                if ( $amen_count > 0 ) {
+                    $any_with_amenities = true;
+                    $first_icon  = $amenities[0]['icon']  ?? '?';
+                    $first_label = $amenities[0]['label'] ?? '?';
+                    $log[] = "     ✅ [{$loc_name}]: {$amen_count} amenities (icon: {$first_icon}, label: {$first_label}), {$status_msg}";
+                } else {
+                    $log[] = "     ⚠ [{$loc_name}]: 0 amenities — Re-import або не наша локація, {$status_msg}";
+                }
+            }
+
+            $has_data  = $first_acf && ! empty( $first_acf['name'] );
+            $amen_ok   = $any_with_amenities ? '✅' : '⚠';
+            $amen_hint = $any_with_amenities ? '' : ' (деякі локації мають 0 amenities — дивись деталі нижче)';
+            if ( $has_data ) {
+                $log[] = "  {$amen_ok} Locations: {$count} results — ACF OK{$amen_hint}";
+            } else {
+                $log[] = "  ⚠ Locations: {$count} results but locationFields empty";
+            }
+        }
+    }
+
+    // ── 5b. CPT: Amenities ────────────────────────────────────────────────────
+    [ $ok, $data ] = $query( '{ amenities(first:3) { nodes { title amenityFields { number imageLayout feature1Icon feature2Icon } } } }' );
+    if ( ! $ok ) {
+        $log[] = "  ❌ Amenities: {$data}";
+    } else {
+        $nodes = $data['amenities']['nodes'] ?? [];
+        $count = count( $nodes );
+        if ( $count === 0 ) {
+            $log[] = '  ⚠ Amenities CPT: 0 results — run Import first';
+        } else {
+            $first_af = $nodes[0]['amenityFields'] ?? null;
+            $has_data  = $first_af && ! empty( $first_af['number'] );
+            $log[]     = $has_data
+                ? "  ✅ Amenities CPT: {$count} results — ACF OK (number: \"{$first_af['number']}\", layout: \"{$first_af['imageLayout']}\")"
+                : "  ⚠ Amenities CPT: {$count} results but amenityFields empty";
         }
     }
 
     // ── 6. CPT: Програми ────────────────────────────────────────────────────
-    [ $ok, $data ] = $query( '{ programs(first:3) { nodes { programFields { title price color } } } }' );
-    if ( ! $ok ) {
+    [ $ok, $data ] = $query( '{ programs(first:3) { nodes { programFields { title price color } } } }' );    if ( ! $ok ) {
         $log[] = "  ❌ Programs: {$data}";
     } else {
         $nodes = $data['programs']['nodes'] ?? [];
@@ -871,6 +918,28 @@ function rq_verify_graphql(): array {
         }
     }
 
+    // ── 10. Book Modal Options ───────────────────────────────────────────────
+    [ $ok, $data ] = $query( '{ acfOptionsBookModal { bookModal { modalTitle modalSubtitle sport1Title sport1ButtonText sport1BookingUrl sport2Title sport2ButtonText sport2BookingUrl } } }' );
+    if ( ! $ok ) {
+        $log[] = "  ❌ Book Modal options: {$data}";
+        $log[] = '     → Перевір: WPGraphQL for ACF активний, Book Modal Options Page зареєстрована (theme-setup.php)';
+        $log[] = '     → Перевір: group_book_modal_options зареєстровано в acf-blocks.php з show_in_graphql=true';
+    } else {
+        $bm = $data['acfOptionsBookModal']['bookModal'] ?? null;
+        if ( ! $bm ) {
+            $log[] = '  ⚠ Book Modal: acfOptionsBookModal є в схемі але повертає null — запусти Import або збережи Book Modal options у WP Admin';
+        } else {
+            $title  = $bm['modalTitle']  ?? '(empty)';
+            $sport1 = $bm['sport1Title'] ?? '(empty)';
+            $sport2 = $bm['sport2Title'] ?? '(empty)';
+            $url1   = $bm['sport1BookingUrl'] ?? '(empty)';
+            $url2   = $bm['sport2BookingUrl'] ?? '(empty)';
+            $log[]  = "  ✅ Book Modal options OK — title: \"{$title}\", sport1: \"{$sport1}\", sport2: \"{$sport2}\"";
+            $log[]  = "     sport1 URL: {$url1}";
+            $log[]  = "     sport2 URL: {$url2}";
+        }
+    }
+
     // ── 10. Атрибути блоку (Hero block) ───────────────────────────────────
     $log[] = '';
     $log[] = '5. Block Attributes (Hero on Home)';
@@ -921,6 +990,40 @@ function rq_verify_graphql(): array {
     $log[] = '';
     $log[] = '6. About Block Images (attachment ID → URL check)';
     [ $ok2, $data2 ] = $query( '{ pageBy(uri:"/") { blocks { __typename ... on AcfRacqueteerAboutBlock { racqueteerAbout { leftImage rightImage } } } } }' );
+
+    // ── 6b. Amenities block attributes ────────────────────────────────────────
+    [ $ok_am, $data_am ] = $query( '{ pageBy(uri:"/") { blocks { __typename ... on AcfRacqueteerAmenitiesBlock { racqueteerAmenities { label title amenities } } } } }' );
+    if ( ! $ok_am ) {
+        $err_am = (string) $data_am;
+        if ( strpos( $err_am, 'cannot be spread' ) !== false || strpos( $err_am, 'can never be of type' ) !== false ) {
+            $log[] = '  ❌ Amenities block query failed: AcfRacqueteerAmenitiesBlock does NOT implement Block interface';
+            $log[] = '     → Deploy graphql-extensions.php with AcfRacqueteerAmenitiesBlock in $rq_acf_block_names';
+        } else {
+            $log[] = "  ❌ Запит Amenities block не вдався: {$err_am}";
+        }
+    } else {
+        $am_block = null;
+        foreach ( $data_am['pageBy']['blocks'] ?? [] as $b ) {
+            if ( ( $b['__typename'] ?? '' ) === 'AcfRacqueteerAmenitiesBlock' ) {
+                $am_block = $b;
+                break;
+            }
+        }
+        if ( ! $am_block ) {
+            $log[] = '  ⚠ AcfRacqueteerAmenitiesBlock не знайдено на сторінці Home — re-run Import';
+        } else {
+            $am_attrs = $am_block['racqueteerAmenities'] ?? [];
+            $amenities_json = $am_attrs['amenities'] ?? null;
+            if ( empty( $amenities_json ) ) {
+                $log[] = '  ⚠ Amenities block знайдено, але racqueteerAmenities.amenities порожній — inline repeater не зчитано';
+            } else {
+                $decoded = json_decode( $amenities_json, true );
+                $count   = is_array( $decoded ) ? count( $decoded ) : 0;
+                $log[]   = "  ✅ Amenities block OK — label: \"{$am_attrs['label']}\", title: \"{$am_attrs['title']}\", amenities: {$count} items";
+            }
+        }
+    }
+
         if ( ! $ok2 ) {
             $log[] = "  ❌ Запит About block не вдався: {$data2}";
     } else {
@@ -1244,6 +1347,8 @@ function rq_import_media( string $nextjs, array &$log ): array {
         'membership_padel'      => [ 'membership-racket-padel.png',     $nextjs . 'membership-racket-padel.png'     ],
         'about_hero'            => [ 'about-hero.png',                  $nextjs . 'about-hero.png'                  ],
         'contact_bg'            => [ 'contact-bg.png',                  $nextjs . 'contact-bg.png'                  ],
+        'book_modal_padel'      => [ 'book-modal-padel-v2.webp',        $nextjs . 'book-modal-padel-v2.webp'        ],
+        'book_modal_pickleball' => [ 'book-modal-pickleball-v2.webp',   $nextjs . 'book-modal-pickleball-v2.webp'   ],
     ];
 
     $media = [];
@@ -1326,7 +1431,6 @@ function rq_create_locations( array $media, array &$log ): void {
             [ 'Homebush, Sydney', 'New South Wales 2140, Australia' ],
             'Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.',
             [
-                // Repeater rows MUST use sub-field NAMES (not field keys) as array keys
                 [ 'icon' => 'courts',    'label' => '12 Courts'     ],
                 [ 'icon' => 'lounge',    'label' => 'Lounge Zones'  ],
                 [ 'icon' => 'coworking', 'label' => 'Coworking'     ],
@@ -1351,22 +1455,100 @@ function rq_create_locations( array $media, array &$log ): void {
     ];
 
     foreach ( $locations as [ $title, $status, $address, $desc, $amenities ] ) {
+        // Scalar fields — зберігаємо через update_field (надійно для скалярів)
         $acf = [
             'field_loc_location_id'     => sanitize_title( $title ),
             'field_loc_name'            => $title,
             'field_loc_status'          => $status,
-            // address: textarea — по одному рядку, фронтенд розбиває по "\n"
             'field_loc_address'         => implode( "\n", $address ),
-            // field_cpt_loc_description уникає конфлікту ключів з блоком racqueteer-locations
             'field_cpt_loc_description' => $desc,
-            // amenities: repeater — масив рядків з ключами sub-fields
-            'field_loc_amenities'       => $amenities,
+            // Amenities НЕ передаємо через rq_upsert_cpt — зберігаємо окремо через
+            // direct update_post_meta, щоб уникнути тихого failure update_field() для repeater.
         ];
         if ( ! empty( $media['about_hero'] ) ) {
             $acf['field_loc_image'] = $media['about_hero'];
         }
         $id = rq_upsert_cpt( 'location', $title, $acf );
+
+        // Зберегти amenities через прямий update_post_meta — 100% надійно для ACF repeater
+        if ( $id ) {
+            rq_save_location_amenities( $id, $amenities );
+        }
         $log[] = "  ✔ Location: {$title} (ID {$id}, amenities: " . count( $amenities ) . ')';
+    }
+}
+
+/**
+ * Зберігає ACF repeater "amenities" у post meta напряму.
+ * Обходить update_field() (може тихо повернути false для repeater через timing ACF local fields).
+ * ACF читатиме ці дані коректно через get_field('amenities', $post_id) завдяки полям _amenities*.
+ */
+function rq_save_location_amenities( int $post_id, array $amenities ): void {
+    global $wpdb;
+
+    // Видалити старі рядки репітера (якщо є залишки від попереднього імпорту)
+    $wpdb->query( $wpdb->prepare(
+        "DELETE FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key REGEXP '^_?amenities(_[0-9]+.*)?$'",
+        $post_id
+    ) );
+
+    if ( empty( $amenities ) ) {
+        update_post_meta( $post_id, 'amenities',  0 );
+        update_post_meta( $post_id, '_amenities', 'field_loc_amenities' );
+        return;
+    }
+
+    // Зберегти кількість рядків + посилання на field group key
+    update_post_meta( $post_id, 'amenities',  count( $amenities ) );
+    update_post_meta( $post_id, '_amenities', 'field_loc_amenities' );
+
+    // Зберегти кожен рядок
+    foreach ( $amenities as $i => $row ) {
+        $icon  = isset( $row['icon']  ) ? (string) $row['icon']  : '';
+        $label = isset( $row['label'] ) ? (string) $row['label'] : '';
+
+        update_post_meta( $post_id, "amenities_{$i}_icon",   $icon  );
+        update_post_meta( $post_id, "_amenities_{$i}_icon",  'field_loc_amenity_icon'  );
+        update_post_meta( $post_id, "amenities_{$i}_label",  $label );
+        update_post_meta( $post_id, "_amenities_{$i}_label", 'field_loc_amenity_label' );
+    }
+}
+
+// ─────────────────────────────────────────────
+// CPT: AMENITIES
+// ─────────────────────────────────────────────
+
+/**
+ * Creates 6 Amenity CPT entries that mirror the inline block data.
+ * These are standalone records — the ACF Gutenberg block on the Home page
+ * uses its own inline data. These CPT entries allow querying via
+ * GET_AMENITIES GraphQL query (amenities { nodes { amenityFields { … } } }).
+ */
+function rq_create_amenities( array &$log ): void {
+    $items = [
+        // [ title, number, layout, feat1_icon, feat1_text, feat2_icon, feat2_text ]
+        [ 'State-of-the-Art Courts', '01', 'split',  'courts',  '11 pickleball and 6 premium panoramic padel courts for top-level play',       'jumprope', 'Tournament-quality surfaces, lighting, and spacious layouts'                             ],
+        [ 'Premium Locker Rooms',    '02', 'single', 'locker',  'Spacious changing rooms with lockers, private showers, and saunas',            'sauna',    'Elevated finishes with hotel-style toiletries'                                           ],
+        [ 'Members Lounge',          '03', 'split',  'lounge',  'Comfortable lounge spaces to relax and connect between matches',               'member',   'Exclusive members-only access with social seating areas'                                 ],
+        [ 'Café & Coffee Bar',       '04', 'single', 'coffee',  'Specialty coffee by Wood Roasters, an award-winning Australian roaster',       'drink',    'Coffee, drinks, and light bites to fuel your game or your workday'                      ],
+        [ 'Coworking Spaces',        '05', 'single', 'laptop',  'Dedicated workspaces with comfortable seating and TVs',                        'video',    'Private call booths for meetings or focused work'                                       ],
+        [ 'Pro Shop',                '06', 'single', 'shop',    'Premium paddles, rackets, and apparel from leading brands like Wilson and JOOL', 'shop',  'Expertly curated equipment to help players of all levels elevate their game'            ],
+    ];
+
+    foreach ( $items as $order => [ $title, $num, $layout, $icon1, $text1, $icon2, $text2 ] ) {
+        $id = rq_upsert_cpt( 'amenity', $title, [
+            'field_amenity_number'       => $num,
+            'field_amenity_image_layout' => $layout,
+            'field_amenity_feat1_icon'   => $icon1,
+            'field_amenity_feat1_text'   => $text1,
+            'field_amenity_feat2_icon'   => $icon2,
+            'field_amenity_feat2_text'   => $text2,
+        ] );
+        // Set menu_order so amenities return in correct sequence
+        if ( $id ) {
+            wp_update_post( [ 'ID' => $id, 'menu_order' => $order + 1 ] );
+        }
+        $log[] = "  ✔ Amenity: {$title} (ID {$id})";
     }
 }
 
@@ -1476,12 +1658,12 @@ function rq_create_page_home( string $nextjs, array $media, array &$log ): void 
         '_description' => 'field_loc_description',
     ] );
 
-    $content .= rq_acf_block( 'acf/racqueteer-amenities', [
-        'label'        => 'amenities',
-        '_label'       => 'field_amen_label',
-        'title'        => 'Our Amenities',
-        '_title'       => 'field_amen_title',
-    ] );
+    $content .= rq_acf_block( 'acf/racqueteer-amenities', array_merge( [
+        'label'  => 'amenities',
+        '_label' => 'field_amen_label',
+        'title'  => 'Our Amenities',
+        '_title' => 'field_amen_title',
+    ], rq_amenities_block_data() ) );
 
     $content .= rq_acf_block( 'acf/racqueteer-programs', [
         'label'        => 'programming',
@@ -1720,6 +1902,57 @@ function rq_create_page_careers( string $nextjs, array $media, array &$log ): vo
 }
 
 // ─────────────────────────────────────────────
+// HELPERS: Amenities block repeater data
+// ─────────────────────────────────────────────
+
+/**
+ * Budує плаский масив для ACF-репітера amenities (для inline-даних блоку Gutenberg).
+ * Формат відповідає тому, як ACF зберігає repeater у коментарях блок-маркапу:
+ *   amenities          => кількість рядків
+ *   _amenities         => field_key repeater
+ *   amenities_0_title  => значення
+ *   _amenities_0_title => field_key sub-поля
+ *   ...
+ */
+function rq_amenities_block_data(): array {
+    $items = [
+        // [ title, number, layout, feat1_icon, feat1_text, feat2_icon, feat2_text ]
+        [ 'State-of-the-Art Courts', '01', 'split',  'courts', '11 pickleball and 6 premium panoramic padel courts for top-level play',       'jumprope', 'Tournament-quality surfaces, lighting, and spacious layouts'                             ],
+        [ 'Premium Locker Rooms',    '02', 'single', 'locker', 'Spacious changing rooms with lockers, private showers, and saunas',            'sauna',    'Elevated finishes with hotel-style toiletries'                                           ],
+        [ 'Members Lounge',          '03', 'split',  'lounge', 'Comfortable lounge spaces to relax and connect between matches',               'member',   'Exclusive members-only access with social seating areas'                                 ],
+        [ 'Café & Coffee Bar',       '04', 'single', 'coffee', 'Specialty coffee by Wood Roasters, an award-winning Australian roaster',       'drink',    'Coffee, drinks, and light bites to fuel your game or your workday'                      ],
+        [ 'Coworking Spaces',        '05', 'single', 'laptop', 'Dedicated workspaces with comfortable seating and TVs',                        'video',    'Private call booths for meetings or focused work'                                       ],
+        [ 'Pro Shop',                '06', 'single', 'shop',   'Premium paddles, rackets, and apparel from leading brands like Wilson and JOOL','shop',    'Expertly curated equipment to help players of all levels elevate their game'            ],
+    ];
+
+    $data = [
+        'amenities'  => count( $items ),
+        '_amenities' => 'field_amen_amenities',
+    ];
+
+    foreach ( $items as $i => [ $title, $num, $layout, $icon1, $text1, $icon2, $text2 ] ) {
+        $data[ "amenities_{$i}_title" ]            = $title;
+        $data[ "_amenities_{$i}_title" ]           = 'field_amen_item_title';
+        $data[ "amenities_{$i}_number" ]           = $num;
+        $data[ "_amenities_{$i}_number" ]          = 'field_amen_item_number';
+        $data[ "amenities_{$i}_image_layout" ]     = $layout;
+        $data[ "_amenities_{$i}_image_layout" ]    = 'field_amen_item_layout';
+        $data[ "amenities_{$i}_images" ]           = [];
+        $data[ "_amenities_{$i}_images" ]          = 'field_amen_item_images';
+        $data[ "amenities_{$i}_feature_1_icon" ]   = $icon1;
+        $data[ "_amenities_{$i}_feature_1_icon" ]  = 'field_amen_item_feat1_icon';
+        $data[ "amenities_{$i}_feature_1_text" ]   = $text1;
+        $data[ "_amenities_{$i}_feature_1_text" ]  = 'field_amen_item_feat1_text';
+        $data[ "amenities_{$i}_feature_2_icon" ]   = $icon2;
+        $data[ "_amenities_{$i}_feature_2_icon" ]  = 'field_amen_item_feat2_icon';
+        $data[ "amenities_{$i}_feature_2_text" ]   = $text2;
+        $data[ "_amenities_{$i}_feature_2_text" ]  = 'field_amen_item_feat2_text';
+    }
+
+    return $data;
+}
+
+// ─────────────────────────────────────────────
 // ACF OPTIONS: Navbar + Footer
 // ─────────────────────────────────────────────
 
@@ -1771,5 +2004,28 @@ function rq_set_site_options( array $media, array &$log ): void {
         [ 'label' => 'Privacy Policy',   'url' => '#' ],
     ], 'options' );
     $log[] = '  ✔ Footer options saved';
+}
+
+// ─────────────────────────────────────────────
+// ACF OPTIONS: Book Modal
+// ─────────────────────────────────────────────
+
+function rq_set_book_modal_options( array $media, array &$log ): void {
+    if ( ! function_exists( 'update_field' ) ) {
+        $log[] = '  ⚠ ACF not active — skipping Book Modal fields';
+        return;
+    }
+
+    update_field( 'field_bm_modal_title',     'Book a Court',                    'options' );
+    update_field( 'field_bm_modal_subtitle',  'Select your sport to get started','options' );
+    update_field( 'field_bm_sport1_title',    'Padel',                           'options' );
+    update_field( 'field_bm_sport1_image',    $media['book_modal_padel']      ?? 0, 'options' );
+    update_field( 'field_bm_sport1_btn_text', 'Book a Court',                   'options' );
+    update_field( 'field_bm_sport1_url',      'https://racqueteer.com.au/',     'options' );
+    update_field( 'field_bm_sport2_title',    'Pickleball',                     'options' );
+    update_field( 'field_bm_sport2_image',    $media['book_modal_pickleball'] ?? 0, 'options' );
+    update_field( 'field_bm_sport2_btn_text', 'Book a Court',                   'options' );
+    update_field( 'field_bm_sport2_url',      'https://racqueteer.com.au/',     'options' );
+    $log[] = '  ✔ Book Modal options saved';
 }
 

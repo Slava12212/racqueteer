@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback } from "react";
 import BookModal from "@/components/BookModal";
+import type { WPBookModalOptions } from "@/types";
 
 export interface CtaData {
   ctaText: string;
@@ -9,6 +10,8 @@ export interface CtaData {
   isBookModalOpen: boolean;
   openBookModal: () => void;
   closeBookModal: () => void;
+  /** Options from WordPress Site Options → Book Modal page */
+  bookModalOptions: WPBookModalOptions | null;
 }
 
 export const CtaContext = createContext<CtaData>({
@@ -17,16 +20,19 @@ export const CtaContext = createContext<CtaData>({
   isBookModalOpen: false,
   openBookModal: () => {},
   closeBookModal: () => {},
+  bookModalOptions: null,
 });
 
 export function CtaProvider({
   children,
   ctaText,
   ctaUrl,
+  bookModalOptions = null,
 }: {
   children: React.ReactNode;
   ctaText: string;
   ctaUrl: string;
+  bookModalOptions?: WPBookModalOptions | null;
 }) {
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
 
@@ -39,7 +45,7 @@ export function CtaProvider({
   }, []);
 
   return (
-    <CtaContext.Provider value={{ ctaText, ctaUrl, isBookModalOpen, openBookModal, closeBookModal }}>
+    <CtaContext.Provider value={{ ctaText, ctaUrl, isBookModalOpen, openBookModal, closeBookModal, bookModalOptions }}>
       {children}
       <BookModal />
     </CtaContext.Provider>

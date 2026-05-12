@@ -6,7 +6,6 @@ import { getSiteOptions } from "@/lib/wp-api";
 import { getNavbarContent, getFooterContent } from "@/lib/api";
 import type { NavbarContent, FooterContent } from "@/types";
 import { CtaProvider } from "@/lib/navbar-cta";
-import BookModal from "@/components/BookModal";
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://racqueteer.vercel.app'),
@@ -54,8 +53,8 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Fetch WP Options (navbar/footer). Falls back to null on error.
-  const { navbar, footer } = await getSiteOptions();
+  // Fetch WP Options (navbar/footer/bookModal). Falls back to null on error.
+  const { navbar, footer, bookModal } = await getSiteOptions();
 
   // Convert WP data → NavbarContent, OR use hardcoded fallback
   const hardcodedNavbar = await getNavbarContent();
@@ -103,7 +102,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className="font-mona-sans antialiased">
-        <CtaProvider ctaText={navbarContent.ctaText} ctaUrl={navbarContent.ctaUrl}>
+        <CtaProvider ctaText={navbarContent.ctaText} ctaUrl={navbarContent.ctaUrl} bookModalOptions={bookModal}>
           <Navbar content={navbarContent} />
           {children}
           <Footer content={footerContent} />

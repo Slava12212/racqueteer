@@ -323,9 +323,38 @@ export interface WPFooterOptions {
   footerLegalLinks?: Array<{ label: string; url: string }> | null;
 }
 
+/**
+ * ACF Options page: Book Modal
+ * WordPress ACF options page slug: book-modal
+ * Field group key: acfOptionsBookModal → bookModal
+ */
+export interface WPBookModalOptions {
+  /** Modal heading. Default: "Book a Court" */
+  modalTitle?: string | null;
+  /** Modal sub-heading. Default: "Select your sport to get started" */
+  modalSubtitle?: string | null;
+  /** Sport 1 name. Default: "Padel" */
+  sport1Title?: string | null;
+  /** Sport 1 image uploaded in WP media library */
+  sport1Image?: { sourceUrl: string } | null;
+  /** Sport 1 button label. Default: "Book a Court" */
+  sport1ButtonText?: string | null;
+  /** Sport 1 external booking URL */
+  sport1BookingUrl?: string | null;
+  /** Sport 2 name. Default: "Pickleball" */
+  sport2Title?: string | null;
+  /** Sport 2 image uploaded in WP media library */
+  sport2Image?: { sourceUrl: string } | null;
+  /** Sport 2 button label. Default: "Book a Court" */
+  sport2ButtonText?: string | null;
+  /** Sport 2 external booking URL */
+  sport2BookingUrl?: string | null;
+}
+
 export interface WPSiteOptions {
   navbar: WPNavbarOptions | null;
   footer: WPFooterOptions | null;
+  bookModal: WPBookModalOptions | null;
 }
 
 // ========================================
