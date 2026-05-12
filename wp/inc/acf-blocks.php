@@ -543,12 +543,17 @@ add_action( 'acf/init', function () {
                 'show_in_graphql' => false,
             ],
             [
-                'key'           => 'field_amenity_images',
-                'label'         => 'Images',
-                'name'          => 'images',
-                'type'          => 'gallery',
-                'return_format' => 'array',
-                'instructions'  => 'Upload 1 image for single layout, 2 for split. Exposed as images { sourceUrl } in GraphQL.',
+                'key'             => 'field_amenity_images',
+                'label'           => 'Images',
+                'name'            => 'images',
+                'type'            => 'gallery',
+                'return_format'   => 'array',
+                'instructions'    => 'Upload 1 image for single layout, 2 for split.',
+                // Exposed manually via register_graphql_field('AmenityFields','images',…)
+                // in graphql-extensions.php to return a simple [AmenityImage] list.
+                // This avoids WPGraphQL for ACF generating AcfMediaItemConnection
+                // which has no direct sourceUrl field.
+                'show_in_graphql' => false,
             ],
             [
                 'key'          => 'field_amenity_feat1_icon',

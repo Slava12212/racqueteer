@@ -710,6 +710,65 @@ add_action( 'graphql_register_types', function () {
             },
         ) );
     } catch ( \Throwable $e ) {}
+
+    // ── Amenity.images — ручна реєстрація (gallery → [AmenityImage]) ──────────
+    // show_in_graphql=false в acf-blocks.php; реєструємо вручну щоб повністю
+    // уникнути AcfMediaItemConnection і відповідних помилок схеми.
+    // Повертає масив об'єктів { sourceUrl } через власний get_field() резолвер.
+
+    try {
+        register_graphql_object_type( 'AmenityImage', array(
+            'description' => 'Зображення amenity',
+            'fields'      => array(
+                'sourceUrl' => array( 'type' => 'String' ),
+            ),
+        ) );
+    } catch ( \Throwable $e ) {}
+
+    $images_resolver = function ( $source ) {
+        if ( ! function_exists( 'get_field' ) ) { return array(); }
+        $post_id = null;
+        if ( is_object( $source ) ) {
+            $post_id = isset( $source->databaseId ) ? (int) $source->databaseId
+                     : ( isset( $source->ID ) ? (int) $source->ID : null );
+        } elseif ( is_array( $source ) ) {
+            $post_id = isset( $source['databaseId'] ) ? (int) $source['databaseId']
+                     : ( isset( $source['ID'] ) ? (int) $source['ID'] : null );
+        }
+        if ( ! $post_id ) { return array(); }
+        $imgs = get_field( 'field_amenity_images', $post_id );
+        if ( ! is_array( $imgs ) || empty( $imgs ) ) { return array(); }
+        $result = array();
+        foreach ( $imgs as $img ) {
+            if ( is_array( $img ) && ! empty( $img['url'] ) ) {
+                $result[] = array( 'sourceUrl' => $img['url'] );
+            } elseif ( is_numeric( $img ) && (int) $img > 0 ) {
+                $url = wp_get_attachment_url( (int) $img );
+                if ( $url ) { $result[] = array( 'sourceUrl' => $url ); }
+            } elseif ( is_string( $img ) && '' !== $img ) {
+                $result[] = array( 'sourceUrl' => $img );
+            }
+        }
+        return $result;
+    };
+
+    // На post node (Amenity)
+    try {
+        register_graphql_field( 'Amenity', 'images', array(
+            'type'        => array( 'list_of' => 'AmenityImage' ),
+            'description' => 'Gallery images for this amenity',
+            'resolve'     => $images_resolver,
+        ) );
+    } catch ( \Throwable $e ) {}
+
+    // На AmenityFields wrapper
+    try {
+        register_graphql_field( 'AmenityFields', 'images', array(
+            'type'        => array( 'list_of' => 'AmenityImage' ),
+            'description' => 'Gallery images for this amenity',
+            'resolve'     => $images_resolver,
+        ) );
+    } catch ( \Throwable $e ) {}
 }, 5 );
 
 

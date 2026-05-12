@@ -417,7 +417,7 @@ export async function getAmenities(): Promise<WPCptAmenity[]> {
           amenityFields: {
             number: string | null;
             imageLayout: string | null;
-            images: { nodes: Array<{ sourceUrl: string }> } | null;
+            images: Array<{ sourceUrl: string }> | null;
             feature1Icon: string | null;
             feature1Text: string | null;
             feature2Icon: string | null;
@@ -434,8 +434,8 @@ export async function getAmenities(): Promise<WPCptAmenity[]> {
         title:        node.title,
         number:       af?.number ?? String(index + 1).padStart(2, '0'),
         imageLayout:  (af?.imageLayout === 'split' ? 'split' : 'single') as 'single' | 'split',
-        images:       Array.isArray(af?.images?.nodes)
-                        ? af!.images!.nodes.map((img) => img.sourceUrl).filter(Boolean)
+        images:       Array.isArray(af?.images)
+                        ? af!.images!.map((img) => img.sourceUrl).filter(Boolean)
                         : [],
         feature1Icon: af?.feature1Icon ?? '',
         feature1Text: af?.feature1Text ?? '',

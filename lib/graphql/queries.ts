@@ -256,7 +256,7 @@ export const GET_AMENITIES = `
         amenityFields {
           number
           imageLayout
-          images { nodes { sourceUrl } }
+          images { sourceUrl }
           feature1Icon
           feature1Text
           feature2Icon
