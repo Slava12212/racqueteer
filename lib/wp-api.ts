@@ -400,7 +400,7 @@ export interface WPCptAmenity {
   title: string;
   number: string;
   imageLayout: 'single' | 'split';
-  images: string[];
+  images: string[]; // always [] from query; resolved via fallback in AmenitiesBlock
   feature1Icon: string;
   feature1Text: string;
   feature2Icon: string;
@@ -417,7 +417,6 @@ export async function getAmenities(): Promise<WPCptAmenity[]> {
           amenityFields: {
             number: string | null;
             imageLayout: string | null;
-            images: Array<{ sourceUrl: string }> | null;
             feature1Icon: string | null;
             feature1Text: string | null;
             feature2Icon: string | null;
@@ -434,9 +433,7 @@ export async function getAmenities(): Promise<WPCptAmenity[]> {
         title:        node.title,
         number:       af?.number ?? String(index + 1).padStart(2, '0'),
         imageLayout:  (af?.imageLayout === 'split' ? 'split' : 'single') as 'single' | 'split',
-        images:       Array.isArray(af?.images)
-                        ? af!.images!.map((img) => img.sourceUrl).filter(Boolean)
-                        : [],
+        images:       [], // resolved in AmenitiesBlock.tsx via fallback
         feature1Icon: af?.feature1Icon ?? '',
         feature1Text: af?.feature1Text ?? '',
         feature2Icon: af?.feature2Icon ?? '',
