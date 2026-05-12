@@ -69,7 +69,7 @@ export function AmenityCard({ amenity, total }: AmenityCardProps) {
         <div className="flex items-stretch gap-4 xl:gap-7 flex-1">
           {/* Feature 1 */}
           <div className="flex-1 flex flex-col gap-3 xl:gap-4 py-2 xl:py-4">
-            <div className="flex-shrink-0">{amenity.features[0].icon}</div>
+            <div className="flex-shrink-0 h-12 flex items-center">{amenity.features[0].icon}</div>
             <p className="text-gray-500 text-sm xl:text-base leading-relaxed">
               {amenity.features[0].text}
             </p>
@@ -80,7 +80,7 @@ export function AmenityCard({ amenity, total }: AmenityCardProps) {
 
           {/* Feature 2 */}
           <div className="flex-1 flex flex-col gap-3 xl:gap-4 py-2 xl:py-4">
-            <div className="flex-shrink-0">{amenity.features[1].icon}</div>
+            <div className="flex-shrink-0 h-12 flex items-center">{amenity.features[1].icon}</div>
             <p className="text-gray-500 text-sm xl:text-base leading-relaxed">
               {amenity.features[1].text}
             </p>
