@@ -20,13 +20,16 @@ export default async function AmenitiesBlock(attrs: WPAmenitiesAttributes) {
     const cptAmenities = await getAmenities();
     if (cptAmenities.length > 0) {
       frontendAmenities = cptAmenities.map((item, index) => {
+        const hardcodedItem = fallbackAmenities[index];
         // Use hardcoded images for same-index item if CPT returns no images
-        const hardcodedImages = fallbackAmenities[index]?.images ?? FALLBACK_IMAGES[item.imageLayout] ?? ['/placeholder.svg'];
+        const hardcodedImages = hardcodedItem?.images ?? FALLBACK_IMAGES[item.imageLayout] ?? ['/placeholder.svg'];
+        // Prefer hardcoded imageLayout — WP ACF may return null/unset which defaults to 'single'
+        const imageLayout = hardcodedItem?.imageLayout ?? item.imageLayout;
         return {
           id:          item.id,
           title:       item.title,
           number:      item.number,
-          imageLayout: item.imageLayout,
+          imageLayout: imageLayout,
           images:      hardcodedImages,
           features: [
             { icon: resolveAmenityIcon(item.feature1Icon), text: item.feature1Text },
