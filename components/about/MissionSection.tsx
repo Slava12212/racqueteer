@@ -11,9 +11,13 @@ interface MissionSectionProps {
 
 interface StatBlockProps {
   color: "blue" | "red";
+  stat1Number?: string;
+  stat1Label?: string;
+  stat2Number?: string;
+  stat2Label?: string;
 }
 
-function StatBlock({ color }: StatBlockProps) {
+function StatBlock({ color, stat1Number, stat1Label, stat2Number, stat2Label }: StatBlockProps) {
   const isBlue = color === "blue";
   const textClass = isBlue ? "text-[#265090]" : "text-[#B40023]";
   const dividerColor = isBlue ? "bg-[#27508D]" : "bg-[#960005]";
@@ -24,29 +28,33 @@ function StatBlock({ color }: StatBlockProps) {
         <span
           className={`text-4xl lg:text-[40px] font-extrabold leading-[1.2] tracking-[2px] uppercase ${textClass}`}
         >
-          25
+          {stat1Number}
         </span>
         <span
           className={`text-[11px] font-medium tracking-[2.4px] uppercase ${textClass} text-center`}
         >
-          Courts of art
+          {stat1Label}
         </span>
       </div>
 
-      <div className={`h-[34px] w-px mx-6 lg:mx-10 shrink-0 ${dividerColor}`} />
+      {stat2Number && (
+        <>
+          <div className={`h-[34px] w-px mx-6 lg:mx-10 shrink-0 ${dividerColor}`} />
 
-      <div className="flex flex-col items-center gap-0.5 flex-1">
-        <span
-          className={`text-4xl lg:text-[40px] font-extrabold leading-[1.2] tracking-[2px] uppercase ${textClass}`}
-        >
-          8+
-        </span>
-        <span
-          className={`text-[11px] font-medium tracking-[2.4px] uppercase ${textClass} text-center`}
-        >
-          Years of experience
-        </span>
-      </div>
+          <div className="flex flex-col items-center gap-0.5 flex-1">
+            <span
+              className={`text-4xl lg:text-[40px] font-extrabold leading-[1.2] tracking-[2px] uppercase ${textClass}`}
+            >
+              {stat2Number}
+            </span>
+            <span
+              className={`text-[11px] font-medium tracking-[2.4px] uppercase ${textClass} text-center`}
+            >
+              {stat2Label}
+            </span>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -72,7 +80,13 @@ export default function MissionSection({ content }: MissionSectionProps) {
           {/* Left stats — blue */}
           <div className="lg:shrink-0 hidden lg:block order-1">
             <ScrollReveal from="left" delay={200}>
-              <StatBlock color="blue" />
+              <StatBlock
+                color="blue"
+                stat1Number={content.stat1Number}
+                stat1Label={content.stat1Label}
+                stat2Number={content.stat2Number}
+                stat2Label={content.stat2Label}
+              />
             </ScrollReveal>
           </div>
 
@@ -119,17 +133,35 @@ export default function MissionSection({ content }: MissionSectionProps) {
           {/* Right stats — red (desktop only, original position) */}
           <div className="lg:shrink-0 hidden lg:block order-3">
             <ScrollReveal from="right" delay={200}>
-              <StatBlock color="red" />
+              <StatBlock
+                color="red"
+                stat1Number={content.stat3Number}
+                stat1Label={content.stat3Label}
+                stat2Number={content.stat4Number}
+                stat2Label={content.stat4Label}
+              />
             </ScrollReveal>
           </div>
 
           {/* Mobile: both stat blocks centered below button */}
           <div className="lg:hidden flex flex-col items-center gap-8 order-2 mt-2">
             <ScrollReveal from="bottom" delay={400}>
-              <StatBlock color="blue" />
+              <StatBlock
+                color="blue"
+                stat1Number={content.stat1Number}
+                stat1Label={content.stat1Label}
+                stat2Number={content.stat2Number}
+                stat2Label={content.stat2Label}
+              />
             </ScrollReveal>
             <ScrollReveal from="bottom" delay={500}>
-              <StatBlock color="red" />
+              <StatBlock
+                color="red"
+                stat1Number={content.stat3Number}
+                stat1Label={content.stat3Label}
+                stat2Number={content.stat4Number}
+                stat2Label={content.stat4Label}
+              />
             </ScrollReveal>
           </div>
         </div>

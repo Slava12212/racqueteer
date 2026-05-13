@@ -159,17 +159,53 @@ add_action( 'admin_menu', function () {
 } );
 
 function racqueteer_settings_page() {
+    $revalidate_results = [];
+    $flush_msg          = '';
+
     if ( isset( $_POST['racqueteer_save'] ) ) {
         check_admin_referer( 'racqueteer_settings' );
         update_option( 'racqueteer_nextjs_url',        sanitize_url( $_POST['nextjs_url'] ) );
         update_option( 'racqueteer_revalidate_secret', sanitize_text_field( $_POST['revalidate_secret'] ) );
         echo '<div class="notice notice-success"><p>Settings saved!</p></div>';
     }
+
+    // ── Revalidate All Pages ─────────────────────────────────────────────────
+    if ( isset( $_POST['racqueteer_revalidate_all'] ) ) {
+        check_admin_referer( 'racqueteer_settings' );
+        $pages = [ '/', '/memberships', '/private-events', '/about', '/careers' ];
+        foreach ( $pages as $slug ) {
+            racqueteer_send_revalidate( $slug );
+            $revalidate_results[] = $slug;
+        }
+    }
+
+    // ── Flush WPGraphQL Schema Cache ──────────────────────────────────────────
+    if ( isset( $_POST['racqueteer_flush_graphql'] ) ) {
+        check_admin_referer( 'racqueteer_settings' );
+        delete_option( '_graphql_stored_schema' );
+        delete_transient( '_graphql_registered_types' );
+        global $wpdb;
+        $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_graphql%'" );
+        $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_graphql%'" );
+        if ( function_exists( 'graphql_can_use_router' ) || class_exists( 'WPGraphQL' ) ) {
+            do_action( 'graphql_flush_schema_cache' );
+        }
+        $flush_msg = 'WPGraphQL schema cache flushed. The schema will be rebuilt on the next GraphQL request.';
+    }
+
     $nextjs_url = get_option( 'racqueteer_nextjs_url', '' );
     $secret     = get_option( 'racqueteer_revalidate_secret', '' );
     ?>
     <div class="wrap">
         <h1>Racqueteer Settings</h1>
+
+        <?php if ( ! empty( $revalidate_results ) ) : ?>
+            <div class="notice notice-success"><p>✅ Revalidation triggered for: <strong><?php echo esc_html( implode( ', ', $revalidate_results ) ); ?></strong></p></div>
+        <?php endif; ?>
+        <?php if ( $flush_msg ) : ?>
+            <div class="notice notice-success"><p>✅ <?php echo esc_html( $flush_msg ); ?></p></div>
+        <?php endif; ?>
+
         <form method="post">
             <?php wp_nonce_field( 'racqueteer_settings' ); ?>
             <table class="form-table">
@@ -184,6 +220,27 @@ function racqueteer_settings_page() {
             </table>
             <p class="submit"><button type="submit" name="racqueteer_save" class="button button-primary">Save Settings</button></p>
         </form>
+
+        <hr>
+        <h2>🔄 Cache Management</h2>
+        <p>Use these buttons when content changes are not appearing on the live site.</p>
+
+        <form method="post" style="display:inline-block; margin-right:16px;">
+            <?php wp_nonce_field( 'racqueteer_settings' ); ?>
+            <button type="submit" name="racqueteer_flush_graphql" class="button button-secondary">
+                🗑️ Flush WPGraphQL Schema Cache
+            </button>
+        </form>
+        <em style="color:#666">← Use after adding new ACF fields (e.g. new stat fields in Mission block)</em>
+        <br><br>
+        <form method="post" style="display:inline-block; margin-right:16px;">
+            <?php wp_nonce_field( 'racqueteer_settings' ); ?>
+            <button type="submit" name="racqueteer_revalidate_all" class="button button-secondary">
+                🔄 Revalidate All Pages on Vercel
+            </button>
+        </form>
+        <em style="color:#666">← Clears the ISR cache for /, /about, /memberships, /private-events, /careers</em>
+
         <hr>
         <h2>How to Use</h2>
         <ol>
@@ -191,6 +248,7 @@ function racqueteer_settings_page() {
             <li>Set <strong>Revalidate Secret</strong> — must match <code>REVALIDATE_SECRET</code> in your Vercel environment variables.</li>
             <li>Go to <strong>Site Settings → Navbar</strong> to edit navigation links, logo and CTA button.</li>
             <li>Go to <strong>Site Settings → Footer</strong> to edit footer content, locations and legal links.</li>
+            <li><strong>After adding new ACF fields:</strong> click <strong>Flush WPGraphQL Schema Cache</strong>, fill in the values in the block editor, save the page, then click <strong>Revalidate All Pages</strong>.</li>
         </ol>
     </div>
     <?php

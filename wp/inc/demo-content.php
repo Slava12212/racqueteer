@@ -1922,6 +1922,22 @@ function rq_create_page_about( string $nextjs, array $media, array &$log ): void
         '_description' => 'field_miss_description',
         'image'        => $media['about_hero'] ?? '',
         '_image'       => 'field_miss_image',
+        'stat1_number' => '25',
+        '_stat1_number' => 'field_miss_stat1_num',
+        'stat1_label'  => 'Courts',
+        '_stat1_label'  => 'field_miss_stat1_lbl',
+        'stat2_number' => '8+',
+        '_stat2_number' => 'field_miss_stat2_num',
+        'stat2_label'  => 'Years of experience',
+        '_stat2_label'  => 'field_miss_stat2_lbl',
+        'stat3_number' => '5K+',
+        '_stat3_number' => 'field_miss_stat3_num',
+        'stat3_label'  => 'Members',
+        '_stat3_label'  => 'field_miss_stat3_lbl',
+        'stat4_number' => '50+',
+        '_stat4_number' => 'field_miss_stat4_num',
+        'stat4_label'  => 'Events per year',
+        '_stat4_label'  => 'field_miss_stat4_lbl',
     ] );
 
     $content .= rq_acf_block( 'acf/racqueteer-locations', [

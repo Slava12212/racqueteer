@@ -151,6 +151,14 @@ export const GET_PAGE_BY_SLUG = `
             title
             description
             image
+            stat1Number
+            stat1Label
+            stat2Number
+            stat2Label
+            stat3Number
+            stat3Label
+            stat4Number
+            stat4Label
           }
         }
         ... on AcfRacqueteerContactBlock {

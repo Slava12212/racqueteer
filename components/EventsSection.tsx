@@ -17,8 +17,8 @@ export default function EventsSection({ content }: EventsSectionProps) {
   ];
 
   const whatIncludes: WhatIncludesItem[] =
-    (content as EventsContent & { whatIncludes?: WhatIncludesItem[] }).whatIncludes?.length
-      ? (content as EventsContent & { whatIncludes?: WhatIncludesItem[] }).whatIncludes!
+    content.whatIncludes && content.whatIncludes.length > 0
+      ? content.whatIncludes
       : FALLBACK_ITEMS;
   return (
     <main data-header-theme="light" className="w-full bg-brand-bg font-sans">

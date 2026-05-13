@@ -250,6 +250,14 @@ export interface MissionContent {
   title: string;
   description: string;
   imageUrl: string;
+  stat1Number?: string;
+  stat1Label?: string;
+  stat2Number?: string;
+  stat2Label?: string;
+  stat3Number?: string;
+  stat3Label?: string;
+  stat4Number?: string;
+  stat4Label?: string;
 }
 
 export interface ContactContent {

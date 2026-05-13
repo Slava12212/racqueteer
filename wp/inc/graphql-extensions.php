@@ -837,7 +837,7 @@ add_action( 'graphql_register_types', function () {
         'RqRacqueteerGalleryFields'             => array( 'label', 'title', 'description', 'images' ),
         'RqRacqueteerLogoMarqueeFields'         => array( 'label', 'title', 'logos' ),
         'RqRacqueteerAboutHeroFields'           => array( 'label', 'title', 'description', 'videoUrl' ),
-        'RqRacqueteerMissionFields'             => array( 'label', 'title', 'description', 'image' ),
+        'RqRacqueteerMissionFields'             => array( 'label', 'title', 'description', 'image', 'stat1Number', 'stat1Label', 'stat2Number', 'stat2Label', 'stat3Number', 'stat3Label', 'stat4Number', 'stat4Label' ),
         'RqRacqueteerContactFields'             => array( 'label', 'title', 'description', 'email', 'phone', 'ctaText', 'ctaUrl' ),
         'RqRacqueteerCareersHeroFields'         => array( 'label', 'title', 'description', 'videoUrl' ),
         'RqRacqueteerJobListingsFields'         => array( 'label', 'title', 'description' ),
