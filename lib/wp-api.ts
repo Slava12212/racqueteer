@@ -417,6 +417,7 @@ export async function getAmenities(): Promise<WPCptAmenity[]> {
           amenityFields: {
             number: string | null;
             imageLayout: string | null;
+            images: Array<{ sourceUrl: string }> | null;
             feature1Icon: string | null;
             feature1Text: string | null;
             feature2Icon: string | null;
@@ -428,12 +429,15 @@ export async function getAmenities(): Promise<WPCptAmenity[]> {
 
     return data.amenities.nodes.map((node, index) => {
       const af = node.amenityFields;
+      const wpImages = (af?.images ?? [])
+        .map(img => img?.sourceUrl)
+        .filter((url): url is string => !!url);
       return {
         id:           node.databaseId,
         title:        node.title,
         number:       af?.number ?? String(index + 1).padStart(2, '0'),
         imageLayout:  (af?.imageLayout === 'split' ? 'split' : 'single') as 'single' | 'split',
-        images:       [], // resolved in AmenitiesBlock.tsx via fallback
+        images:       wpImages, // real WP gallery images (empty array when not uploaded)
         feature1Icon: af?.feature1Icon ?? '',
         feature1Text: af?.feature1Text ?? '',
         feature2Icon: af?.feature2Icon ?? '',

@@ -21,16 +21,23 @@ export default async function AmenitiesBlock(attrs: WPAmenitiesAttributes) {
     if (cptAmenities.length > 0) {
       frontendAmenities = cptAmenities.map((item, index) => {
         const hardcodedItem = fallbackAmenities[index];
-        // Use hardcoded images for same-index item if CPT returns no images
-        const hardcodedImages = hardcodedItem?.images ?? FALLBACK_IMAGES[item.imageLayout] ?? ['/placeholder.svg'];
-        // Prefer hardcoded imageLayout — WP ACF may return null/unset which defaults to 'single'
-        const imageLayout = hardcodedItem?.imageLayout ?? item.imageLayout;
+
+        // Use WP images when available; fall back to hardcoded static data
+        const wpImages = item.images ?? [];
+        const images = wpImages.length > 0
+          ? wpImages
+          : (hardcodedItem?.images ?? FALLBACK_IMAGES[item.imageLayout] ?? ['/placeholder.svg']);
+
+        // Derive layout from actual image count so split works even when
+        // the WP imageLayout ACF field is left at its 'single' default.
+        const imageLayout: 'split' | 'single' = images.length >= 2 ? 'split' : 'single';
+
         return {
           id:          item.id,
           title:       item.title,
           number:      item.number,
           imageLayout: imageLayout,
-          images:      hardcodedImages,
+          images:      images,
           features: [
             { icon: resolveAmenityIcon(item.feature1Icon), text: item.feature1Text },
             { icon: resolveAmenityIcon(item.feature2Icon), text: item.feature2Text },
