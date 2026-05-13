@@ -23,6 +23,7 @@ define( 'RACQUETEER_URL', get_template_directory_uri() );
 require_once RACQUETEER_DIR . '/inc/theme-setup.php';
 require_once RACQUETEER_DIR . '/inc/cpt-registration.php';
 require_once RACQUETEER_DIR . '/inc/acf-blocks.php';
+require_once RACQUETEER_DIR . '/inc/pe-hero-what-includes.php';
 require_once RACQUETEER_DIR . '/inc/graphql-extensions.php';
 require_once RACQUETEER_DIR . '/inc/revalidate-webhook.php';
 // Demo importer disabled — do not re-enable to avoid overwriting live content.
