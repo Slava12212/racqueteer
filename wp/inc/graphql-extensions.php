@@ -657,7 +657,6 @@ add_action( 'graphql_register_types', function () {
 
 }, 5 );
 
-}, 5 );
 
 // ─── Program.color — ручна реєстрація (select → String) ───────────────────────────
 // show_in_graphql=false в acf-blocks.php; реєструємо вручну щоб уникнути
