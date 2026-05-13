@@ -1,4 +1,3 @@
-"use client";
 /**
  * Shared amenity icon map — used by AmenitiesBlock (WP server path)
  * and page.tsx (CPT fallback path).
