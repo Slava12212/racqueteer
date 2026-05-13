@@ -687,11 +687,18 @@ add_action( 'acf/init', function () {
         'fields' => [
             [ 'key' => 'field_cpt_prog_title',       'label' => 'Title',       'name' => 'title',       'type' => 'text'     ],
             [
-                'key'     => 'field_prog_color',
-                'label'   => 'Color',
-                'name'    => 'color',
-                'type'    => 'select',
-                'choices' => [ 'red' => 'Red', 'blue' => 'Blue' ],
+                'key'             => 'field_prog_color',
+                'label'           => 'Color',
+                'name'            => 'color',
+                'type'            => 'select',
+                'choices'         => [ 'red' => 'Red', 'blue' => 'Blue' ],
+                'return_format'   => 'value',
+                'allow_null'      => 0,
+                'multiple'        => 0,
+                // show_in_graphql=false: WPGraphQL for ACF v2.6.x serializes select → ["red"].
+                // Exposed manually via register_graphql_field('ProgramFields','color',…)
+                // in graphql-extensions.php using get_field() which returns a plain string.
+                'show_in_graphql' => false,
             ],
             [ 'key' => 'field_prog_price',           'label' => 'Price',       'name' => 'price',       'type' => 'text'     ],
             [ 'key' => 'field_prog_unit',            'label' => 'Unit',        'name' => 'unit',        'type' => 'text'     ],

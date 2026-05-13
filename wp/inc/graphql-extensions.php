@@ -657,7 +657,47 @@ add_action( 'graphql_register_types', function () {
 
 }, 5 );
 
-// ── Залишкові safety-net фільтри (не шкодять, але вже не критичні) ──────────
+}, 5 );
+
+// ─── Program.color — ручна реєстрація (select → String) ───────────────────────────
+// show_in_graphql=false в acf-blocks.php; реєструємо вручну щоб уникнути
+// WPGraphQL for ACF v2.6.x serialized-array TypeError на select-полях.
+add_action( 'graphql_register_types', function () {
+    $color_resolver = function ( $source ) {
+        if ( ! function_exists( 'get_field' ) ) { return 'blue'; }
+        $post_id = null;
+        if ( is_object( $source ) ) {
+            $post_id = isset( $source->databaseId ) ? (int) $source->databaseId
+                     : ( isset( $source->ID ) ? (int) $source->ID : null );
+        } elseif ( is_array( $source ) ) {
+            $post_id = isset( $source['databaseId'] ) ? (int) $source['databaseId']
+                     : ( isset( $source['ID'] ) ? (int) $source['ID'] : null );
+        }
+        if ( ! $post_id ) { return 'blue'; }
+        $val = get_field( 'field_prog_color', $post_id );
+        if ( is_array( $val ) ) { $val = $val[0] ?? ''; }
+        $val = strtolower( trim( (string) $val ) );
+        return ( $val === 'red' ) ? 'red' : 'blue';
+    };
+
+    try {
+        register_graphql_field( 'Program', 'color', array(
+            'type'        => 'String',
+            'description' => 'Program color: red or blue',
+            'resolve'     => $color_resolver,
+        ) );
+    } catch ( \Throwable $e ) {}
+
+    try {
+        register_graphql_field( 'ProgramFields', 'color', array(
+            'type'        => 'String',
+            'description' => 'Program color: red or blue',
+            'resolve'     => $color_resolver,
+        ) );
+    } catch ( \Throwable $e ) {}
+}, 5 );
+
+// ─── Залишкові safety-net фільтри (не шкодять, але вже не критичні) ──────────
 add_filter( 'acf/format_value/key=field_loc_status', function ( $value, $post_id, $field ) {
     if ( is_array( $value ) ) { $value = $value[0] ?? ''; }
     return strtolower( trim( is_string( $value ) ? $value : (string) $value ) );
