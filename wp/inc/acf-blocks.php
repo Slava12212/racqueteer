@@ -144,41 +144,8 @@ add_action( 'acf/init', function () {
             ['key'=>'field_pc_cta_url','label'=>'CTA Button URL','name'=>'cta_url','type'=>'text','instructions'=>'e.g. /memberships or https://...'],
         ]],
         // Сторінка Private Events
-        ['name'=>'racqueteer-private-events-hero','title'=>'Private Events Hero','icon'=>'cover-image','keywords'=>['private events'],'fields'=>[
-            ['key'=>'field_pehero_label','label'=>'Label','name'=>'label','type'=>'text'],
-            ['key'=>'field_pehero_title','label'=>'Title','name'=>'title','type'=>'text'],
-            ['key'=>'field_pehero_description','label'=>'Description','name'=>'description','type'=>'textarea'],
-            ['key'=>'field_pehero_cta_text','label'=>'CTA Text','name'=>'cta_text','type'=>'text'],
-            ['key'=>'field_pehero_cta_url','label'=>'CTA URL','name'=>'cta_url','type'=>'text','instructions'=>'e.g. /private-events'],
-            ['key'=>'field_pehero_video','label'=>'Video URL','name'=>'video_url','type'=>'text','instructions'=>'Full URL to the video file'],
-            [
-                'key'          => 'field_pehero_what_includes',
-                'label'        => 'What Includes',
-                'name'         => 'what_includes',
-                'type'         => 'repeater',
-                'min'          => 0,
-                'max'          => 20,
-                'layout'       => 'block',
-                'button_label' => 'Add Item',
-                'sub_fields'   => [
-                    [
-                        'key'   => 'field_pe_wi_text',
-                        'label' => 'Text',
-                        'name'  => 'text',
-                        'type'  => 'text',
-                    ],
-                    [
-                        'key'           => 'field_pe_wi_icon',
-                        'label'         => 'Icon',
-                        'name'          => 'icon',
-                        'type'          => 'select',
-                        'choices'       => [ 'box' => '📦 Box (Package)', 'vip' => '👑 VIP (Crown)' ],
-                        'default_value' => 'box',
-                        'return_format' => 'value',
-                    ],
-                ],
-            ],
-        ]],
+        // NOTE: racqueteer-private-events-hero is registered SEPARATELY below (outside the loop)
+        // because it contains a repeater field — ACF requires an explicit standalone registration.
         ['name'=>'racqueteer-gallery','title'=>'Gallery Section','icon'=>'format-gallery','keywords'=>['gallery'],'fields'=>[
             ['key'=>'field_gal_label','label'=>'Label','name'=>'label','type'=>'text'],
             ['key'=>'field_gal_title','label'=>'Title','name'=>'title','type'=>'text'],
@@ -257,6 +224,74 @@ add_action( 'acf/init', function () {
             'location'           => [ [ [ 'param' => 'block', 'operator' => '==', 'value' => 'acf/' . $block['name'] ] ] ],
         ] );
     }
+
+    // ======================================================
+    // Private Events Hero — standalone registration (outside loop)
+    // Registered separately because it contains a repeater field.
+    // Using a versioned group key (v2) to bypass any ACF local-group cache.
+    // ======================================================
+    acf_register_block_type( [
+        'name'               => 'racqueteer-private-events-hero',
+        'title'              => 'Private Events Hero',
+        'icon'               => 'cover-image',
+        'keywords'           => [ 'private events' ],
+        'api_version'        => 3,
+        'category'           => 'racqueteer',
+        'mode'               => 'edit',
+        'render_callback'    => 'racqueteer_block_render_callback',
+        'supports'           => [ 'jsx' => false ],
+        'show_in_graphql'    => true,
+        'graphql_field_name' => 'racqueteerPrivateEventsHero',
+    ] );
+
+    acf_add_local_field_group( [
+        'key'                => 'group_racqueteer_pe_hero_v2',
+        'title'              => 'Private Events Hero Fields',
+        'show_in_graphql'    => true,
+        'graphql_field_name' => 'racqueteerPrivateEventsHero',
+        'fields'             => [
+            [ 'key' => 'field_pehero_label_v2', 'label' => 'Label',       'name' => 'label',       'type' => 'text'     ],
+            [ 'key' => 'field_pehero_title_v2', 'label' => 'Title',       'name' => 'title',       'type' => 'text'     ],
+            [ 'key' => 'field_pehero_desc_v2',  'label' => 'Description', 'name' => 'description', 'type' => 'textarea' ],
+            [ 'key' => 'field_pehero_cta_t_v2', 'label' => 'CTA Text',    'name' => 'cta_text',    'type' => 'text'     ],
+            [ 'key' => 'field_pehero_cta_u_v2', 'label' => 'CTA URL',     'name' => 'cta_url',     'type' => 'text',    'instructions' => 'e.g. /private-events' ],
+            [ 'key' => 'field_pehero_vid_v2',   'label' => 'Video URL',   'name' => 'video_url',   'type' => 'text',    'instructions' => 'Full URL to the video file' ],
+            [
+                'key'          => 'field_pehero_wi_v2',
+                'label'        => 'What Includes',
+                'name'         => 'what_includes',
+                'type'         => 'repeater',
+                'min'          => 0,
+                'max'          => 20,
+                'layout'       => 'block',
+                'button_label' => 'Add Item',
+                'sub_fields'   => [
+                    [
+                        'key'          => 'field_pehero_wi_text_v2',
+                        'label'        => 'Text',
+                        'name'         => 'text',
+                        'type'         => 'text',
+                        'instructions' => 'e.g. Private event packages for any occasion',
+                    ],
+                    [
+                        'key'           => 'field_pehero_wi_icon_v2',
+                        'label'         => 'Icon',
+                        'name'          => 'icon',
+                        'type'          => 'select',
+                        'choices'       => [
+                            'box' => 'Box (Package)',
+                            'vip' => 'VIP (Crown)',
+                        ],
+                        'default_value' => 'box',
+                        'return_format' => 'value',
+                        'allow_null'    => 0,
+                        'multiple'      => 0,
+                    ],
+                ],
+            ],
+        ],
+        'location' => [ [ [ 'param' => 'block', 'operator' => '==', 'value' => 'acf/racqueteer-private-events-hero' ] ] ],
+    ] );
 
     // ======================================================
     // Phase 8 — Поля Navbar Options
