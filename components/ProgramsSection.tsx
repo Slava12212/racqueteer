@@ -126,9 +126,11 @@ function ProgramRow({
           >
             {program.price}
           </span>
-          <span className={`text-base transition-colors duration-300 ${sepColor}`}>
-            /
-          </span>
+          {program.price && (
+            <span className={`text-base transition-colors duration-300 ${sepColor}`}>
+              /
+            </span>
+          )}
           <span
             className={`text-xs uppercase tracking-wide transition-colors duration-300 ${unitColor}`}
             style={{ fontFamily: '"Mona Sans", sans-serif' }}
