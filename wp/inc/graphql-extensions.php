@@ -794,7 +794,7 @@ add_action( 'graphql_register_types', function () {
         'RqRacqueteerMembershipHeroFields'      => array( 'label', 'title', 'description', 'priceStarting', 'priceUnit', 'ctaText', 'videoUrl' ),
         'RqRacqueteerSubscriptionsDetailFields' => array( 'label', 'title', 'description' ),
         'RqRacqueteerPriceCompareFields'        => array( 'label', 'title', 'description' ),
-        'RqRacqueteerPrivateEventsHeroFields'   => array( 'label', 'title', 'description', 'ctaText', 'ctaUrl', 'videoUrl' ),
+        'RqRacqueteerPrivateEventsHeroFields'   => array( 'label', 'title', 'description', 'ctaText', 'ctaUrl', 'videoUrl', 'whatIncludes' ),
         'RqRacqueteerGalleryFields'             => array( 'label', 'title', 'description', 'images' ),
         'RqRacqueteerLogoMarqueeFields'         => array( 'label', 'title', 'logos' ),
         'RqRacqueteerAboutHeroFields'           => array( 'label', 'title', 'description', 'videoUrl' ),
@@ -834,7 +834,7 @@ add_action( 'graphql_register_types', function () {
         'AcfRacqueteerMembershipHeroBlock'      => array( 'field' => 'racqueteerMembershipHero',      'type' => 'RqRacqueteerMembershipHeroFields' ),
         'AcfRacqueteerSubscriptionsDetailBlock' => array( 'field' => 'racqueteerSubscriptionsDetail', 'type' => 'RqRacqueteerSubscriptionsDetailFields' ),
         'AcfRacqueteerPriceCompareBlock'        => array( 'field' => 'racqueteerPriceCompare',        'type' => 'RqRacqueteerPriceCompareFields' ),
-        'AcfRacqueteerPrivateEventsHeroBlock'   => array( 'field' => 'racqueteerPrivateEventsHero',   'type' => 'RqRacqueteerPrivateEventsHeroFields' ),
+        // NOTE: AcfRacqueteerPrivateEventsHeroBlock uses a custom resolver below (what_includes repeater) — skip here
         'AcfRacqueteerGalleryBlock'             => array( 'field' => 'racqueteerGallery',             'type' => 'RqRacqueteerGalleryFields' ),
         'AcfRacqueteerLogoMarqueeBlock'         => array( 'field' => 'racqueteerLogoMarquee',         'type' => 'RqRacqueteerLogoMarqueeFields' ),
         'AcfRacqueteerAboutHeroBlock'           => array( 'field' => 'racqueteerAboutHero',           'type' => 'RqRacqueteerAboutHeroFields' ),
@@ -935,8 +935,53 @@ add_action( 'graphql_register_types', function () {
         }
     }
 
-    // ── AcfRacqueteerAmenitiesBlock — custom resolver (repeater rebuild) ─────────────────
-    // The standard resolver cannot reconstruct an ACF repeater stored as numbered keys
+    // ── AcfRacqueteerPrivateEventsHeroBlock — custom resolver (what_includes repeater) ─────────────────
+    // The standard flat resolver cannot reconstruct ACF repeater data stored as numbered keys
+    // (what_includes_0_text, what_includes_0_icon, …). This custom resolver rebuilds the items
+    // and JSON-encodes them; PrivateEventsHeroBlock.tsx parses via JSON.parse(attrs.whatIncludes).
+    try {
+        register_graphql_field( 'AcfRacqueteerPrivateEventsHeroBlock', 'racqueteerPrivateEventsHero', array(
+            'type'    => 'RqRacqueteerPrivateEventsHeroFields',
+            'resolve' => function ( $source ) {
+                $raw = isset( $source['attrs']['data'] ) ? $source['attrs']['data']
+                     : ( isset( $source['attrs'] ) ? $source['attrs']
+                     : ( isset( $source['data']  ) ? $source['data']  : $source ) );
+
+                if ( ! is_array( $raw ) ) {
+                    return array( 'label' => '', 'title' => '', 'description' => '', 'ctaText' => '', 'ctaUrl' => '', 'videoUrl' => '', 'whatIncludes' => '[]' );
+                }
+
+                $out = array(
+                    'label'       => isset( $raw['label'] )       ? (string) $raw['label']       : '',
+                    'title'       => isset( $raw['title'] )       ? (string) $raw['title']       : '',
+                    'description' => isset( $raw['description'] ) ? (string) $raw['description'] : '',
+                    'ctaText'     => isset( $raw['cta_text'] )    ? (string) $raw['cta_text']    : '',
+                    'ctaUrl'      => isset( $raw['cta_url'] )     ? (string) $raw['cta_url']     : '',
+                    'videoUrl'    => isset( $raw['video_url'] )   ? (string) $raw['video_url']   : '',
+                );
+
+                // Rebuild what_includes repeater from numbered flat keys
+                $count = (int) ( isset( $raw['what_includes'] ) ? $raw['what_includes'] : 0 );
+                $items = array();
+
+                for ( $i = 0; $i < $count; $i++ ) {
+                    $icon = isset( $raw[ "what_includes_{$i}_icon" ] ) ? $raw[ "what_includes_{$i}_icon" ] : '';
+                    if ( is_array( $icon ) ) { $icon = $icon[0] ?? ''; }
+                    $items[] = array(
+                        'text' => isset( $raw[ "what_includes_{$i}_text" ] ) ? (string) $raw[ "what_includes_{$i}_text" ] : '',
+                        'icon' => strtolower( trim( (string) $icon ) ),
+                    );
+                }
+
+                $out['whatIncludes'] = json_encode( $items, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+                return $out;
+            },
+        ) );
+    } catch ( \Throwable $e ) {
+        // Ignore duplicate registration
+    }
+
+    // ── AcfRacqueteerAmenitiesBlock — custom resolver (repeater rebuild) ─────────────────    // The standard resolver cannot reconstruct an ACF repeater stored as numbered keys
     // (amenities_0_title, amenities_1_number, …). This custom resolver rebuilds the array
     // and JSON-encodes it so AmenitiesBlock.tsx can parse it via JSON.parse(attrs.amenities).
     try {

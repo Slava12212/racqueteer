@@ -110,6 +110,8 @@ export interface WPPrivateEventsHeroAttributes {
   ctaText: string;
   ctaUrl: string;
   videoUrl: string;
+  /** JSON-encoded array of {text: string; icon: string} from the what_includes repeater */
+  whatIncludes?: unknown;
 }
 
 export interface WPGalleryAttributes {

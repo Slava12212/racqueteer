@@ -209,6 +209,8 @@ export interface PrivateEventsHeroContent {
   ctaText: string;
   ctaUrl: string;
   videoUrl: string;
+  /** Dynamic "What Includes" items from WordPress */
+  whatIncludes?: Array<{ text: string; icon: string }>;
 }
 
 export interface GalleryContent {

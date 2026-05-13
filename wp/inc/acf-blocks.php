@@ -151,6 +151,33 @@ add_action( 'acf/init', function () {
             ['key'=>'field_pehero_cta_text','label'=>'CTA Text','name'=>'cta_text','type'=>'text'],
             ['key'=>'field_pehero_cta_url','label'=>'CTA URL','name'=>'cta_url','type'=>'text','instructions'=>'e.g. /private-events'],
             ['key'=>'field_pehero_video','label'=>'Video URL','name'=>'video_url','type'=>'text','instructions'=>'Full URL to the video file'],
+            [
+                'key'          => 'field_pehero_what_includes',
+                'label'        => 'What Includes',
+                'name'         => 'what_includes',
+                'type'         => 'repeater',
+                'min'          => 0,
+                'max'          => 20,
+                'layout'       => 'block',
+                'button_label' => 'Add Item',
+                'sub_fields'   => [
+                    [
+                        'key'   => 'field_pe_wi_text',
+                        'label' => 'Text',
+                        'name'  => 'text',
+                        'type'  => 'text',
+                    ],
+                    [
+                        'key'           => 'field_pe_wi_icon',
+                        'label'         => 'Icon',
+                        'name'          => 'icon',
+                        'type'          => 'select',
+                        'choices'       => [ 'box' => '📦 Box (Package)', 'vip' => '👑 VIP (Crown)' ],
+                        'default_value' => 'box',
+                        'return_format' => 'value',
+                    ],
+                ],
+            ],
         ]],
         ['name'=>'racqueteer-gallery','title'=>'Gallery Section','icon'=>'format-gallery','keywords'=>['gallery'],'fields'=>[
             ['key'=>'field_gal_label','label'=>'Label','name'=>'label','type'=>'text'],

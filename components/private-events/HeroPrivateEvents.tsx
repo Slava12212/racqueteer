@@ -12,6 +12,16 @@ interface HeroPrivateEventsProps {
 export default function HeroPrivateEvents({ content }: HeroPrivateEventsProps) {
   const [videoReady, setVideoReady] = useState(false);
 
+  const FALLBACK_ITEMS: Array<{ text: string; icon: string }> = [
+    { text: "private event packages for any occasion", icon: "box" },
+    { text: "exclusive access to our courts, lounges, coaching", icon: "vip" },
+  ];
+
+  const whatIncludes =
+    content.whatIncludes && content.whatIncludes.length > 0
+      ? content.whatIncludes
+      : FALLBACK_ITEMS;
+
   return (
     <div>
       {/* Hero banner */}
@@ -87,24 +97,17 @@ export default function HeroPrivateEvents({ content }: HeroPrivateEventsProps) {
                 What includes
               </p>
               <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between items-center gap-4">
-                    <p className="text-black text-sm font-extrabold uppercase tracking-[0.7px] leading-[1.2]">
-                      private event packages for any occasion
-                    </p>
-                    <IconBadge icon={<BoxIcon />} />
+                {whatIncludes.map((item, idx) => (
+                  <div key={idx} className="flex flex-col gap-2">
+                    <div className="flex justify-between items-center gap-4">
+                      <p className="text-black text-sm font-extrabold uppercase tracking-[0.7px] leading-[1.2]">
+                        {item.text}
+                      </p>
+                      <IconBadge icon={item.icon === "vip" ? <VipIcon /> : <BoxIcon />} />
+                    </div>
+                    <div className="h-px bg-[#DDE3E7]" />
                   </div>
-                  <div className="h-px bg-[#DDE3E7]" />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between items-center gap-4">
-                    <p className="text-black text-sm font-extrabold uppercase tracking-[0.7px] leading-[1.2]">
-                      exclusive access to our courts, lounges, coaching
-                    </p>
-                    <IconBadge icon={<VipIcon />} />
-                  </div>
-                  <div className="h-px bg-[#DDE3E7]" />
-                </div>
+                ))}
               </div>
               <p className="text-[#6B7280] text-base leading-6 max-w-[496px]">
                 With premium amenities and tailored experiences, we&apos;ll make your event

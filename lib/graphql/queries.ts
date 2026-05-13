@@ -118,6 +118,7 @@ export const GET_PAGE_BY_SLUG = `
             ctaText
             ctaUrl
             videoUrl
+            whatIncludes
           }
         }
         ... on AcfRacqueteerGalleryBlock {
