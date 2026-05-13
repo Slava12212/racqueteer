@@ -76,6 +76,8 @@ export interface WPEventsAttributes {
   ctaText: string;
   ctaUrl: string;
   image: string;
+  /** JSON-encoded array of {text: string; icon: string} from what_includes repeater */
+  whatIncludes?: unknown;
 }
 
 export interface WPMembershipHeroAttributes {

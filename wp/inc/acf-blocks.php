@@ -119,6 +119,36 @@ add_action( 'acf/init', function () {
             ['key'=>'field_events_cta_text','label'=>'CTA Text','name'=>'cta_text','type'=>'text'],
             ['key'=>'field_events_cta_url','label'=>'CTA URL','name'=>'cta_url','type'=>'text','instructions'=>'e.g. /events'],
             ['key'=>'field_events_image','label'=>'Image','name'=>'image','type'=>'image','return_format'=>'url'],
+            [
+                'key'          => 'field_events_what_includes',
+                'label'        => 'What Includes',
+                'name'         => 'what_includes',
+                'type'         => 'repeater',
+                'min'          => 0,
+                'max'          => 20,
+                'layout'       => 'block',
+                'button_label' => 'Add Item',
+                'sub_fields'   => [
+                    [
+                        'key'          => 'field_events_wi_text',
+                        'label'        => 'Text',
+                        'name'         => 'text',
+                        'type'         => 'text',
+                        'instructions' => 'e.g. Private event packages for any occasion',
+                    ],
+                    [
+                        'key'           => 'field_events_wi_icon',
+                        'label'         => 'Icon',
+                        'name'          => 'icon',
+                        'type'          => 'select',
+                        'choices'       => [ 'box' => 'Box (Package)', 'vip' => 'VIP (Crown)' ],
+                        'default_value' => 'box',
+                        'return_format' => 'value',
+                        'allow_null'    => 0,
+                        'multiple'      => 0,
+                    ],
+                ],
+            ],
         ]],
         // Сторінка Memberships
         ['name'=>'racqueteer-membership-hero','title'=>'Membership Hero','icon'=>'cover-image','keywords'=>['membership','hero'],'fields'=>[

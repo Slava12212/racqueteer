@@ -84,6 +84,7 @@ export const GET_PAGE_BY_SLUG = `
             ctaText
             ctaUrl
             image
+            whatIncludes
           }
         }
         ... on AcfRacqueteerMembershipHeroBlock {

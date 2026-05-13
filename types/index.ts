@@ -150,6 +150,7 @@ export interface EventsContent {
   ctaText: string;
   ctaUrl: string;
   imageUrl: string;
+  whatIncludes?: Array<{ text: string; icon: string }>;
 }
 
 export interface HomepageContent {

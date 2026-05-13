@@ -790,7 +790,7 @@ add_action( 'graphql_register_types', function () {
         'RqRacqueteerMembershipCtaFields'       => array( 'label', 'title', 'description', 'ctaText', 'ctaUrl', 'bgImage' ),
         'RqRacqueteerSubscriptionsFields'       => array( 'label', 'title', 'description' ),
         'RqRacqueteerTestimonialsFields'        => array( 'label', 'title', 'description' ),
-        'RqRacqueteerEventsFields'              => array( 'title', 'description', 'ctaText', 'ctaUrl', 'image' ),
+        'RqRacqueteerEventsFields'              => array( 'title', 'description', 'ctaText', 'ctaUrl', 'image', 'whatIncludes' ),
         'RqRacqueteerMembershipHeroFields'      => array( 'label', 'title', 'description', 'priceStarting', 'priceUnit', 'ctaText', 'videoUrl' ),
         'RqRacqueteerSubscriptionsDetailFields' => array( 'label', 'title', 'description' ),
         'RqRacqueteerPriceCompareFields'        => array( 'label', 'title', 'description' ),
@@ -830,7 +830,7 @@ add_action( 'graphql_register_types', function () {
         'AcfRacqueteerMembershipCtaBlock'       => array( 'field' => 'racqueteerMembershipCta',       'type' => 'RqRacqueteerMembershipCtaFields' ),
         'AcfRacqueteerSubscriptionsBlock'       => array( 'field' => 'racqueteerSubscriptions',       'type' => 'RqRacqueteerSubscriptionsFields' ),
         'AcfRacqueteerTestimonialsBlock'        => array( 'field' => 'racqueteerTestimonials',        'type' => 'RqRacqueteerTestimonialsFields' ),
-        'AcfRacqueteerEventsBlock'              => array( 'field' => 'racqueteerEvents',              'type' => 'RqRacqueteerEventsFields' ),
+        // NOTE: AcfRacqueteerEventsBlock uses a custom resolver below (what_includes repeater) — skip here
         'AcfRacqueteerMembershipHeroBlock'      => array( 'field' => 'racqueteerMembershipHero',      'type' => 'RqRacqueteerMembershipHeroFields' ),
         'AcfRacqueteerSubscriptionsDetailBlock' => array( 'field' => 'racqueteerSubscriptionsDetail', 'type' => 'RqRacqueteerSubscriptionsDetailFields' ),
         'AcfRacqueteerPriceCompareBlock'        => array( 'field' => 'racqueteerPriceCompare',        'type' => 'RqRacqueteerPriceCompareFields' ),
@@ -934,6 +934,51 @@ add_action( 'graphql_register_types', function () {
             // Поле вже існує (зареєстровано WPGraphQL for ACF) — ігнорувати
         }
     }
+
+    // ── AcfRacqueteerEventsBlock — custom resolver (what_includes repeater) ─────────────────
+    try {
+        register_graphql_field( 'AcfRacqueteerEventsBlock', 'racqueteerEvents', array(
+            'type'    => 'RqRacqueteerEventsFields',
+            'resolve' => function ( $source ) use ( $rq_single_image_keys ) {
+                $raw = isset( $source['attrs']['data'] ) ? $source['attrs']['data']
+                     : ( isset( $source['attrs'] ) ? $source['attrs']
+                     : ( isset( $source['data']  ) ? $source['data']  : $source ) );
+
+                if ( ! is_array( $raw ) ) {
+                    return array( 'title' => '', 'description' => '', 'ctaText' => '', 'ctaUrl' => '', 'image' => '', 'whatIncludes' => '[]' );
+                }
+
+                // Resolve image attachment ID → URL
+                $image_val = isset( $raw['image'] ) ? $raw['image'] : '';
+                if ( is_numeric( $image_val ) && (int) $image_val > 0 ) {
+                    $image_val = wp_get_attachment_url( (int) $image_val ) ?: '';
+                }
+
+                $out = array(
+                    'title'       => isset( $raw['title'] )       ? (string) $raw['title']       : '',
+                    'description' => isset( $raw['description'] ) ? (string) $raw['description'] : '',
+                    'ctaText'     => isset( $raw['cta_text'] )    ? (string) $raw['cta_text']    : '',
+                    'ctaUrl'      => isset( $raw['cta_url'] )     ? (string) $raw['cta_url']     : '',
+                    'image'       => (string) $image_val,
+                );
+
+                // Rebuild what_includes repeater from numbered flat keys
+                $count = (int) ( isset( $raw['what_includes'] ) ? $raw['what_includes'] : 0 );
+                $items = array();
+                for ( $i = 0; $i < $count; $i++ ) {
+                    $icon = isset( $raw[ "what_includes_{$i}_icon" ] ) ? $raw[ "what_includes_{$i}_icon" ] : '';
+                    if ( is_array( $icon ) ) { $icon = $icon[0] ?? ''; }
+                    $items[] = array(
+                        'text' => isset( $raw[ "what_includes_{$i}_text" ] ) ? (string) $raw[ "what_includes_{$i}_text" ] : '',
+                        'icon' => strtolower( trim( (string) $icon ) ),
+                    );
+                }
+
+                $out['whatIncludes'] = json_encode( $items, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+                return $out;
+            },
+        ) );
+    } catch ( \Throwable $e ) {}
 
     // ── AcfRacqueteerPrivateEventsHeroBlock — custom resolver (what_includes repeater) ─────────────────
     // The standard flat resolver cannot reconstruct ACF repeater data stored as numbered keys
