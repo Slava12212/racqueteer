@@ -331,6 +331,17 @@ query GetLocations {
     nodes { databaseId locationFields { locationId name status address description image { node { sourceUrl } } } }
   }
 }
+
+# Programs — NOTE: `color` is queried at the Program node level, NOT inside programFields.
+# See graphql-extensions.php note on ACF select field resolvers for the reason.
+query GetPrograms {
+  programs(first: 100) {
+    nodes {
+      color
+      programFields { title price unit description }
+    }
+  }
+}
 ```
 
 ### Site Options (Navbar + Footer)
@@ -360,7 +371,7 @@ query GetSiteOptions {
 | `inc/cpt-registration.php` | Registers 6 CPTs with `show_in_graphql: true` |
 | `inc/theme-setup.php` | Theme supports, block category, ACF Options sub-pages (Navbar, Footer) |
 | `inc/acf-blocks.php` | Registers all 20 ACF blocks + their field groups + CPT field groups + Options field groups |
-| `inc/graphql-extensions.php` | v19: Block interface injection, flat `Rq*Fields` types, image ID→URL resolver, Strategy H runtime resolver |
+| `inc/graphql-extensions.php` | v25: Block interface injection, flat `Rq*Fields` types, image ID→URL resolver, Strategy H runtime resolver, manual resolvers for ACF select fields (locationStatus, Program.color, Amenity.imageLayout) |
 | `inc/revalidate-webhook.php` | Sends ISR webhook on `save_post` for all CPTs; `acf/save_post` for Options; `transition_post_status` for Draft/Publish changes |
 
 ### CPT Registration
@@ -390,7 +401,7 @@ WPGraphQL type:          AcfRacqueteerHeroBlock
 GraphQL field on block:  racqueteerHero { title ... }
 ```
 
-### GraphQL Extensions (v19)
+### GraphQL Extensions (v25)
 
 `graphql-extensions.php` solves the core integration problem: making `AcfRacqueteer*Block` types implement the `Block` interface from WPGraphQL Content Blocks, so that `Page.blocks` returns ACF blocks.
 
@@ -408,6 +419,26 @@ GraphQL field on block:  racqueteerHero { title ... }
 **Strategy H is the key runtime fix.** It fires after WPGraphQL's own resolver and replaces an empty result set with blocks parsed from `post_content`. The existing `Rq*Fields` resolvers in the same file then read ACF data from `$source['attrs']['data']` (where ACF stores field values in the Gutenberg block comment).
 
 **Flat field types** (`Rq*Fields` section): Each block type has a corresponding `RqRacqueteer*Fields` GraphQL object type registered with all its string fields. A `graphql_resolve_field` closure maps snake_case ACF data keys to camelCase GraphQL field names, and resolves image attachment IDs to full URLs via `wp_get_attachment_url()`.
+
+**Manual ACF select field resolvers:** WPGraphQL for ACF v2.6.x serializes select fields as PHP arrays (e.g. `['red']`) and casting them to `(string)` throws a `TypeError` in PHP 8.x. Three fields are registered manually with `show_in_graphql=false` in `acf-blocks.php` and exposed via custom resolvers in `graphql-extensions.php`:
+
+| Field | GraphQL type | Resolver registered on | Notes |
+|-------|-------------|----------------------|-------|
+| `field_loc_status` | `Location.locationStatus` | `Location` | Returns `'available'` or `'coming_soon'` |
+| `field_amenity_image_layout` | `Amenity.imageLayout` / `AmenityFields.imageLayout` | `Amenity`, `AmenityFields` | Returns `'single'` or `'split'` |
+| `field_prog_color` | `Program.color` / `ProgramFields.color` | `Program`, `ProgramFields` | Returns `'red'` or `'blue'` — **always query at `Program` node level** (see below) |
+
+> ⚠️ **Program.color — important query pattern:** The `color` field **must be queried at the `Program` node level**, not inside `programFields { color }`. When called via `programFields { color }`, the `$source` passed to the resolver is the ACF field group wrapper object which lacks `databaseId`/`ID` → `get_field()` cannot find the post → always falls back to `'blue'`. The `Program`-level resolver correctly receives the post model object.
+>
+> **Correct query:**
+> ```graphql
+> programs { nodes { color programFields { title price unit description } } }
+> ```
+> **Wrong query (always returns blue):**
+> ```graphql
+> programs { nodes { programFields { color title price unit description } } }
+> ```
+> Fixed in commit `bccb7e3` (May 2026).
 
 ---
 
@@ -611,7 +642,7 @@ PHP files (`wp/inc/*.php`) are **not deployed via Vercel**. They must be uploade
 ```graphql
 { __type(name: "RqDeployVersion") { enumValues { name } } }
 ```
-Should return `v19` (or current version).
+Should return `v25` (or current version).
 
 ---
 
@@ -647,7 +678,7 @@ Possible causes and fixes:
 1. **WPGraphQL Content Blocks plugin not installed** — install it in WP Admin → Plugins
 2. **`AcfRacqueteer*Block` types not implementing `Block` interface** — Strategy H in `graphql-extensions.php` handles this as a runtime override. Check `wp_options.rq_diag_blocks_resolver` in the WP database for diagnostic info.
 3. **Block data not in Gutenberg post_content** — check if the page was saved correctly in the Gutenberg editor.
-4. **Old version of `graphql-extensions.php` on server** — upload the v19 file.
+4. **Old version of `graphql-extensions.php` on server** — upload the v25 file.
 
 **Diagnostic query:**
 ```graphql
@@ -659,6 +690,25 @@ Possible causes and fixes:
 }
 ```
 Should show `Block` in interfaces. If empty, the interface injection hasn't worked.
+
+### Program cards always show blue color (Color field ignored)
+
+**Root cause:** The `color` ACF select field has `show_in_graphql=false` and is exposed via a manual resolver in `graphql-extensions.php`. When queried as `programFields { color }`, the resolver receives the ACF field group wrapper as `$source` — this object has no `databaseId`/`ID`, so `get_field()` cannot retrieve the post meta → always returns the fallback value `'blue'`.
+
+**Fix (applied in commit `bccb7e3`):**
+- `GET_PROGRAMS` query moved `color` from inside `programFields{}` to the `Program` node level
+- `wp-api.ts` reads `node.color` instead of `node.programFields.color`
+- The `Program`-level resolver receives the actual post object with `databaseId` → works correctly
+
+**If it persists:** Confirm the updated `graphql-extensions.php` (v25) is on the WP server. Test with:
+```graphql
+{
+  programs(first: 3) {
+    nodes { color programFields { title } }
+  }
+}
+```
+If `color` returns `null` or always `"blue"` → v25 resolver is not deployed on the server.
 
 ### Images showing as numbers (`src="54"`)
 
@@ -730,6 +780,16 @@ Useful queries for debugging at `https://racqueteer.websplash.pro/graphql`:
 {
   jobs(first: 5) {
     nodes { title jobFields { category description } }
+  }
+}
+
+# Test Programs — color must be at node level, NOT inside programFields
+{
+  programs(first: 5) {
+    nodes {
+      color
+      programFields { title price unit description }
+    }
   }
 }
 

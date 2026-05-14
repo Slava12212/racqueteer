@@ -486,6 +486,8 @@ Each job listing has:
 | **Unit** | Text | Price unit (e.g. "per session") |
 | **Description** | Textarea | Short program description |
 
+> **Important — Color field note:** The `Color` select field uses a custom GraphQL resolver. It is read directly from the `Program` post node (not from the `programFields` sub-object). This is an intentional technical design — WPGraphQL for ACF v2.6.x cannot reliably return the value via `programFields { color }` due to a missing post ID in the wrapper object context. The value is always correctly applied as long as the field is saved in WP Admin.
+
 ---
 
 ## ➕ Creating New Pages
@@ -556,7 +558,20 @@ Images uploaded to WordPress Media Library are automatically converted from inte
 ### Image shows as a number (e.g. `src="54"`)
 
 This means an older version of the PHP theme is on the server.
-- A developer needs to upload the latest `wp/inc/graphql-extensions.php` (v19+) to the hosting server.
+- A developer needs to upload the latest `wp/inc/graphql-extensions.php` (v25+) to the hosting server.
+
+### All program cards appear blue regardless of color set in WP Admin
+
+This was a known bug (fixed in commit `bccb7e3`, May 2026).
+
+**Root cause:** The `color` select field was being queried inside `programFields { color }`. WPGraphQL for ACF v2.6.x passes an ACF field group wrapper as `$source` to the resolver — this wrapper has no `databaseId`/`ID`, so `get_field()` cannot find the post, and the fallback `'blue'` was always returned.
+
+**Fix applied:**
+- `lib/graphql/queries.ts`: `color` is now queried at the `Program` node level (`nodes { color programFields { ... } }`)
+- `lib/wp-api.ts`: reads `node.color` instead of `node.programFields.color`
+- `wp/inc/graphql-extensions.php`: resolver updated with additional fallbacks (`$source->node`, `get_the_ID()`, `$GLOBALS['post']`)
+
+**If this persists after the fix:** Make sure the updated `graphql-extensions.php` (v25) is uploaded to the WordPress hosting server.
 
 ### "Please enter a valid URL" error in WP Admin for URL fields
 
