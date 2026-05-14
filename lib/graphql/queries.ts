@@ -303,9 +303,9 @@ export const GET_PROGRAMS = `
   query GetPrograms {
     programs(first: 100) {
       nodes {
+        color
         programFields {
           title
-          color
           price
           unit
           description

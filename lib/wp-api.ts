@@ -457,16 +457,17 @@ export async function getAmenities(): Promise<WPCptAmenity[]> {
 export async function getPrograms(): Promise<Program[]> {
   try {
     const data = await wpGraphQL<{
-      programs: { nodes: Array<{ programFields: Record<string, unknown> }> };
+      programs: { nodes: Array<{ color?: unknown; programFields: Record<string, unknown> }> };
     }>(GET_PROGRAMS);
 
     return data.programs.nodes
       .map((node) => {
         const f = node.programFields;
         if (!f) return null;
-        // WPGraphQL for ACF v2.6.x returns select fields as a serialized array e.g. ["red"].
-        // Normalize to a plain string value.
-        const rawColor = Array.isArray(f.color) ? f.color[0] : f.color;
+        // `color` is queried at the Program node level (not inside programFields)
+        // because the ProgramFields ACF wrapper doesn't pass databaseId to the resolver.
+        // The Program-level resolver correctly receives the post object.
+        const rawColor = Array.isArray(node.color) ? node.color[0] : node.color;
         const color: 'red' | 'blue' = rawColor === 'red' ? 'red' : 'blue';
         return {
           title:       (f.title       as string) ?? '',

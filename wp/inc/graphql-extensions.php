@@ -661,6 +661,11 @@ add_action( 'graphql_register_types', function () {
 // ─── Program.color — ручна реєстрація (select → String) ───────────────────────────
 // show_in_graphql=false в acf-blocks.php; реєструємо вручну щоб уникнути
 // WPGraphQL for ACF v2.6.x serialized-array TypeError на select-полях.
+//
+// NOTE: Завжди запитуйте `color` на рівні вузла Program (не всередині programFields).
+// Коли запит надходить як `programFields { color }`, $source є обгорткою ACF field group
+// і може НЕ мати databaseId/ID → post_id = null → fallback 'blue'.
+// Запит `programs { nodes { color programFields { ... } } }` передає правильний post object.
 add_action( 'graphql_register_types', function () {
     $color_resolver = function ( $source ) {
         if ( ! function_exists( 'get_field' ) ) { return 'blue'; }
@@ -668,9 +673,26 @@ add_action( 'graphql_register_types', function () {
         if ( is_object( $source ) ) {
             $post_id = isset( $source->databaseId ) ? (int) $source->databaseId
                      : ( isset( $source->ID ) ? (int) $source->ID : null );
+            // WPGraphQL for ACF field group wrapper може мати вкладений post через ->node або ->post
+            if ( ! $post_id && isset( $source->node ) && is_object( $source->node ) ) {
+                $post_id = isset( $source->node->databaseId ) ? (int) $source->node->databaseId
+                         : ( isset( $source->node->ID ) ? (int) $source->node->ID : null );
+            }
         } elseif ( is_array( $source ) ) {
             $post_id = isset( $source['databaseId'] ) ? (int) $source['databaseId']
                      : ( isset( $source['ID'] ) ? (int) $source['ID'] : null );
+            if ( ! $post_id && isset( $source['node'] ) && is_array( $source['node'] ) ) {
+                $post_id = isset( $source['node']['databaseId'] ) ? (int) $source['node']['databaseId']
+                         : ( isset( $source['node']['ID'] ) ? (int) $source['node']['ID'] : null );
+            }
+        }
+        // Останній fallback — поточний глобальний WP пост у контексті виконання
+        if ( ! $post_id && function_exists( 'get_the_ID' ) ) {
+            $the_id = get_the_ID();
+            if ( $the_id ) { $post_id = (int) $the_id; }
+        }
+        if ( ! $post_id && isset( $GLOBALS['post'] ) && is_object( $GLOBALS['post'] ) ) {
+            $post_id = (int) ( $GLOBALS['post']->ID ?? 0 );
         }
         if ( ! $post_id ) { return 'blue'; }
         $val = get_field( 'field_prog_color', $post_id );
