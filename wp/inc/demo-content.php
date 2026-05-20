@@ -1405,7 +1405,6 @@ function rq_import_media( string $nextjs, array &$log ): array {
 
 function rq_create_jobs( array &$log ): void {
     $jobs = [
-        [ 'Club Manager',         'Lead daily operations, manage staff scheduling, oversee member relations, and ensure an exceptional experience across all club facilities.',        'Manager', ],
         [ 'Assistant Manager',    'Support the Club Manager in daily operations, coordinate events, handle member inquiries, and step in as acting manager when needed.',              'Manager', ],
         [ 'Head Pickleball Coach','Design and lead pickleball training programs for all skill levels. Conduct private lessons, group clinics, and competitive development sessions.',  'Trainer', ],
         [ 'Padel Trainer',        'Deliver high-energy padel coaching sessions, develop player technique, and help grow the padel community at the club through engaging programs.',   'Trainer', ],
@@ -1413,6 +1412,7 @@ function rq_create_jobs( array &$log ): void {
         [ 'Lead Barista',         'Manage the club café, craft specialty coffee and drinks, maintain quality standards, and train new barista team members.',                          'Barista', ],
         [ 'Barista',              'Prepare and serve premium beverages, maintain a clean and welcoming café space, and provide excellent customer service to members and guests.',     'Barista', ],
         [ 'Front Desk Associate', 'Welcome members and guests, handle court bookings, answer questions, and ensure smooth check-in and check-out experiences daily.',                 'Manager', ],
+        [ 'Club Manager',         'Lead daily operations, manage staff scheduling, oversee member relations, and ensure an exceptional experience across all club facilities.',        'Manager', ],
     ];
 
     foreach ( $jobs as [ $title, $desc, $cat ] ) {
@@ -1458,9 +1458,9 @@ function rq_create_testimonials( array &$log ): void {
 function rq_create_locations( array $media, array &$log ): void {
     $locations = [
         [
-            'Homebush Club', 'available',
-            [ 'Homebush, Sydney', 'New South Wales 2140, Australia' ],
-            'Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.',
+            'Alexandria Club', 'coming_soon',
+            [ 'Alexandria,', '82-86 Bourke Rd, Alexandria NSW 2015' ],
+            'Our newest location coming soon to Alexandria. A world-class facility designed for serious players and casual enthusiasts alike.',
             [
                 [ 'icon' => 'courts',    'label' => '12 Courts'     ],
                 [ 'icon' => 'lounge',    'label' => 'Lounge Zones'  ],
@@ -1471,9 +1471,21 @@ function rq_create_locations( array $media, array &$log ): void {
             ],
         ],
         [
-            'Alexandria Club', 'coming_soon',
-            [ 'Alexandria, Sydney', 'New South Wales 2015, Australia' ],
-            'Our newest location coming soon to Alexandria. A world-class facility designed for serious players and casual enthusiasts alike.',
+            'Rosehill club', 'coming_soon',
+            [ 'Rosehill club', '11A Grand Ave, Camellia NSW 2142' ],
+            'Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.',
+            [
+                [ 'icon' => 'courts',    'label' => '12 Courts'     ],
+                [ 'icon' => 'lounge',    'label' => 'Lounge Zones'  ],
+                [ 'icon' => 'coworking', 'label' => 'Coworking'     ],
+                [ 'icon' => 'cafe',      'label' => 'Cafe'          ],
+                [ 'icon' => 'fitness',   'label' => 'Fitness Areas' ],
+            ],
+        ],
+        [
+            'Homebush Club', 'available',
+            [ 'Homebush,', '10 Carter St, Lidcombe NSW 2141' ],
+            'Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.',
             [
                 [ 'icon' => 'courts',    'label' => '12 Courts'     ],
                 [ 'icon' => 'lounge',    'label' => 'Lounge Zones'  ],
@@ -1651,10 +1663,11 @@ function rq_create_amenities( array $media, array &$log ): void {
 
 function rq_create_programs( array &$log ): void {
     $programs = [
-        [ "Women's Beginners",   'red',  '$40', 'per game', "This introductory session is the perfect way to get started! We'll cover the basics of the game, from the rules and scoring to essential techniques like grip, positioning, and basic shots." ],
-        [ 'Mens Beginner',       'blue', '$40', 'per game', "Join our fun and supportive group clinic designed specifically for beginners! Whether you're new to padel or just starting to play, this clinic will help you master the fundamentals." ],
-        [ 'Group Beginner',      'red',  '$60', 'per game', "Take your padel skills to the next level in our intermediate clinic! Perfect for those who already know the basics, this clinic focuses on refining your technique and improving shot placement." ],
-        [ "Women's Intermediate",'blue', '$80', 'per game', "This clinic is designed for top players looking to perfect their game. Focus will be on very advanced techniques, precision, and strategic play with complex shot combinations." ],
+        [ "Women's Intermediate", 'red',  '$80', 'per game', "This clinic is designed for top players looking to perfect their game. Focus will be on very advanced techniques, precision, and strategic play with complex shot combinations." ],
+        [ 'PICKLEBALL SOCIAL',    'blue', '',    'per game', "A fun, social session where players of all levels can jump into games. Enjoy friendly competition in a welcoming, high-energy environment." ],
+        [ 'PICKLEBALL 101',       'red',  '',    'per game', "A fun, beginner-friendly introduction to pickleball where you'll learn the fundamentals, rules, and flow of the game. Build confidence on court while developing a strong foundation alongside others." ],
+        [ 'PADEL 101',            'blue', '',    'per game', "A welcoming introduction to padel focused on building core skills and understanding the flow of the game. Learn key shots, movement, and tactics in a supportive environment designed to help you improve with every session." ],
+        [ 'PADEL AMERICANO',      'red',  '',    'per game', "A fast-paced, social format where players rotate partners and opponents each round. It's a great way to meet new people, get plenty of game time, and enjoy some friendly competition." ],
     ];
 
     foreach ( $programs as [ $title, $color, $price, $unit, $desc ] ) {
@@ -1705,7 +1718,7 @@ function rq_create_membership_plans( array &$log ): void {
 
 function rq_create_page_home( string $nextjs, array $media, array &$log ): void {
     $content  = rq_acf_block( 'acf/racqueteer-hero', [
-        'title'               => 'Where Elite Competition Meets a Refined Social Atmosphere',
+        'title'               => 'AUSTRALIA\'S LARGEST INDOOR RACQUET SPORTS FACILITY',
         '_title'              => 'field_hero_title',
         'description'         => 'Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.',
         '_description'        => 'field_hero_description',
@@ -1724,17 +1737,17 @@ function rq_create_page_home( string $nextjs, array $media, array &$log ): void 
     $content .= rq_acf_block( 'acf/racqueteer-about', [
         'label'         => 'about racqueteer',
         '_label'        => 'field_about_label',
-        'title'         => 'The Ultimate Destination for Padel & Pickleball Players',
+        'title'         => 'THE ULTIMATE DESTINATION FOR PADEL & PICKLEBALL PLAYERS',
         '_title'        => 'field_about_title',
-        'description'   => 'Racqueteer is more than just a place to play — it\'s a hub for the fast-growing world of padel and pickleball. Designed for players of all levels, our club combines professional courts, a welcoming community, and world-class facilities.',
+        'description'   => 'Racqueteer is an elevated racquet sports club designed for performance and connection. It\'s where you come to play and unwind—on and off the court.',
         '_description'  => 'field_about_description',
-        'stat1_number'  => '25',
+        'stat1_number'  => '11',
         '_stat1_number' => 'field_about_stat1_num',
-        'stat1_label'   => 'Courts of Art',
+        'stat1_label'   => 'Pickleball Courts',
         '_stat1_label'  => 'field_about_stat1_lbl',
-        'stat2_number'  => '8+',
+        'stat2_number'  => '6',
         '_stat2_number' => 'field_about_stat2_num',
-        'stat2_label'   => 'Years of Experience',
+        'stat2_label'   => 'Padel Courts',
         '_stat2_label'  => 'field_about_stat2_lbl',
         'left_image'    => $media['racket_pickleball'] ?: ( $nextjs . 'racket-pickleball.png' ),
         '_left_image'   => 'field_about_left_image',
@@ -1788,16 +1801,30 @@ function rq_create_page_home( string $nextjs, array $media, array &$log ): void 
     ] );
 
     $content .= rq_acf_block( 'acf/racqueteer-events', [
-        'title'        => 'Join Our Next Tournament or Social Event',
-        '_title'       => 'field_events_title',
-        'description'  => 'From competitive tournaments to casual social mixers, there\'s always something happening at Racqueteer.',
-        '_description' => 'field_events_description',
-        'cta_text'     => 'View Events Calendar',
-        '_cta_text'    => 'field_events_cta_text',
-        'cta_url'      => '#',
-        '_cta_url'     => 'field_events_cta_url',
-        'image'        => $media['about_hero'] ?? '',
-        '_image'       => 'field_events_image',
+        'title'                    => 'Bring your next event to the court',
+        '_title'                   => 'field_events_title',
+        'description'              => 'Luxury private event packages designed for any occasion, from corporate team-building to birthday celebrations. With discounted court hire, private spaces, and premium add-ons, every event is tailored to your group.',
+        '_description'             => 'field_events_description',
+        'cta_text'                 => 'View Events Calendar',
+        '_cta_text'                => 'field_events_cta_text',
+        'cta_url'                  => '#',
+        '_cta_url'                 => 'field_events_cta_url',
+        'image'                    => $media['about_hero'] ?? '',
+        '_image'                   => 'field_events_image',
+        'what_includes_0_text'     => 'Discounted court hire for your group',
+        '_what_includes_0_text'    => 'field_events_wi_text_2026',
+        'what_includes_0_icon'     => 'box',
+        '_what_includes_0_icon'    => 'field_events_wi_icon_2026',
+        'what_includes_1_text'     => 'Private event space with dedicated seating',
+        '_what_includes_1_text'    => 'field_events_wi_text_2026',
+        'what_includes_1_icon'     => 'vip',
+        '_what_includes_1_icon'    => 'field_events_wi_icon_2026',
+        'what_includes_2_text'     => 'Optional add-ons including bar service and tailored experiences',
+        '_what_includes_2_text'    => 'field_events_wi_text_2026',
+        'what_includes_2_icon'     => 'box',
+        '_what_includes_2_icon'    => 'field_events_wi_icon_2026',
+        'what_includes'            => '3',
+        '_what_includes'           => 'field_events_what_includes_2026',
     ] );
 
     $page_id = rq_upsert_page( 'Home', 'home', $content );
@@ -1905,38 +1932,38 @@ function rq_create_page_about( string $nextjs, array $media, array &$log ): void
     $content  = rq_acf_block( 'acf/racqueteer-about-hero', [
         'label'        => 'about us',
         '_label'       => 'field_ahero_label',
-        'title'        => 'Bringing People Together Through Racquet Sports',
+        'title'        => 'The ultimate destination for padel & pickleball players',
         '_title'       => 'field_ahero_title',
-        'description'  => 'Racqueteer was founded on a simple belief: racquet sports should be accessible, enjoyable, and community-driven. We\'ve built more than courts — we\'ve built a movement.',
+        'description'  => 'From first serves to elite-level play, we\'re building Sydney\'s home for players who want to learn, compete, and level up—together.',
         '_description' => 'field_ahero_description',
         'video_url'    => $nextjs . 'private-events-hero.mp4',
         '_video_url'   => 'field_ahero_video',
     ] );
 
     $content .= rq_acf_block( 'acf/racqueteer-mission', [
-        'label'        => 'our mission',
-        '_label'       => 'field_miss_label',
-        'title'        => 'Creating Spaces Where Players Thrive',
-        '_title'       => 'field_miss_title',
-        'description'  => 'We\'re committed to providing world-class facilities, expert coaching, and a welcoming environment where players of all levels can improve, connect, and have fun.',
-        '_description' => 'field_miss_description',
-        'image'        => $media['about_hero'] ?? '',
-        '_image'       => 'field_miss_image',
-        'stat1_number' => '25',
+        'label'         => 'our mission',
+        '_label'        => 'field_miss_label',
+        'title'         => 'Creating Spaces Where Players Thrive',
+        '_title'        => 'field_miss_title',
+        'description'   => 'We\'re committed to providing world-class facilities, expert coaching, and a welcoming environment where players of all levels can improve, connect, and have fun.',
+        '_description'  => 'field_miss_description',
+        'image'         => $media['about_hero'] ?? '',
+        '_image'        => 'field_miss_image',
+        'stat1_number'  => '9 ',
         '_stat1_number' => 'field_miss_stat1_num',
-        'stat1_label'  => 'Courts',
+        'stat1_label'   => 'pickleball courts',
         '_stat1_label'  => 'field_miss_stat1_lbl',
-        'stat2_number' => '8+',
+        'stat2_number'  => '',
         '_stat2_number' => 'field_miss_stat2_num',
-        'stat2_label'  => 'Years of experience',
+        'stat2_label'   => '',
         '_stat2_label'  => 'field_miss_stat2_lbl',
-        'stat3_number' => '5K+',
+        'stat3_number'  => '6',
         '_stat3_number' => 'field_miss_stat3_num',
-        'stat3_label'  => 'Members',
+        'stat3_label'   => 'padel courts',
         '_stat3_label'  => 'field_miss_stat3_lbl',
-        'stat4_number' => '50+',
+        'stat4_number'  => '',
         '_stat4_number' => 'field_miss_stat4_num',
-        'stat4_label'  => 'Events per year',
+        'stat4_label'   => '',
         '_stat4_label'  => 'field_miss_stat4_lbl',
     ] );
 

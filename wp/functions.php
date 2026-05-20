@@ -28,7 +28,10 @@ require_once RACQUETEER_DIR . '/inc/pe-hero-what-includes.php';
 require_once RACQUETEER_DIR . '/inc/graphql-extensions.php';
 require_once RACQUETEER_DIR . '/inc/revalidate-webhook.php';
 // Demo importer disabled — do not re-enable to avoid overwriting live content.
-// require_once RACQUETEER_DIR . '/inc/demo-content.php';
+ require_once RACQUETEER_DIR . '/inc/demo-content.php';
+
+// Content Exporter — exports all current ACF field values as PHP for demo-content.php
+require_once RACQUETEER_DIR . '/inc/content-exporter.php';
 
 // ─── Disable Grammarly browser extension in the editor ──────────────────────
 add_action( 'admin_head', function () {
