@@ -71,7 +71,9 @@ export interface Location {
   address: string[];
   description: string;
   amenities: LocationAmenity[];
-  image: string;
+  image: string;        // keep — fallback / placeholder
+  videoUrl?: string;   // NEW — optional vertical video
+  videoMime?: string;   // NEW — for <source type="...">
 }
 
 // Programs

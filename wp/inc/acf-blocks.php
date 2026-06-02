@@ -535,7 +535,16 @@ add_action( 'acf/init', function () {
                 'instructions' => 'Enter each address line on a new line. The frontend splits on newline.',
             ],
             [ 'key' => 'field_cpt_loc_description', 'label' => 'Description', 'name' => 'description', 'type' => 'textarea' ],
-            [ 'key' => 'field_loc_image',           'label' => 'Image',       'name' => 'image',       'type' => 'image', 'return_format' => 'array' ],
+            [ 'key' => 'field_loc_image',           'label' => 'Image (vertical)', 'name' => 'image', 'type' => 'image', 'return_format' => 'array' ],
+            [
+                'key'          => 'field_loc_video',
+                'label'        => 'Video (vertical, optional — overrides image when present)',
+                'name'         => 'video',
+                'type'        => 'file',
+                'return_format' => 'array',
+                'mime_types'   => 'mp4,webm,mov',
+                'instructions' => 'If a video is uploaded, it overrides the image. Use a vertical (9:16 or 3:4) clip ~10MB max.',
+            ],
             [
                 'key'             => 'field_loc_amenities',
                 'label'           => 'Club Amenities',

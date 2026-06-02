@@ -83,6 +83,8 @@ const FALLBACK_LOCATIONS = [
     amenities: FALLBACK_AMENITIES,
     image:
       "https://api.builder.io/api/v1/image/assets/TEMP/edca0eb2071de6afc816146f03f622629c2fb896?width=1182",
+    videoUrl: undefined,
+    videoMime: undefined,
   },
   {
     id: "alexandria",
@@ -92,8 +94,11 @@ const FALLBACK_LOCATIONS = [
     description:
       "Our newest location coming soon to Alexandria. A world-class facility designed for serious players and casual enthusiasts alike.",
     amenities: FALLBACK_AMENITIES,
+    // Different placeholder for Alexandria to show per-location concept in demo mode
     image:
-      "https://api.builder.io/api/v1/image/assets/TEMP/edca0eb2071de6afc816146f03f622629c2fb896?width=1182",
+      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1182&q=80",
+    videoUrl: undefined,
+    videoMime: undefined,
   },
 ];
 
@@ -284,16 +289,57 @@ export default function LocationsSection({ content, locations: locationsProp }: 
 
         {/* RIGHT PANEL — court photo fills remaining space to right edge */}
         <ScrollReveal from="right" delay={200} distance={40} duration={900} className="hidden lg:block flex-1 lg:h-screen">
-          <img
-            src={selected.image}
-            alt="Court"
-            className="w-full h-full object-cover"
-          />
+          {selected.videoUrl ? (
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster={selected.image}
+              className="w-full h-full object-cover"
+            >
+              <source src={selected.videoUrl} type={selected.videoMime ?? 'video/mp4'} />
+              <img src={selected.image} alt="Court" className="w-full h-full object-cover" />
+            </video>
+          ) : (
+            <img
+              src={selected.image}
+              alt="Court"
+              className="w-full h-full object-cover"
+            />
+          )}
         </ScrollReveal>
       </div>
 
       {/* MOBILE detail panel (shown below location list on small screens) */}
       <div className="lg:hidden relative bg-white/10 backdrop-blur-[50px] mx-4 mb-8 p-6 rounded-sm">
+        {/* Media at top of mobile detail card */}
+        <div className="aspect-[3/4] mb-6 overflow-hidden rounded-sm">
+          {selected.videoUrl ? (
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster={selected.image}
+              className="w-full h-full object-cover"
+            >
+              <source src={selected.videoUrl} type={selected.videoMime ?? 'video/mp4'} />
+              <img src={selected.image} alt="Court" className="w-full h-full object-cover" />
+            </video>
+          ) : selected.image ? (
+            <img
+              src={selected.image}
+              alt="Court"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-black/20 flex items-center justify-center">
+              <span className="text-white/40 text-sm">No media available</span>
+            </div>
+          )}
+        </div>
+
         <p className="text-white/40 text-[11px] font-normal tracking-[1.68px] uppercase mb-4">
           Address
         </p>
