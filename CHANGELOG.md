@@ -12,7 +12,7 @@ Local working copy: `projects/racqueteer-fresh/`
 ### 2026-06-02 — site-developer / MiniMax M2.5
 - Files touched: `components/Navbar.tsx`, `app/globals.css`
 - What changed: Bug 1 — Fixed navbar text color being wrong on non-homepage pages. Replaced fragile IntersectionObserver (rootMargin -95%) with position-based getBoundingClientRect() check that detects which [data-header-theme] section is behind the navbar's bottom edge. Throttled with requestAnimationFrame. Bug 2 — Deleted global `@media (max-width: 1023px) { .min-h-screen { min-height: auto !important; } }` that was collapsing homepage hero on mobile. Now hero fills full viewport.
-- Commit SHA: `a1b2c3d`
+- Commit SHA: `18fe70e`
 - Push status: ✅ pushed
 
 ### 2026-05-11 — site-developer / MiniMax M2.5
