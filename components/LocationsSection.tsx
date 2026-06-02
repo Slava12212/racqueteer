@@ -72,6 +72,11 @@ const FALLBACK_AMENITIES = [
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Placeholder media for the two demo locations. Used when WordPress returns no
+// per-location image/video. Files live in public/locations/.
+// Sources (Pexels — no attribution required):
+//   homebush-placeholder.jpg → photo ID 35248286 (vertical padel court)
+//   alexandria-placeholder.mp4 → video ID 34449247 (vertical 540x960 padel clip)
 const FALLBACK_LOCATIONS = [
   {
     id: "homebush",
@@ -81,8 +86,8 @@ const FALLBACK_LOCATIONS = [
     description:
       "Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.",
     amenities: FALLBACK_AMENITIES,
-    image:
-      "https://api.builder.io/api/v1/image/assets/TEMP/edca0eb2071de6afc816146f03f622629c2fb896?width=1182",
+    // Homebush shows a still IMAGE placeholder.
+    image: "/locations/homebush-placeholder.jpg",
     videoUrl: undefined,
     videoMime: undefined,
   },
@@ -94,11 +99,11 @@ const FALLBACK_LOCATIONS = [
     description:
       "Our newest location coming soon to Alexandria. A world-class facility designed for serious players and casual enthusiasts alike.",
     amenities: FALLBACK_AMENITIES,
-    // Different placeholder for Alexandria to show per-location concept in demo mode
-    image:
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1182&q=80",
-    videoUrl: undefined,
-    videoMime: undefined,
+    // Alexandria shows a vertical VIDEO placeholder.
+    // image is used as the poster while the video loads.
+    image: "/locations/homebush-placeholder.jpg",
+    videoUrl: "/locations/alexandria-placeholder.mp4",
+    videoMime: "video/mp4",
   },
 ];
 
