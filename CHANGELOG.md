@@ -12,7 +12,7 @@ Local working copy: `projects/racqueteer-fresh/`
 ### 2026-06-02 — site-orchestrator / Claude Opus 4.7
 - Files touched: `public/locations/homebush-placeholder.jpg` (new), `public/locations/alexandria-placeholder.mp4` (new), `components/LocationsSection.tsx`
 - What changed: Added real placeholder media to FALLBACK_LOCATIONS so the locations section demonstrates the per-tab image/video concept end-to-end. Homebush now uses a vertical padel-court photo (Pexels #35248286, 194 KB), Alexandria uses a vertical padel-court video (Pexels #34449247, 540x960 @ 60fps, 2.9 MB, 10s loop). Both files served locally from `public/locations/`. Pexels license = no attribution required, but source IDs are documented inline for future reference.
-- Commit SHA: _(filled in after push)_
+- Commit SHA: `753b502`
 - Push status: ✅ pushed
 
 ### 2026-06-02 — site-orchestrator / Claude Opus 4.7
