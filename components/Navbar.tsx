@@ -97,27 +97,52 @@ export default function Navbar({ content }: NavbarProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Intersection Observer for theme detection
-  useEffect(() => {
-    const sections = document.querySelectorAll("[data-header-theme]");
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const theme = (entry.target as HTMLElement).dataset.headerTheme;
-            setIsDark(theme === "dark");
-          }
-        }
-      },
-      {
-        rootMargin: "0px 0px -95% 0px",
-        threshold: 0,
-      }
-    );
+  // Determine header theme based on which section is currently behind the navbar
+  const navRef = useRef<HTMLElement>(null);
 
-    sections.forEach((s) => observer.observe(s));
-    return () => observer.disconnect();
-  }, []);
+  const updateTheme = () => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const navRect = nav.getBoundingClientRect();
+    const navbarBottom = navRect.top + navRect.height + 10; // 10px buffer below navbar
+
+    const sections = Array.from(document.querySelectorAll("[data-header-theme]"));
+    let foundTheme = true; // default to dark (for dark heroes)
+
+    for (const section of sections) {
+      const rect = section.getBoundingClientRect();
+      // Check if the navbar's bottom edge is within this section
+      if (navbarBottom >= rect.top && navbarBottom <= rect.bottom) {
+        const theme = (section as HTMLElement).dataset.headerTheme;
+        foundTheme = theme === "dark";
+        break;
+      }
+    }
+
+    setIsDark(foundTheme);
+  };
+
+  // Theme detection: position-based checking instead of IntersectionObserver
+  useEffect(() => {
+    // Initial check
+    updateTheme();
+
+    let rafId: number;
+    const throttledUpdate = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateTheme);
+    };
+
+    window.addEventListener("scroll", throttledUpdate, { passive: true });
+    window.addEventListener("resize", throttledUpdate);
+
+    return () => {
+      window.removeEventListener("scroll", throttledUpdate);
+      window.removeEventListener("resize", throttledUpdate);
+      cancelAnimationFrame(rafId);
+    };
+  }, [pathname]);
 
   const textColor = isDark ? "text-white" : "text-black";
   const hoverClass = isDark ? "hover:opacity-70" : "hover:opacity-60";
@@ -134,6 +159,7 @@ export default function Navbar({ content }: NavbarProps) {
   return (
     <>
       <nav
+        ref={navRef}
         className={`fixed top-0 left-0 right-0 w-full transition-all duration-300 ease-in-out ${menuOpen ? "z-[60]" : "z-50"}`}
         style={{
           background: menuOpen ? "transparent" : "rgba(210,212,223,0.01)",

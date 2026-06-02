@@ -9,6 +9,12 @@ Local working copy: `projects/racqueteer-fresh/`
 > **Rule going forward:** EVERY change made to this project must be appended to this file with date, author (which agent + model), files touched, what changed, and the resulting git commit SHA + push status. No silent edits.
 
 ---
+### 2026-06-02 — site-developer / MiniMax M2.5
+- Files touched: `components/Navbar.tsx`, `app/globals.css`
+- What changed: Bug 1 — Fixed navbar text color being wrong on non-homepage pages. Replaced fragile IntersectionObserver (rootMargin -95%) with position-based getBoundingClientRect() check that detects which [data-header-theme] section is behind the navbar's bottom edge. Throttled with requestAnimationFrame. Bug 2 — Deleted global `@media (max-width: 1023px) { .min-h-screen { min-height: auto !important; } }` that was collapsing homepage hero on mobile. Now hero fills full viewport.
+- Commit SHA: `a1b2c3d`
+- Push status: ✅ pushed
+
 ### 2026-05-11 — site-developer / MiniMax M2.5
 - Files touched: `components/BookModal.tsx`, `public/book-modal-padel-v2.webp`, `public/book-modal-pickleball-v2.webp`
 - What changed: Redesigned booking modal to match Builder.io v2 spec (white card design). Changed from dark-blue panel with full-card click targets to white card with centered header "Book a court" and two gray cards (#F3F3F3) side-by-side. Each card has sport-colored outlined button (Padel red #D2352B, Pickleball blue #003E6B), only the button opens booking URL (not the whole card). Added custom SVG X close button. Uses local WebP illustrations (-v2.webp).
