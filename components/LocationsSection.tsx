@@ -111,9 +111,35 @@ export default function LocationsSection({ content, locations: locationsProp }: 
   const { ctaText, ctaUrl, openBookModal } = useCta();
 
   // Use WP locations if provided; fall back to hardcoded
-  const locations = (locationsProp && locationsProp.length > 0)
+  const wpLocations = (locationsProp && locationsProp.length > 0)
     ? locationsProp
     : FALLBACK_LOCATIONS;
+
+  // Demo media fallback (per location, matched by `id`):
+  //   - If WP returns no video for this location, use the demo video (if any).
+  //   - If WP returns no image (or the legacy Builder.io stub image), use the
+  //     demo image as a poster/placeholder.
+  // This ensures Homebush shows a vertical IMAGE and Alexandria shows a
+  // vertical VIDEO until the content team uploads real per-location media in
+  // WordPress (Location → Image / Video ACF fields).
+  const LEGACY_PLACEHOLDER_PATTERNS = [
+    'api.builder.io/api/v1/image/assets/TEMP/edca0eb2',
+  ];
+  const isLegacyPlaceholder = (url?: string) =>
+    !!url && LEGACY_PLACEHOLDER_PATTERNS.some((p) => url.includes(p));
+
+  const locations = wpLocations.map((loc) => {
+    const demo = FALLBACK_LOCATIONS.find((f) => f.id === loc.id);
+    if (!demo) return loc;
+    const hasRealImage = !!loc.image && !isLegacyPlaceholder(loc.image);
+    const hasVideo = !!loc.videoUrl;
+    return {
+      ...loc,
+      image:      hasRealImage ? loc.image      : demo.image,
+      videoUrl:   hasVideo     ? loc.videoUrl   : demo.videoUrl,
+      videoMime:  hasVideo     ? loc.videoMime  : demo.videoMime,
+    };
+  });
 
   const [selectedId, setSelectedId] = useState(() => locations[0]?.id ?? "homebush");
   const selected = locations.find((l) => l.id === selectedId)!;
