@@ -343,3 +343,30 @@
 .animate-marquee {
   animation: marquee 30s linear infinite;
 }
+
+/* Hero-only full-viewport-height utility.
+ *
+ * Why this exists:
+ *   - Tailwind's `min-h-screen` is used on many non-hero sections (About, Amenities,
+ *     Membership, Programs, PriceCompare, etc.). On mobile, forcing all of those to
+ *     ≥100vh creates massive whitespace, so we INTENTIONALLY relax `min-h-screen`
+ *     to `auto` below the `lg` breakpoint (see media query below).
+ *   - BUT the hero sections (HeroSection, HeroCareers, HeroMembership) genuinely
+ *     need to fill the mobile viewport. They use this dedicated class instead of
+ *     `min-h-screen` so the global override doesn't affect them.
+ *   - Uses `100dvh` (dynamic viewport height) on browsers that support it so the
+ *     hero accounts for mobile address-bar shrink, with `100vh` as a fallback.
+ */
+.hero-min-h-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Responsive: Relax `min-h-screen` on tablet/mobile so non-hero sections
+ * don't force 100vh and create huge gaps. Heroes opt out by using
+ * `.hero-min-h-screen` instead. */
+@media (max-width: 1023px) {
+  .min-h-screen {
+    min-height: auto !important;
+  }
+}

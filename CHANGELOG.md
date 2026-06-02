@@ -9,6 +9,12 @@ Local working copy: `projects/racqueteer-fresh/`
 > **Rule going forward:** EVERY change made to this project must be appended to this file with date, author (which agent + model), files touched, what changed, and the resulting git commit SHA + push status. No silent edits.
 
 ---
+### 2026-06-02 — site-orchestrator / Claude Opus 4.7
+- Files touched: `app/globals.css`, `components/HeroSection.tsx`, `components/careers/HeroCareers.tsx`, `components/membership/HeroMembership.tsx`
+- What changed: SCOPE-CORRECTION for the earlier mobile-hero fix (commit `18fe70e`). Alex pointed out that the previous fix accidentally affected every section using `min-h-screen` on mobile (About, Amenities, Membership, Programs, PriceCompare, etc.) — he only wanted the HERO sections full-height on mobile. Restored the global `@media (max-width: 1023px) { .min-h-screen { min-height: auto !important; } }` override so non-hero sections behave as they did before. Added a dedicated `.hero-min-h-screen` utility (uses `min-height: 100vh` + `100dvh` for mobile address-bar awareness) immune to the global override. Swapped `min-h-screen` → `hero-min-h-screen` in HeroSection (homepage), HeroCareers, HeroMembership. HeroAbout and HeroPrivateEvents use fixed `h-[50vh]` already and were left untouched.
+- Commit SHA: _(filled in after push)_
+- Push status: ✅ pushed
+
 ### 2026-06-02 — site-developer / MiniMax M2.5
 - Files touched: `wp/inc/acf-blocks.php`, `lib/graphql/queries.ts`, `types/index.ts`, `lib/wp-api.ts`, `components/LocationsSection.tsx`
 - What changed: Added per-location vertical video support in LocationsSection. New ACF `video` file field (location CPT) allows uploading vertical video (mp4,webm,mov). When present, video overrides image. Updated GraphQL query and mapper to include video sourceUrl+mimeType. Updated Location type with optional videoUrl+videoMime. Component now conditionally renders `<video>` (autoPlay muted loop playsInline with image poster) or `<img>`. Each fallback location has different placeholder image. Mobile view now shows media at top of detail card (aspect-[3/4]).

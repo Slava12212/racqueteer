@@ -24,7 +24,7 @@ export default function HeroMembership({ content }: HeroMembershipProps) {
   const [videoReady, setVideoReady] = useState(false);
 
   return (
-    <div data-header-theme="dark" className="relative min-h-screen overflow-hidden flex flex-col">
+    <div data-header-theme="dark" className="relative hero-min-h-screen overflow-hidden flex flex-col">
       {/* Background video — always full height */}
       <div className="absolute inset-0 bg-black">
         <video
@@ -48,7 +48,7 @@ export default function HeroMembership({ content }: HeroMembershipProps) {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col min-h-screen items-center justify-end">
+      <div className="relative z-10 flex flex-col hero-min-h-screen items-center justify-end">
         <div className="w-full flex flex-col items-center px-6 sm:px-4 pb-8 md:pb-16">
           <div className="flex flex-col items-center gap-4 sm:gap-6 max-w-2xl w-full mb-8 md:mb-10">
             <ScrollReveal from="bottom" delay={0}>
