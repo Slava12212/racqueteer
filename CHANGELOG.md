@@ -12,7 +12,7 @@ Local working copy: `projects/racqueteer-fresh/`
 ### 2026-06-02 — site-orchestrator / Claude Opus 4.7
 - Files touched: `app/globals.css`, `components/HeroSection.tsx`, `components/careers/HeroCareers.tsx`, `components/membership/HeroMembership.tsx`
 - What changed: SCOPE-CORRECTION for the earlier mobile-hero fix (commit `18fe70e`). Alex pointed out that the previous fix accidentally affected every section using `min-h-screen` on mobile (About, Amenities, Membership, Programs, PriceCompare, etc.) — he only wanted the HERO sections full-height on mobile. Restored the global `@media (max-width: 1023px) { .min-h-screen { min-height: auto !important; } }` override so non-hero sections behave as they did before. Added a dedicated `.hero-min-h-screen` utility (uses `min-height: 100vh` + `100dvh` for mobile address-bar awareness) immune to the global override. Swapped `min-h-screen` → `hero-min-h-screen` in HeroSection (homepage), HeroCareers, HeroMembership. HeroAbout and HeroPrivateEvents use fixed `h-[50vh]` already and were left untouched.
-- Commit SHA: _(filled in after push)_
+- Commit SHA: `7de1370`
 - Push status: ✅ pushed
 
 ### 2026-06-02 — site-developer / MiniMax M2.5
