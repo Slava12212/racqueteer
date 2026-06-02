@@ -10,6 +10,12 @@ Local working copy: `projects/racqueteer-fresh/`
 
 ---
 ### 2026-06-02 — site-orchestrator / Claude Opus 4.7
+- Files touched: `components/LocationsSection.tsx`
+- What changed: Hotfix — earlier placeholder media commit (`753b502`) wasn't visible on production because WordPress returns real `Location` CPT rows (with the legacy Builder.io stub image and no `video` field), so the FALLBACK_LOCATIONS branch never fired. Added a per-location merge step that overlays the demo media onto WP locations matched by `id`: missing/legacy image → use demo image, missing video → use demo video. Real WP uploads take precedence as soon as the content team adds them in the Location ACF Image/Video fields.
+- Commit SHA: `cc82b81`
+- Push status: ✅ pushed
+
+### 2026-06-02 — site-orchestrator / Claude Opus 4.7
 - Files touched: `public/locations/homebush-placeholder.jpg` (new), `public/locations/alexandria-placeholder.mp4` (new), `components/LocationsSection.tsx`
 - What changed: Added real placeholder media to FALLBACK_LOCATIONS so the locations section demonstrates the per-tab image/video concept end-to-end. Homebush now uses a vertical padel-court photo (Pexels #35248286, 194 KB), Alexandria uses a vertical padel-court video (Pexels #34449247, 540x960 @ 60fps, 2.9 MB, 10s loop). Both files served locally from `public/locations/`. Pexels license = no attribution required, but source IDs are documented inline for future reference.
 - Commit SHA: `753b502`
