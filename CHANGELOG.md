@@ -12,8 +12,8 @@ Local working copy: `projects/racqueteer-fresh/`
 ### 2026-06-02 — site-developer / MiniMax M2.5
 - Files touched: `wp/inc/acf-blocks.php`, `lib/graphql/queries.ts`, `types/index.ts`, `lib/wp-api.ts`, `components/LocationsSection.tsx`
 - What changed: Added per-location vertical video support in LocationsSection. New ACF `video` file field (location CPT) allows uploading vertical video (mp4,webm,mov). When present, video overrides image. Updated GraphQL query and mapper to include video sourceUrl+mimeType. Updated Location type with optional videoUrl+videoMime. Component now conditionally renders `<video>` (autoPlay muted loop playsInline with image poster) or `<img>`. Each fallback location has different placeholder image. Mobile view now shows media at top of detail card (aspect-[3/4]).
-- Commit SHA: `` (pending push)
-- Push status: ⏳ pending
+- Commit SHA: `2af606f`
+- Push status: ✅ pushed
 
 ### 2026-06-02 — site-developer / MiniMax M2.5
 - Files touched: `components/Navbar.tsx`, `app/globals.css`
