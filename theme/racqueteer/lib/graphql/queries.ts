@@ -302,6 +302,30 @@ export const GET_LOCATIONS = `
   }
 `;
 
+/**
+ * Minimal locations query — used as fallback when custom WPGraphQL resolvers
+ * (locationStatus, locationMediaType, locationAmenities, locationBgImage) are
+ * not yet registered on the WordPress site. Only requests fields from the ACF
+ * field group (locationFields) which are more likely to be available.
+ */
+export const GET_LOCATIONS_MINIMAL = `
+  query GetLocationsMinimal {
+    locations(first: 100) {
+      nodes {
+        databaseId
+        locationFields {
+          locationId
+          name
+          address
+          description
+          image { node { sourceUrl } }
+          video
+        }
+      }
+    }
+  }
+`;
+
 export const GET_PROGRAMS = `
   query GetPrograms {
     programs(first: 100) {

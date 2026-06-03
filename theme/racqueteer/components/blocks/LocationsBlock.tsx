@@ -7,9 +7,9 @@ export default async function LocationsBlock(attrs: WPLocationsAttributes) {
   return (
     <LocationsSection
       content={{
-        label: attrs.label,
-        title: attrs.title,
-        description: attrs.description,
+        label:       attrs.label       ?? 'Our Locations',
+        title:       attrs.title       ?? '',
+        description: attrs.description ?? '',
       }}
       locations={locations.length > 0 ? locations : undefined}
     />

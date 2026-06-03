@@ -15,6 +15,7 @@ import {
   GET_TESTIMONIALS,
   GET_AMENITIES,
   GET_LOCATIONS,
+  GET_LOCATIONS_MINIMAL,
   GET_PROGRAMS,
   GET_PRICE_COMPARE,
   GET_SITE_OPTIONS,
@@ -335,66 +336,93 @@ export async function getTestimonials(): Promise<Testimonial[]> {
 // LOCATIONS
 // ========================================
 
+/** Internal helper: map raw WP node to Location */
+function mapLocationNode(node: {
+  databaseId: number;
+  locationStatus?: string | null;
+  locationMediaType?: string | null;
+  locationBgImage?: string | null;
+  locationAmenities?: Array<{ icon?: string; label?: string }> | null;
+  locationFields: {
+    locationId?: string | null;
+    name?: string | null;
+    address?: string | null;
+    description?: string | null;
+    image?: { node?: { sourceUrl?: string } | null } | null;
+    video?: string | null;
+  } | null;
+}): Location {
+  const lf = node.locationFields ?? {};
+  const rawSt = node.locationStatus ?? '';
+  const status: 'available' | 'coming_soon' =
+    rawSt === 'coming_soon' ? 'coming_soon' : 'available';
+  const amenities = Array.isArray(node.locationAmenities)
+    ? node.locationAmenities
+        .filter((a) => a && a.label)
+        .map((a) => ({
+          label: a.label ?? '',
+          iconName: Array.isArray(a.icon) ? (a.icon[0] ?? '') : (a.icon ?? ''),
+        }))
+    : [];
+  return {
+    id:          lf.locationId ?? String(node.databaseId),
+    name:        lf.name        ?? '',
+    status,
+    address:     (lf.address ?? '').split('\n').filter(Boolean),
+    description: lf.description ?? '',
+    amenities,
+    image:       lf.image?.node?.sourceUrl ?? '',
+    mediaType:   (node.locationMediaType === 'video' ? 'video' : 'image') as 'image' | 'video',
+    video:       lf.video ?? '',
+    bgImage:     node.locationBgImage ?? undefined,
+  };
+}
+
 export async function getLocations(): Promise<Location[]> {
+  // Try full query (includes custom WPGraphQL resolvers: locationStatus, locationMediaType, etc.)
+  try {
+    const data = await wpGraphQL<{
+      locations: { nodes: Array<Parameters<typeof mapLocationNode>[0]> };
+    }>(GET_LOCATIONS);
+    const nodes = data.locations.nodes ?? [];
+    if (nodes.length > 0) return nodes.map(mapLocationNode);
+  } catch (err) {
+    console.warn(
+      'getLocations() full query failed (custom resolvers may not be registered in WPGraphQL). ' +
+      'Trying minimal query…\n', err
+    );
+  }
+
+  // Fallback: minimal query — only locationFields ACF group
   try {
     const data = await wpGraphQL<{
       locations: {
         nodes: Array<{
           databaseId: number;
-          locationStatus?: string | null;
-          locationMediaType?: string | null;
-          locationBgImage?: string | null;
-          locationAmenities?: Array<{ icon?: string; label?: string }> | null;
           locationFields: {
-            locationId: string;
-            name: string;
-            address: string;
-            description: string;
-            image: { node: { sourceUrl: string } };
+            locationId?: string | null;
+            name?: string | null;
+            address?: string | null;
+            description?: string | null;
+            image?: { node?: { sourceUrl?: string } | null } | null;
             video?: string | null;
-          };
+          } | null;
         }>;
       };
-    }>(GET_LOCATIONS);
-
-    return data.locations.nodes.map((node) => {
-      const lf = node.locationFields ?? {};
-
-      // locationStatus comes from Location.locationStatus (manual resolver, v24).
-      // Resolver already normalises to lowercase 'available' | 'coming_soon'.
-      const rawSt = node.locationStatus ?? '';
-      const status: 'available' | 'coming_soon' =
-        rawSt === 'coming_soon' ? 'coming_soon' : 'available';
-
-      // Map amenities from WP repeater rows to LocationAmenity objects.
-      // The icon SVG is resolved by the component via LOCATION_ICON_MAP.
-      const amenities = Array.isArray(node.locationAmenities)
-        ? node.locationAmenities
-            .filter((a) => a && a.label)
-            .map((a) => ({
-              label: a.label ?? '',
-              iconName: Array.isArray(a.icon) ? (a.icon[0] ?? '') : (a.icon ?? ''),
-            }))
-        : [];
-
-      return {
-        id:          lf.locationId ?? String(node.databaseId),
-        name:        lf.name        ?? '',
-        status,
-        address:     (lf.address ?? '').split('\n').filter(Boolean),
-        description: lf.description ?? '',
-        amenities,   // icons are resolved in LocationsSection via LOCATION_ICON_MAP
-        image:       lf.image?.node?.sourceUrl ?? '',
-        mediaType:   (node.locationMediaType === 'video' ? 'video' : 'image') as 'image' | 'video',
-        video:       lf.video ?? '',
-        bgImage:     node.locationBgImage ?? undefined,
-      };
-    });
-  } catch (err) {
-    console.error('getLocations() failed, falling back to hardcoded data:', err);
-    const { getLocations: getFallback } = await import('./api');
-    return getFallback();
+    }>(GET_LOCATIONS_MINIMAL);
+    const nodes = data.locations.nodes ?? [];
+    if (nodes.length > 0) {
+      return nodes.map((node) =>
+        mapLocationNode({ ...node, locationStatus: null, locationMediaType: null, locationBgImage: null, locationAmenities: null })
+      );
+    }
+  } catch (minErr) {
+    console.warn('getLocations() minimal query also failed. Falling back to hardcoded data.\n', minErr);
   }
+
+  // Final fallback: hardcoded static data
+  const { getLocations: getFallback } = await import('./api');
+  return getFallback();
 }
 
 // ========================================
@@ -510,7 +538,10 @@ export async function getPriceCompareData(): Promise<{
     const features = featuresData.priceCompare.nodes[0]?.acf.features ?? [];
     return { features, plans };
   } catch (err) {
-    console.error('getPriceCompareData() failed, falling back to hardcoded data:', err);
+    console.warn(
+      'getPriceCompareData() failed — the "priceCompare" CPT may not be registered in WPGraphQL yet. ' +
+      'Falling back to hardcoded data:', err
+    );
     const { getPriceCompareData: getFallback } = await import('./api');
     return getFallback();
   }
