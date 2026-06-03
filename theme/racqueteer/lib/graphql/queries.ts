@@ -283,6 +283,7 @@ export const GET_LOCATIONS = `
       nodes {
         databaseId
         locationStatus
+        locationMediaType
         locationAmenities {
           icon
           label
@@ -293,7 +294,9 @@ export const GET_LOCATIONS = `
           address
           description
           image { node { sourceUrl } }
+          video
         }
+        locationBgImage
       }
     }
   }

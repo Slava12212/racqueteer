@@ -342,6 +342,8 @@ export async function getLocations(): Promise<Location[]> {
         nodes: Array<{
           databaseId: number;
           locationStatus?: string | null;
+          locationMediaType?: string | null;
+          locationBgImage?: string | null;
           locationAmenities?: Array<{ icon?: string; label?: string }> | null;
           locationFields: {
             locationId: string;
@@ -349,6 +351,7 @@ export async function getLocations(): Promise<Location[]> {
             address: string;
             description: string;
             image: { node: { sourceUrl: string } };
+            video?: string | null;
           };
         }>;
       };
@@ -382,6 +385,9 @@ export async function getLocations(): Promise<Location[]> {
         description: lf.description ?? '',
         amenities,   // icons are resolved in LocationsSection via LOCATION_ICON_MAP
         image:       lf.image?.node?.sourceUrl ?? '',
+        mediaType:   (node.locationMediaType === 'video' ? 'video' : 'image') as 'image' | 'video',
+        video:       lf.video ?? '',
+        bgImage:     node.locationBgImage ?? undefined,
       };
     });
   } catch (err) {

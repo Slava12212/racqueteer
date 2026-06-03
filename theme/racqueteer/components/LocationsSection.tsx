@@ -151,7 +151,7 @@ export default function LocationsSection({ content, locations: locationsProp }: 
     <section data-header-theme="dark" className="relative w-full h-auto lg:h-screen overflow-hidden font-['Mona_Sans',_-apple-system,_Roboto,_Helvetica,_sans-serif]">
       {/* Background image */}
       <img
-        src={content.bgImage || DEFAULT_BG}
+        src={selected.bgImage || DEFAULT_BG}
         alt="Padel courts background"
         className="absolute inset-0 w-full h-full object-cover"
       />

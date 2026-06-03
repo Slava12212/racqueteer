@@ -627,6 +627,42 @@ add_action( 'graphql_register_types', function () {
         ) );
     } catch ( \Throwable $e ) {}
 
+    // ── locationBgImage ──────────────────────────────────────────────────────
+    // bg_image поле у CPT (show_in_graphql=false) — повертає URL рядком.
+    try {
+        register_graphql_field( 'Location', 'locationBgImage', array(
+            'type'        => 'String',
+            'description' => 'Background image URL for the locations section',
+            'resolve'     => function ( $post ) {
+                if ( ! function_exists( 'get_field' ) ) { return null; }
+                $post_id = is_object( $post ) ? ( $post->databaseId ?? $post->ID ?? null ) : null;
+                if ( ! $post_id ) { return null; }
+                $val = get_field( 'field_loc_bg_image', $post_id );
+                if ( is_array( $val ) ) { $val = $val['url'] ?? null; }
+                return is_string( $val ) && $val !== '' ? $val : null;
+            },
+        ) );
+    } catch ( \Throwable $e ) {}
+
+    // ── locationMediaType ────────────────────────────────────────────────────
+    // select-поле media_type має show_in_graphql=false щоб уникнути серіалізації ACF v2.6.x.
+    // Резолвер повертає 'image' або 'video'.
+    try {
+        register_graphql_field( 'Location', 'locationMediaType', array(
+            'type'        => 'String',
+            'description' => 'Тип медіа правої панелі: image або video',
+            'resolve'     => function ( $post ) {
+                if ( ! function_exists( 'get_field' ) ) { return 'image'; }
+                $post_id = is_object( $post ) ? ( $post->databaseId ?? $post->ID ?? null ) : null;
+                if ( ! $post_id ) { return 'image'; }
+                $val = get_field( 'field_loc_media_type', $post_id );
+                if ( is_array( $val ) ) { $val = $val[0] ?? ''; }
+                $val = strtolower( trim( (string) $val ) );
+                return in_array( $val, [ 'image', 'video' ], true ) ? $val : 'image';
+            },
+        ) );
+    } catch ( \Throwable $e ) {}
+
     // ── locationAmenities ────────────────────────────────────────────────────
     try {
         register_graphql_field( 'Location', 'locationAmenities', array(

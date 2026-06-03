@@ -1477,6 +1477,7 @@ function rq_create_locations( array $media, array &$log ): void {
             'amenity_courts_2', // right-panel fallback image (video plays over it)
             'video',            // Alexandria показує відео
             $video_url,
+            'amenity_courts_2', // bg_image key
         ],
         [
             'Rosehill Club', 'coming_soon',
@@ -1492,6 +1493,7 @@ function rq_create_locations( array $media, array &$log ): void {
             'amenity_coworking', // right-panel image → amenity-coworking.jpg
             'image',
             $video_url,
+            'amenity_coworking', // bg_image key
         ],
         [
             'Homebush Club', 'available',
@@ -1508,10 +1510,11 @@ function rq_create_locations( array $media, array &$log ): void {
             'homebush_placeholder', // right-panel image → homebush-placeholder.jpg
             'image',
             $video_url,
+            'homebush_placeholder', // bg_image key
         ],
     ];
 
-    foreach ( $locations as [ $title, $status, $address, $desc, $amenities, $img_key, $media_type, $video_url ] ) {
+    foreach ( $locations as [ $title, $status, $address, $desc, $amenities, $img_key, $media_type, $video_url, $bg_key ] ) {
         // Scalar fields — зберігаємо через update_field (надійно для скалярів)
         $acf = [
             'field_loc_location_id'     => sanitize_title( $title ),
@@ -1524,10 +1527,15 @@ function rq_create_locations( array $media, array &$log ): void {
             // Amenities НЕ передаємо через rq_upsert_cpt — зберігаємо окремо через
             // direct update_post_meta, щоб уникнути тихого failure update_field() для repeater.
         ];
-        // Використовуємо зображення кортів для правої панелі; fallback → about_hero
+        // Зображення правої панелі
         $img_id = ! empty( $media[ $img_key ] ) ? $media[ $img_key ] : ( $media['about_hero'] ?? 0 );
         if ( $img_id ) {
             $acf['field_loc_image'] = $img_id;
+        }
+        // Background Image (Section)
+        $bg_id = ! empty( $media[ $bg_key ] ) ? $media[ $bg_key ] : 0;
+        if ( $bg_id ) {
+            $acf['field_loc_bg_image'] = $bg_id;
         }
         $id = rq_upsert_cpt( 'location', $title, $acf );
 
@@ -1780,8 +1788,6 @@ function rq_create_page_home( string $nextjs, array $media, array &$log ): void 
         '_title'       => 'field_loc_title',
         'description'  => 'With multiple state-of-the-art locations across Sydney, we make it easy to find a club near you.',
         '_description' => 'field_loc_description',
-        'bg_image'     => ! empty( $media['amenity_courts_2'] ) ? $media['amenity_courts_2'] : ( $media['about_hero'] ?? '' ),
-        '_bg_image'    => 'field_loc_bg_image',
     ] );
 
     $content .= rq_acf_block( 'acf/racqueteer-amenities', array_merge( [
@@ -1994,8 +2000,6 @@ function rq_create_page_about( string $nextjs, array $media, array &$log ): void
         '_title'       => 'field_loc_title',
         'description'  => 'With multiple state-of-the-art locations across Sydney, we make it easy to find a club near you.',
         '_description' => 'field_loc_description',
-        'bg_image'     => ! empty( $media['amenity_courts_2'] ) ? $media['amenity_courts_2'] : ( $media['about_hero'] ?? '' ),
-        '_bg_image'    => 'field_loc_bg_image',
     ] );
 
     $content .= rq_acf_block( 'acf/racqueteer-contact', [
