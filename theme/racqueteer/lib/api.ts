@@ -437,29 +437,42 @@ export async function getTestimonials(): Promise<Testimonial[]> {
  * TODO: Replace with WP REST API fetch — GET /wp-json/wp/v2/locations
  */
 export async function getLocations(): Promise<Location[]> {
-  // Icons will be imported in the component that uses this data
   return [
-    {
-      id: "homebush",
-      name: "Homebush Club",
-      status: "available",
-      address: ["Homebush, Sydney", "New South Wales 2140, Australia"],
-      description:
-        "Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.",
-      amenities: [], // Will be populated in component with icon components
-      image:
-        "https://api.builder.io/api/v1/image/assets/TEMP/edca0eb2071de6afc816146f03f622629c2fb896?width=1182",
-    },
     {
       id: "alexandria",
       name: "Alexandria Club",
       status: "coming_soon",
-      address: ["Alexandria, Sydney", "New South Wales 2015, Australia"],
+      address: ["Alexandria,", "82-86 Bourke Rd, Alexandria NSW 2015"],
       description:
         "Our newest location coming soon to Alexandria. A world-class facility designed for serious players and casual enthusiasts alike.",
-      amenities: [], // Will be populated in component with icon components
-      image:
-        "https://api.builder.io/api/v1/image/assets/TEMP/edca0eb2071de6afc816146f03f622629c2fb896?width=1182",
+      amenities: [],
+      image: "/amenity-courts-2.jpg",
+      mediaType: "video",
+      video: "/events-video-opt.mp4",
+    },
+    {
+      id: "rosehill",
+      name: "Rosehill Club",
+      status: "coming_soon",
+      address: ["Rosehill,", "11A Grand Ave, Camellia NSW 2142"],
+      description:
+        "Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.",
+      amenities: [],
+      image: "/amenity-coworking.jpg",
+      mediaType: "image",
+      video: "/events-video-opt.mp4",
+    },
+    {
+      id: "homebush",
+      name: "Homebush Club",
+      status: "available",
+      address: ["Homebush,", "10 Carter St, Lidcombe NSW 2141"],
+      description:
+        "Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.",
+      amenities: [],
+      image: "/amenity-lounge-1.jpg",
+      mediaType: "image",
+      video: "/events-video-opt.mp4",
     },
   ];
 }

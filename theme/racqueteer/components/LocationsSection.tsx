@@ -72,30 +72,47 @@ const FALLBACK_AMENITIES = [
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-const FALLBACK_LOCATIONS = [
-  {
-    id: "homebush",
-    name: "Homebush Club",
-    status: "available" as const,
-    address: ["Homebush, Sydney", "New South Wales 2140, Australia"],
-    description:
-      "Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.",
-    amenities: FALLBACK_AMENITIES,
-    image:
-      "https://api.builder.io/api/v1/image/assets/TEMP/edca0eb2071de6afc816146f03f622629c2fb896?width=1182",
-  },
+const FALLBACK_LOCATIONS: Location[] = [
   {
     id: "alexandria",
     name: "Alexandria Club",
     status: "coming_soon" as const,
-    address: ["Alexandria, Sydney", "New South Wales 2015, Australia"],
+    address: ["Alexandria,", "82-86 Bourke Rd, Alexandria NSW 2015"],
     description:
       "Our newest location coming soon to Alexandria. A world-class facility designed for serious players and casual enthusiasts alike.",
     amenities: FALLBACK_AMENITIES,
-    image:
-      "https://api.builder.io/api/v1/image/assets/TEMP/edca0eb2071de6afc816146f03f622629c2fb896?width=1182",
+    image: "/amenity-courts-2.jpg",
+    mediaType: "video",
+    video: "/events-video-opt.mp4",
+  },
+  {
+    id: "rosehill",
+    name: "Rosehill Club",
+    status: "coming_soon" as const,
+    address: ["Rosehill,", "11A Grand Ave, Camellia NSW 2142"],
+    description:
+      "Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.",
+    amenities: FALLBACK_AMENITIES,
+    image: "/amenity-coworking.jpg",
+    mediaType: "image",
+    video: "/events-video-opt.mp4",
+  },
+  {
+    id: "homebush",
+    name: "Homebush Club",
+    status: "available" as const,
+    address: ["Homebush,", "10 Carter St, Lidcombe NSW 2141"],
+    description:
+      "Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.",
+    amenities: FALLBACK_AMENITIES,
+    image: "/amenity-lounge-1.jpg",
+    mediaType: "image",
+    video: "/events-video-opt.mp4",
   },
 ];
+
+const DEFAULT_BG =
+  "https://api.builder.io/api/v1/image/assets/TEMP/d030e821f9fa82fd99e0b0c647c0ee6763233604?width=3840";
 
 export default function LocationsSection({ content, locations: locationsProp }: LocationsSectionProps) {
   const { ctaText, ctaUrl, openBookModal } = useCta();
@@ -134,7 +151,7 @@ export default function LocationsSection({ content, locations: locationsProp }: 
     <section data-header-theme="dark" className="relative w-full h-auto lg:h-screen overflow-hidden font-['Mona_Sans',_-apple-system,_Roboto,_Helvetica,_sans-serif]">
       {/* Background image */}
       <img
-        src="https://api.builder.io/api/v1/image/assets/TEMP/d030e821f9fa82fd99e0b0c647c0ee6763233604?width=3840"
+        src={content.bgImage || DEFAULT_BG}
         alt="Padel courts background"
         className="absolute inset-0 w-full h-full object-cover"
       />
@@ -282,13 +299,25 @@ export default function LocationsSection({ content, locations: locationsProp }: 
           </div>
         </div>
 
-        {/* RIGHT PANEL — court photo fills remaining space to right edge */}
+        {/* RIGHT PANEL — court photo/video fills remaining space to right edge */}
         <ScrollReveal from="right" delay={200} distance={40} duration={900} className="hidden lg:block flex-1 lg:h-screen">
-          <img
-            src={selected.image}
-            alt="Court"
-            className="w-full h-full object-cover"
-          />
+          {selected.mediaType === 'video' && selected.video ? (
+            <video
+              key={selected.video}
+              src={selected.video}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <img
+              src={selected.image}
+              alt="Court"
+              className="w-full h-full object-cover"
+            />
+          )}
         </ScrollReveal>
       </div>
 
