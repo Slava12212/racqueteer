@@ -143,9 +143,9 @@ function rq_demo_admin_page(): void {
             <li><strong>Кожна сторінка</strong> матиме правильні ACF Gutenberg-блоки з попередньо заповненим контентом</li>
             <li><strong>Вакансії (8)</strong> — оголошення про вакансії для сторінки Careers</li>
             <li><strong>Відгуки (6)</strong> — відгуки учасників</li>
-            <li><strong>Локації (2)</strong> — Homebush &amp; Alexandria</li>
+            <li><strong>Локації (3)</strong> — Alexandria, Rosehill &amp; Homebush</li>
             <li><strong>Amenities (6)</strong> — Courts, Locker Rooms, Members Lounge, Café &amp; Coffee Bar, Coworking, Pro Shop (CPT записи)</li>
-            <li><strong>Програми (4)</strong> — тренувальні програми</li>
+            <li><strong>Програми (5)</strong> — тренувальні програми</li>
             <li><strong>Плани членства (4)</strong> — Starter, Light, Pro, Pro+</li>
             <li><strong>Navbar &amp; Footer ACF Options</strong> — посилання, CTA, контакти</li>
             <li><strong>Налаштування читання</strong> — Home встановлено як головну сторінку</li>
@@ -1371,14 +1371,15 @@ function rq_import_media( string $nextjs, array &$log ): array {
     // If absent — silently skipped; rq_create_amenities() falls back to already-imported
     // theme images (racket_pickleball, racket_padel, about_hero, etc.).
     $optional_local = [
-        'amenity_courts_1' => 'amenity-courts-1.jpg',
-        'amenity_courts_2' => 'amenity-courts-2.jpg',
-        'amenity_locker'   => 'amenity-locker-rooms.jpg',
-        'amenity_lounge_1' => 'amenity-lounge-1.jpg',
-        'amenity_lounge_2' => 'amenity-lounge-2.jpg',
-        'amenity_cafe'     => 'amenity-cafe.jpg',
-        'amenity_coworking'=> 'amenity-coworking.jpg',
-        'amenity_proshop'  => 'amenity-pro-shop.jpg',
+        'amenity_courts_1'      => 'amenity-courts-1.jpg',
+        'amenity_courts_2'      => 'amenity-courts-2.jpg',
+        'amenity_locker'        => 'amenity-locker-rooms.jpg',
+        'amenity_lounge_1'      => 'amenity-lounge-1.jpg',
+        'amenity_lounge_2'      => 'amenity-lounge-2.jpg',
+        'amenity_cafe'          => 'amenity-cafe.jpg',
+        'amenity_coworking'     => 'amenity-coworking.jpg',
+        'amenity_proshop'       => 'amenity-pro-shop.jpg',
+        'homebush_placeholder'  => 'homebush-placeholder.jpg',
     ];
 
     foreach ( $optional_local as $key => $filename ) {
@@ -1456,23 +1457,14 @@ function rq_create_testimonials( array &$log ): void {
 // ─────────────────────────────────────────────
 
 function rq_create_locations( array $media, array &$log ): void {
+    // Відео зберігається як URL у полі ACF url-type.
+    // Використовуємо локальний файл із папки теми wp/assets/images/.
+    $video_url = RACQUETEER_URL . '/assets/images/events-video-opt.mp4';
+
     $locations = [
         [
-            'Homebush Club', 'available',
-            [ 'Homebush, Sydney', 'New South Wales 2140, Australia' ],
-            'Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.',
-            [
-                [ 'icon' => 'courts',    'label' => '12 Courts'     ],
-                [ 'icon' => 'lounge',    'label' => 'Lounge Zones'  ],
-                [ 'icon' => 'coworking', 'label' => 'Coworking'     ],
-                [ 'icon' => 'proshop',   'label' => 'Pro-Shop'      ],
-                [ 'icon' => 'cafe',      'label' => 'Cafe'          ],
-                [ 'icon' => 'fitness',   'label' => 'Fitness Areas' ],
-            ],
-        ],
-        [
             'Alexandria Club', 'coming_soon',
-            [ 'Alexandria, Sydney', 'New South Wales 2015, Australia' ],
+            [ 'Alexandria,', '82-86 Bourke Rd, Alexandria NSW 2015' ],
             'Our newest location coming soon to Alexandria. A world-class facility designed for serious players and casual enthusiasts alike.',
             [
                 [ 'icon' => 'courts',    'label' => '12 Courts'     ],
@@ -1482,10 +1474,44 @@ function rq_create_locations( array $media, array &$log ): void {
                 [ 'icon' => 'cafe',      'label' => 'Cafe'          ],
                 [ 'icon' => 'fitness',   'label' => 'Fitness Areas' ],
             ],
+            'amenity_courts_2', // right-panel fallback image (video plays over it)
+            'video',            // Alexandria показує відео
+            $video_url,
+        ],
+        [
+            'Rosehill Club', 'coming_soon',
+            [ 'Rosehill,', '11A Grand Ave, Camellia NSW 2142' ],
+            'Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.',
+            [
+                [ 'icon' => 'courts',    'label' => '12 Courts'     ],
+                [ 'icon' => 'lounge',    'label' => 'Lounge Zones'  ],
+                [ 'icon' => 'coworking', 'label' => 'Coworking'     ],
+                [ 'icon' => 'cafe',      'label' => 'Cafe'          ],
+                [ 'icon' => 'fitness',   'label' => 'Fitness Areas' ],
+            ],
+            'amenity_coworking', // right-panel image → amenity-coworking.jpg
+            'image',
+            $video_url,
+        ],
+        [
+            'Homebush Club', 'available',
+            [ 'Homebush,', '10 Carter St, Lidcombe NSW 2141' ],
+            'Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.',
+            [
+                [ 'icon' => 'courts',    'label' => '12 Courts'     ],
+                [ 'icon' => 'lounge',    'label' => 'Lounge Zones'  ],
+                [ 'icon' => 'coworking', 'label' => 'Coworking'     ],
+                [ 'icon' => 'proshop',   'label' => 'Pro-Shop'      ],
+                [ 'icon' => 'cafe',      'label' => 'Cafe'          ],
+                [ 'icon' => 'fitness',   'label' => 'Fitness Areas' ],
+            ],
+            'homebush_placeholder', // right-panel image → homebush-placeholder.jpg
+            'image',
+            $video_url,
         ],
     ];
 
-    foreach ( $locations as [ $title, $status, $address, $desc, $amenities ] ) {
+    foreach ( $locations as [ $title, $status, $address, $desc, $amenities, $img_key, $media_type, $video_url ] ) {
         // Scalar fields — зберігаємо через update_field (надійно для скалярів)
         $acf = [
             'field_loc_location_id'     => sanitize_title( $title ),
@@ -1493,11 +1519,15 @@ function rq_create_locations( array $media, array &$log ): void {
             'field_loc_status'          => $status,
             'field_loc_address'         => implode( "\n", $address ),
             'field_cpt_loc_description' => $desc,
+            'field_loc_media_type'      => $media_type,
+            'field_loc_video'           => $video_url,
             // Amenities НЕ передаємо через rq_upsert_cpt — зберігаємо окремо через
             // direct update_post_meta, щоб уникнути тихого failure update_field() для repeater.
         ];
-        if ( ! empty( $media['about_hero'] ) ) {
-            $acf['field_loc_image'] = $media['about_hero'];
+        // Використовуємо зображення кортів для правої панелі; fallback → about_hero
+        $img_id = ! empty( $media[ $img_key ] ) ? $media[ $img_key ] : ( $media['about_hero'] ?? 0 );
+        if ( $img_id ) {
+            $acf['field_loc_image'] = $img_id;
         }
         $id = rq_upsert_cpt( 'location', $title, $acf );
 
@@ -1505,7 +1535,7 @@ function rq_create_locations( array $media, array &$log ): void {
         if ( $id ) {
             rq_save_location_amenities( $id, $amenities );
         }
-        $log[] = "  ✔ Location: {$title} (ID {$id}, amenities: " . count( $amenities ) . ')';
+        $log[] = "  ✔ Location: {$title} (ID {$id}, media_type: {$media_type}, amenities: " . count( $amenities ) . ')';
     }
 }
 
@@ -1651,10 +1681,11 @@ function rq_create_amenities( array $media, array &$log ): void {
 
 function rq_create_programs( array &$log ): void {
     $programs = [
-        [ "Women's Beginners",   'red',  '$40', 'per game', "This introductory session is the perfect way to get started! We'll cover the basics of the game, from the rules and scoring to essential techniques like grip, positioning, and basic shots." ],
-        [ 'Mens Beginner',       'blue', '$40', 'per game', "Join our fun and supportive group clinic designed specifically for beginners! Whether you're new to padel or just starting to play, this clinic will help you master the fundamentals." ],
-        [ 'Group Beginner',      'red',  '$60', 'per game', "Take your padel skills to the next level in our intermediate clinic! Perfect for those who already know the basics, this clinic focuses on refining your technique and improving shot placement." ],
-        [ "Women's Intermediate",'blue', '$80', 'per game', "This clinic is designed for top players looking to perfect their game. Focus will be on very advanced techniques, precision, and strategic play with complex shot combinations." ],
+        [ "Women's Intermediate", 'red',  '$80', 'per game', "This clinic is designed for top players looking to perfect their game. Focus will be on very advanced techniques, precision, and strategic play with complex shot combinations." ],
+        [ 'PICKLEBALL SOCIAL',    'blue', '',    'per game', "A fun, social session where players of all levels can jump into games. Enjoy friendly competition in a welcoming, high-energy environment." ],
+        [ 'PICKLEBALL 101',       'red',  '',    'per game', "A fun, beginner-friendly introduction to pickleball where you'll learn the fundamentals, rules, and flow of the game. Build confidence on court while developing a strong foundation alongside others." ],
+        [ 'PADEL 101',            'blue', '',    'per game', "A welcoming introduction to padel focused on building core skills and understanding the flow of the game. Learn key shots, movement, and tactics in a supportive environment designed to help you improve with every session." ],
+        [ 'PADEL AMERICANO',      'red',  '',    'per game', "A fast-paced, social format where players rotate partners and opponents each round. It's a great way to meet new people, get plenty of game time, and enjoy some friendly competition." ],
     ];
 
     foreach ( $programs as [ $title, $color, $price, $unit, $desc ] ) {
@@ -1705,7 +1736,7 @@ function rq_create_membership_plans( array &$log ): void {
 
 function rq_create_page_home( string $nextjs, array $media, array &$log ): void {
     $content  = rq_acf_block( 'acf/racqueteer-hero', [
-        'title'               => 'Where Elite Competition Meets a Refined Social Atmosphere',
+        'title'               => 'AUSTRALIA\'S LARGEST INDOOR RACQUET SPORTS FACILITY',
         '_title'              => 'field_hero_title',
         'description'         => 'Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.',
         '_description'        => 'field_hero_description',
@@ -1724,17 +1755,17 @@ function rq_create_page_home( string $nextjs, array $media, array &$log ): void 
     $content .= rq_acf_block( 'acf/racqueteer-about', [
         'label'         => 'about racqueteer',
         '_label'        => 'field_about_label',
-        'title'         => 'The Ultimate Destination for Padel & Pickleball Players',
+        'title'         => 'THE ULTIMATE DESTINATION FOR PADEL & PICKLEBALL PLAYERS',
         '_title'        => 'field_about_title',
-        'description'   => 'Racqueteer is more than just a place to play — it\'s a hub for the fast-growing world of padel and pickleball. Designed for players of all levels, our club combines professional courts, a welcoming community, and world-class facilities.',
+        'description'   => 'Racqueteer is an elevated racquet sports club designed for performance and connection. It\'s where you come to play and unwind—on and off the court.',
         '_description'  => 'field_about_description',
-        'stat1_number'  => '25',
+        'stat1_number'  => '11',
         '_stat1_number' => 'field_about_stat1_num',
-        'stat1_label'   => 'Courts of Art',
+        'stat1_label'   => 'Pickleball Courts',
         '_stat1_label'  => 'field_about_stat1_lbl',
-        'stat2_number'  => '8+',
+        'stat2_number'  => '6',
         '_stat2_number' => 'field_about_stat2_num',
-        'stat2_label'   => 'Years of Experience',
+        'stat2_label'   => 'Padel Courts',
         '_stat2_label'  => 'field_about_stat2_lbl',
         'left_image'    => $media['racket_pickleball'] ?: ( $nextjs . 'racket-pickleball.png' ),
         '_left_image'   => 'field_about_left_image',
@@ -1749,6 +1780,8 @@ function rq_create_page_home( string $nextjs, array $media, array &$log ): void 
         '_title'       => 'field_loc_title',
         'description'  => 'With multiple state-of-the-art locations across Sydney, we make it easy to find a club near you.',
         '_description' => 'field_loc_description',
+        'bg_image'     => ! empty( $media['amenity_courts_2'] ) ? $media['amenity_courts_2'] : ( $media['about_hero'] ?? '' ),
+        '_bg_image'    => 'field_loc_bg_image',
     ] );
 
     $content .= rq_acf_block( 'acf/racqueteer-amenities', array_merge( [
@@ -1788,16 +1821,30 @@ function rq_create_page_home( string $nextjs, array $media, array &$log ): void 
     ] );
 
     $content .= rq_acf_block( 'acf/racqueteer-events', [
-        'title'        => 'Join Our Next Tournament or Social Event',
-        '_title'       => 'field_events_title',
-        'description'  => 'From competitive tournaments to casual social mixers, there\'s always something happening at Racqueteer.',
-        '_description' => 'field_events_description',
-        'cta_text'     => 'View Events Calendar',
-        '_cta_text'    => 'field_events_cta_text',
-        'cta_url'      => '#',
-        '_cta_url'     => 'field_events_cta_url',
-        'image'        => $media['about_hero'] ?? '',
-        '_image'       => 'field_events_image',
+        'title'                     => 'Bring your next event to the court',
+        '_title'                    => 'field_events_title',
+        'description'               => 'Luxury private event packages designed for any occasion, from corporate team-building to birthday celebrations. With discounted court hire, private spaces, and premium add-ons, every event is tailored to your group.',
+        '_description'              => 'field_events_description',
+        'cta_text'                  => 'View Events Calendar',
+        '_cta_text'                 => 'field_events_cta_text',
+        'cta_url'                   => '#',
+        '_cta_url'                  => 'field_events_cta_url',
+        'image'                     => $media['about_hero'] ?? '',
+        '_image'                    => 'field_events_image',
+        'what_includes'             => '3',
+        '_what_includes'            => 'field_events_what_includes_2026',
+        'what_includes_0_text'      => 'Discounted court hire for your group',
+        '_what_includes_0_text'     => 'field_events_wi_text_2026',
+        'what_includes_0_icon'      => 'box',
+        '_what_includes_0_icon'     => 'field_events_wi_icon_2026',
+        'what_includes_1_text'      => 'Private event space with dedicated seating',
+        '_what_includes_1_text'     => 'field_events_wi_text_2026',
+        'what_includes_1_icon'      => 'vip',
+        '_what_includes_1_icon'     => 'field_events_wi_icon_2026',
+        'what_includes_2_text'      => 'Optional add-ons including bar service and tailored experiences',
+        '_what_includes_2_text'     => 'field_events_wi_text_2026',
+        'what_includes_2_icon'      => 'box',
+        '_what_includes_2_icon'     => 'field_events_wi_icon_2026',
     ] );
 
     $page_id = rq_upsert_page( 'Home', 'home', $content );
@@ -1905,11 +1952,11 @@ function rq_create_page_about( string $nextjs, array $media, array &$log ): void
     $content  = rq_acf_block( 'acf/racqueteer-about-hero', [
         'label'        => 'about us',
         '_label'       => 'field_ahero_label',
-        'title'        => 'Bringing People Together Through Racquet Sports',
+        'title'        => 'The ultimate destination for padel & pickleball players',
         '_title'       => 'field_ahero_title',
-        'description'  => 'Racqueteer was founded on a simple belief: racquet sports should be accessible, enjoyable, and community-driven. We\'ve built more than courts — we\'ve built a movement.',
+        'description'  => 'From first serves to elite-level play, we\'re building Sydney\'s home for players who want to learn, compete, and level up—together.',
         '_description' => 'field_ahero_description',
-        'video_url'    => $nextjs . 'private-events-hero.mp4',
+        'video_url'    => $nextjs . 'events-video-opt.mp4',
         '_video_url'   => 'field_ahero_video',
     ] );
 
@@ -1922,21 +1969,21 @@ function rq_create_page_about( string $nextjs, array $media, array &$log ): void
         '_description' => 'field_miss_description',
         'image'        => $media['about_hero'] ?? '',
         '_image'       => 'field_miss_image',
-        'stat1_number' => '25',
+        'stat1_number' => '9',
         '_stat1_number' => 'field_miss_stat1_num',
-        'stat1_label'  => 'Courts',
+        'stat1_label'  => 'Pickleball courts',
         '_stat1_label'  => 'field_miss_stat1_lbl',
-        'stat2_number' => '8+',
+        'stat2_number' => '',
         '_stat2_number' => 'field_miss_stat2_num',
-        'stat2_label'  => 'Years of experience',
+        'stat2_label'  => '',
         '_stat2_label'  => 'field_miss_stat2_lbl',
-        'stat3_number' => '5K+',
+        'stat3_number' => '6',
         '_stat3_number' => 'field_miss_stat3_num',
-        'stat3_label'  => 'Members',
+        'stat3_label'  => 'Padel courts',
         '_stat3_label'  => 'field_miss_stat3_lbl',
-        'stat4_number' => '50+',
+        'stat4_number' => '',
         '_stat4_number' => 'field_miss_stat4_num',
-        'stat4_label'  => 'Events per year',
+        'stat4_label'  => '',
         '_stat4_label'  => 'field_miss_stat4_lbl',
     ] );
 
@@ -1947,6 +1994,8 @@ function rq_create_page_about( string $nextjs, array $media, array &$log ): void
         '_title'       => 'field_loc_title',
         'description'  => 'With multiple state-of-the-art locations across Sydney, we make it easy to find a club near you.',
         '_description' => 'field_loc_description',
+        'bg_image'     => ! empty( $media['amenity_courts_2'] ) ? $media['amenity_courts_2'] : ( $media['about_hero'] ?? '' ),
+        '_bg_image'    => 'field_loc_bg_image',
     ] );
 
     $content .= rq_acf_block( 'acf/racqueteer-contact', [
@@ -2155,8 +2204,9 @@ function rq_set_site_options( array $media, array &$log ): void {
         [ 'label' => 'Careers',         'url' => '/careers'        ],
     ], 'options' );
     update_field( 'field_footer_locations', [
-        [ 'name' => 'Homebush Club',   'address' => 'Homebush, Sydney. New South Wales 2140, Australia' ],
-        [ 'name' => 'Alexandria Club', 'address' => 'Alexandria, Sydney. Australia'                     ],
+        [ 'name' => 'Alexandria Club', 'address' => '82-86 Bourke Rd, Alexandria NSW 2015' ],
+        [ 'name' => 'Rosehill Club',   'address' => '11A Grand Ave, Camellia NSW 2142'     ],
+        [ 'name' => 'Homebush Club',   'address' => '10 Carter St, Lidcombe NSW 2141'      ],
     ], 'options' );
     update_field( 'field_footer_copyright',    '©2026 Racqueteer. All Rights Reserved.', 'options' );
     update_field( 'field_footer_legal_links', [

@@ -105,7 +105,7 @@ const FALLBACK_LOCATIONS: Location[] = [
     description:
       "Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.",
     amenities: FALLBACK_AMENITIES,
-    image: "/amenity-lounge-1.jpg",
+    image: "/homebush-placeholder.jpg",
     mediaType: "image",
     video: "/events-video-opt.mp4",
   },
