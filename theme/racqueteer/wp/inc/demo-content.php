@@ -1477,7 +1477,7 @@ function rq_create_locations( array $media, array &$log ): void {
             'amenity_courts_2', // right-panel fallback image (video plays over it)
             'video',            // Alexandria показує відео
             $video_url,
-            'amenity_courts_2', // bg_image key
+            'about_hero',       // bg_image key
         ],
         [
             'Rosehill Club', 'coming_soon',
@@ -1493,7 +1493,7 @@ function rq_create_locations( array $media, array &$log ): void {
             'amenity_coworking', // right-panel image → amenity-coworking.jpg
             'image',
             $video_url,
-            'amenity_coworking', // bg_image key
+            'about_hero',        // bg_image key
         ],
         [
             'Homebush Club', 'available',
@@ -1510,7 +1510,7 @@ function rq_create_locations( array $media, array &$log ): void {
             'homebush_placeholder', // right-panel image → homebush-placeholder.jpg
             'image',
             $video_url,
-            'homebush_placeholder', // bg_image key
+            'about_hero',           // bg_image key
         ],
     ];
 
