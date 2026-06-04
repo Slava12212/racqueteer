@@ -96,8 +96,15 @@ const BLOCK_INTERFACE_FIELDS = new Set(['__typename', 'id', 'type', 'tagName', '
  * backwards compatibility.
  */
 function flattenBlockAttributes(raw: RawBlock): Record<string, unknown> {
-  // New flat schema: look for the first non-standard field that is an object
+  // New flat schema: prefer explicit Racqueteer ACF field groups to avoid
+  // accidentally picking unrelated object fields returned by WPGraphQL.
   const acfKey = Object.keys(raw).find(
+    (k) =>
+      !BLOCK_INTERFACE_FIELDS.has(k) &&
+      k.startsWith('racqueteer') &&
+      raw[k] !== null &&
+      typeof raw[k] === 'object'
+  ) ?? Object.keys(raw).find(
     (k) => !BLOCK_INTERFACE_FIELDS.has(k) && raw[k] !== null && typeof raw[k] === 'object'
   );
   if (acfKey && raw[acfKey]) {
