@@ -4,8 +4,9 @@ import MissionSection from "@/components/about/MissionSection";
 import LocationsSection from "@/components/LocationsSection";
 import ContactSection from "@/components/about/ContactSection";
 import BlockRenderer from "@/components/blocks/BlockRenderer";
+import { getLocations } from "@/lib/wp-api";
 import { getPageBlocks } from "@/lib/wp-api";
-import { getAboutPageContent, getHomepageContent, getLocations } from "@/lib/api";
+import { getAboutPageContent, getHomepageContent } from "@/lib/api";
 
 export const revalidate = 3600;
 

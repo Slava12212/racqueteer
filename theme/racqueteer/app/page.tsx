@@ -9,7 +9,8 @@ import EventsSection from "@/components/EventsSection";
 import { AmenitiesSection } from "@/components/amenities/AmenitiesSection";
 import BlockRenderer from "@/components/blocks/BlockRenderer";
 import { getPageBlocks, getAmenities } from "@/lib/wp-api";
-import { getHomepageContent, getLocations } from "@/lib/api";
+import { getHomepageContent } from "@/lib/api";
+import { getLocations } from "@/lib/wp-api";
 import { resolveAmenityIcon } from "@/lib/amenity-resolver";
 import type { Amenity } from "@/components/amenities/amenitiesData";
 
