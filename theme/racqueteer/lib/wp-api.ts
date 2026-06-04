@@ -84,6 +84,24 @@ interface RawBlock {
   [key: string]: unknown;
 }
 
+type RawAmenity = { icon?: unknown; label?: unknown };
+
+function normalizeAmenities(input: unknown): Array<{ label: string; iconName: string }> {
+  if (!Array.isArray(input)) return [];
+
+  return input
+    .map((item) => {
+      const amenity = (item ?? {}) as RawAmenity;
+      const label = typeof amenity.label === 'string' ? amenity.label.trim() : '';
+      const rawIcon = Array.isArray(amenity.icon)
+        ? amenity.icon.find((v) => typeof v === 'string')
+        : amenity.icon;
+      const iconName = typeof rawIcon === 'string' ? rawIcon.trim() : '';
+      return { label, iconName };
+    })
+    .filter((a) => a.label.length > 0);
+}
+
 // Standard Block interface fields that are NOT ACF data
 const BLOCK_INTERFACE_FIELDS = new Set(['__typename', 'id', 'type', 'tagName', 'innerHtml', 'attributes', 'connections']);
 
@@ -349,12 +367,13 @@ function mapLocationNode(node: {
   locationStatus?: string | null;
   locationMediaType?: string | null;
   locationBgImage?: string | null;
-  locationAmenities?: Array<{ icon?: string; label?: string }> | null;
+  locationAmenities?: unknown;
   locationFields: {
     locationId?: string | null;
     name?: string | null;
     address?: string | null;
     description?: string | null;
+    amenities?: unknown;
     image?: { node?: { sourceUrl?: string } | null } | null;
     video?: string | null;
   } | null;
@@ -363,21 +382,15 @@ function mapLocationNode(node: {
   const rawSt = node.locationStatus ?? '';
   const status: 'available' | 'coming_soon' =
     rawSt === 'coming_soon' ? 'coming_soon' : 'available';
-  const amenities = Array.isArray(node.locationAmenities)
-    ? node.locationAmenities
-        .filter((a) => a && a.label)
-        .map((a) => ({
-          label: a.label ?? '',
-          iconName: Array.isArray(a.icon) ? (a.icon[0] ?? '') : (a.icon ?? ''),
-        }))
-    : [];
+  const amenities = normalizeAmenities(node.locationAmenities);
+  const fallbackAmenities = normalizeAmenities(lf.amenities);
   return {
     id:          lf.locationId ?? String(node.databaseId),
     name:        lf.name        ?? '',
     status,
     address:     (lf.address ?? '').split('\n').filter(Boolean),
     description: lf.description ?? '',
-    amenities,
+    amenities: amenities.length > 0 ? amenities : fallbackAmenities,
     image:       lf.image?.node?.sourceUrl ?? '',
     mediaType:   (node.locationMediaType === 'video' ? 'video' : 'image') as 'image' | 'video',
     video:       lf.video ?? '',
@@ -411,6 +424,7 @@ export async function getLocations(): Promise<Location[]> {
             name?: string | null;
             address?: string | null;
             description?: string | null;
+            amenities?: unknown;
             image?: { node?: { sourceUrl?: string } | null } | null;
             video?: string | null;
           } | null;

@@ -318,6 +318,10 @@ export const GET_LOCATIONS_MINIMAL = `
           name
           address
           description
+          amenities {
+            icon
+            label
+          }
           image { node { sourceUrl } }
           video
         }
