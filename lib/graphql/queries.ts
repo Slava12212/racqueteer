@@ -293,7 +293,7 @@ export const GET_LOCATIONS = `
           address
           description
           image { node { sourceUrl } }
-          video { node { sourceUrl mimeType } }
+          video
         }
       }
     }

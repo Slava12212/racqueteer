@@ -349,7 +349,7 @@ export async function getLocations(): Promise<Location[]> {
             address: string;
             description: string;
             image: { node: { sourceUrl: string } };
-            video: { node: { sourceUrl: string; mimeType: string } };
+            video?: string | null;
           };
         }>;
       };
@@ -383,8 +383,8 @@ export async function getLocations(): Promise<Location[]> {
         description: lf.description ?? '',
         amenities,   // icons are resolved in LocationsSection via LOCATION_ICON_MAP
         image:       lf.image?.node?.sourceUrl ?? '',
-        videoUrl:    lf.video?.node?.sourceUrl,
-        videoMime:  lf.video?.node?.mimeType,
+        videoUrl:    lf.video ?? undefined,
+        videoMime:   lf.video ? 'video/mp4' : undefined,
       };
     });
   } catch (err) {
