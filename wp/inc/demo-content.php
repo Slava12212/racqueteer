@@ -143,9 +143,9 @@ function rq_demo_admin_page(): void {
             <li><strong>Кожна сторінка</strong> матиме правильні ACF Gutenberg-блоки з попередньо заповненим контентом</li>
             <li><strong>Вакансії (8)</strong> — оголошення про вакансії для сторінки Careers</li>
             <li><strong>Відгуки (6)</strong> — відгуки учасників</li>
-            <li><strong>Локації (2)</strong> — Homebush &amp; Alexandria</li>
+            <li><strong>Локації (3)</strong> — Alexandria, Rosehill &amp; Homebush</li>
             <li><strong>Amenities (6)</strong> — Courts, Locker Rooms, Members Lounge, Café &amp; Coffee Bar, Coworking, Pro Shop (CPT записи)</li>
-            <li><strong>Програми (4)</strong> — тренувальні програми</li>
+            <li><strong>Програми (5)</strong> — тренувальні програми</li>
             <li><strong>Плани членства (4)</strong> — Starter, Light, Pro, Pro+</li>
             <li><strong>Navbar &amp; Footer ACF Options</strong> — посилання, CTA, контакти</li>
             <li><strong>Налаштування читання</strong> — Home встановлено як головну сторінку</li>
@@ -1451,6 +1451,7 @@ function rq_create_jobs( array &$log ): void {
         [ 'Lead Barista',         'Manage the club café, craft specialty coffee and drinks, maintain quality standards, and train new barista team members.',                          'Barista', ],
         [ 'Barista',              'Prepare and serve premium beverages, maintain a clean and welcoming café space, and provide excellent customer service to members and guests.',     'Barista', ],
         [ 'Front Desk Associate', 'Welcome members and guests, handle court bookings, answer questions, and ensure smooth check-in and check-out experiences daily.',                 'Manager', ],
+        [ 'Club Manager1',        'Lead daily operations, manage staff scheduling, oversee member relations, and ensure an exceptional experience across all club facilities. 1',       'Manager', ],
         [ 'Club Manager',         'Lead daily operations, manage staff scheduling, oversee member relations, and ensure an exceptional experience across all club facilities.',         'Manager', ],
     ];
 
@@ -1518,8 +1519,8 @@ function rq_create_locations( array $media, array &$log ): void {
             'about_hero',       // bg_image key
         ],
         [
-            'Rosehill club', 'coming_soon',
-            [ 'Rosehill club', '11A Grand Ave, Camellia NSW 2142' ],
+            'Rosehill Club', 'coming_soon',
+            [ 'Rosehill,', '11A Grand Ave, Camellia NSW 2142' ],
             'Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.',
             [
                 [ 'icon' => 'courts',    'label' => '12 Courts'     ],
@@ -1565,10 +1566,12 @@ function rq_create_locations( array $media, array &$log ): void {
             // Amenities НЕ передаємо через rq_upsert_cpt — зберігаємо окремо через
             // direct update_post_meta, щоб уникнути тихого failure update_field() для repeater.
         ];
+        // Зображення правої панелі
         $img_id = ! empty( $media[ $img_key ] ) ? $media[ $img_key ] : ( $media['about_hero'] ?? 0 );
         if ( $img_id ) {
             $acf['field_loc_image'] = $img_id;
         }
+        // Background Image (Section)
         $bg_id = ! empty( $media[ $bg_key ] ) ? $media[ $bg_key ] : 0;
         if ( $bg_id ) {
             $acf['field_loc_bg_image'] = $bg_id;
@@ -1863,30 +1866,30 @@ function rq_create_page_home( string $nextjs, array $media, array &$log ): void 
     ] );
 
     $content .= rq_acf_block( 'acf/racqueteer-events', [
-        'title'                    => 'Bring your next event to the court',
-        '_title'                   => 'field_events_title',
-        'description'              => 'Luxury private event packages designed for any occasion, from corporate team-building to birthday celebrations. With discounted court hire, private spaces, and premium add-ons, every event is tailored to your group.',
-        '_description'             => 'field_events_description',
-        'cta_text'                 => 'View Events Calendar',
-        '_cta_text'                => 'field_events_cta_text',
-        'cta_url'                  => '#',
-        '_cta_url'                 => 'field_events_cta_url',
-        'image'                    => $media['about_hero'] ?? '',
-        '_image'                   => 'field_events_image',
-        'what_includes_0_text'     => 'Discounted court hire for your group',
-        '_what_includes_0_text'    => 'field_events_wi_text_2026',
-        'what_includes_0_icon'     => 'box',
-        '_what_includes_0_icon'    => 'field_events_wi_icon_2026',
-        'what_includes_1_text'     => 'Private event space with dedicated seating',
-        '_what_includes_1_text'    => 'field_events_wi_text_2026',
-        'what_includes_1_icon'     => 'vip',
-        '_what_includes_1_icon'    => 'field_events_wi_icon_2026',
-        'what_includes_2_text'     => 'Optional add-ons including bar service and tailored experiences',
-        '_what_includes_2_text'    => 'field_events_wi_text_2026',
-        'what_includes_2_icon'     => 'box',
-        '_what_includes_2_icon'    => 'field_events_wi_icon_2026',
-        'what_includes'            => '3',
-        '_what_includes'           => 'field_events_what_includes_2026',
+        'title'                     => 'Bring your next event to the court',
+        '_title'                    => 'field_events_title',
+        'description'               => 'Luxury private event packages designed for any occasion, from corporate team-building to birthday celebrations. With discounted court hire, private spaces, and premium add-ons, every event is tailored to your group.',
+        '_description'              => 'field_events_description',
+        'cta_text'                  => 'View Events Calendar',
+        '_cta_text'                 => 'field_events_cta_text',
+        'cta_url'                   => '#',
+        '_cta_url'                  => 'field_events_cta_url',
+        'image'                     => $media['about_hero'] ?? '',
+        '_image'                    => 'field_events_image',
+        'what_includes'             => '3',
+        '_what_includes'            => 'field_events_what_includes_2026',
+        'what_includes_0_text'      => 'Discounted court hire for your group',
+        '_what_includes_0_text'     => 'field_events_wi_text_2026',
+        'what_includes_0_icon'      => 'box',
+        '_what_includes_0_icon'     => 'field_events_wi_icon_2026',
+        'what_includes_1_text'      => 'Private event space with dedicated seating',
+        '_what_includes_1_text'     => 'field_events_wi_text_2026',
+        'what_includes_1_icon'      => 'vip',
+        '_what_includes_1_icon'     => 'field_events_wi_icon_2026',
+        'what_includes_2_text'      => 'Optional add-ons including bar service and tailored experiences',
+        '_what_includes_2_text'     => 'field_events_wi_text_2026',
+        'what_includes_2_icon'      => 'box',
+        '_what_includes_2_icon'     => 'field_events_wi_icon_2026',
     ] );
 
     $page_id = rq_upsert_page( 'Home', 'home', $content );
@@ -2003,29 +2006,29 @@ function rq_create_page_about( string $nextjs, array $media, array &$log ): void
     ] );
 
     $content .= rq_acf_block( 'acf/racqueteer-mission', [
-        'label'         => 'our mission',
-        '_label'        => 'field_miss_label',
-        'title'         => 'Creating Spaces Where Players Thrive',
-        '_title'        => 'field_miss_title',
-        'description'   => 'We\'re committed to providing world-class facilities, expert coaching, and a welcoming environment where players of all levels can improve, connect, and have fun.',
-        '_description'  => 'field_miss_description',
-        'image'         => $media['about_hero'] ?? '',
-        '_image'        => 'field_miss_image',
-        'stat1_number'  => '9 ',
+        'label'        => 'our mission',
+        '_label'       => 'field_miss_label',
+        'title'        => 'Creating Spaces Where Players Thrive',
+        '_title'       => 'field_miss_title',
+        'description'  => 'We\'re committed to providing world-class facilities, expert coaching, and a welcoming environment where players of all levels can improve, connect, and have fun.',
+        '_description' => 'field_miss_description',
+        'image'        => $media['about_hero'] ?? '',
+        '_image'       => 'field_miss_image',
+        'stat1_number' => '9',
         '_stat1_number' => 'field_miss_stat1_num',
-        'stat1_label'   => 'pickleball courts',
+        'stat1_label'  => 'Pickleball courts',
         '_stat1_label'  => 'field_miss_stat1_lbl',
-        'stat2_number'  => '',
+        'stat2_number' => '',
         '_stat2_number' => 'field_miss_stat2_num',
-        'stat2_label'   => '',
+        'stat2_label'  => '',
         '_stat2_label'  => 'field_miss_stat2_lbl',
-        'stat3_number'  => '6',
+        'stat3_number' => '6',
         '_stat3_number' => 'field_miss_stat3_num',
-        'stat3_label'   => 'padel courts',
+        'stat3_label'  => 'Padel courts',
         '_stat3_label'  => 'field_miss_stat3_lbl',
-        'stat4_number'  => '',
+        'stat4_number' => '',
         '_stat4_number' => 'field_miss_stat4_num',
-        'stat4_label'   => '',
+        'stat4_label'  => '',
         '_stat4_label'  => 'field_miss_stat4_lbl',
     ] );
 
@@ -2245,8 +2248,9 @@ function rq_set_site_options( array $media, array &$log ): void {
         [ 'label' => 'Careers',         'url' => '/careers'        ],
     ], 'options' );
     update_field( 'field_footer_locations', [
-        [ 'name' => 'Homebush Club',   'address' => 'Homebush, Sydney. New South Wales 2140, Australia' ],
-        [ 'name' => 'Alexandria Club', 'address' => 'Alexandria, Sydney. Australia'                     ],
+        [ 'name' => 'Alexandria Club', 'address' => '82-86 Bourke Rd, Alexandria NSW 2015' ],
+        [ 'name' => 'Rosehill Club',   'address' => '11A Grand Ave, Camellia NSW 2142'     ],
+        [ 'name' => 'Homebush Club',   'address' => '10 Carter St, Lidcombe NSW 2141'      ],
     ], 'options' );
     update_field( 'field_footer_copyright',    '©2026 Racqueteer. All Rights Reserved.', 'options' );
     update_field( 'field_footer_legal_links', [
