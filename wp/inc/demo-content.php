@@ -161,7 +161,7 @@ function rq_demo_admin_page(): void {
                         '_title'            => 'field_hero_title',
                         'cta_primary_text'  => 'Book a Court',
                         '_cta_primary_text' => 'field_hero_cta_primary_text',
-                        'video_url'         => 'https://racqueteer.vercel.app/hero-video.mp4',
+                        'video_url'         => RACQUETEER_URL . '/assets/images/hero-video.mp4',
                         '_video_url'        => 'field_hero_video',
                     ] );
                     echo esc_html( rtrim( $preview ) );
@@ -1330,6 +1330,18 @@ function rq_sideload_asset( string $filename, string $remote_url, string $title 
     return rq_sideload_image( $remote_url, $title );
 }
 
+function rq_media_url( array $media, string $key, string $fallback_filename ): string {
+    $attachment_id = (int) ( $media[ $key ] ?? 0 );
+    if ( $attachment_id ) {
+        $url = wp_get_attachment_url( $attachment_id );
+        if ( $url ) {
+            return (string) $url;
+        }
+    }
+
+    return RACQUETEER_URL . '/assets/images/' . $fallback_filename;
+}
+
 // ─────────────────────────────────────────────
 // МЕДІА
 // ─────────────────────────────────────────────
@@ -1339,7 +1351,6 @@ function rq_import_media( string $nextjs, array &$log ): array {
 
     // ── 1. Required assets: try local file first, then remote (Next.js / Vercel) ──
     $required = [
-        'logo'                  => [ 'logo2.svg',                        $nextjs . 'logo2.svg'                        ],
         'logo_icon'             => [ 'logo-icon.png',                    $nextjs . 'logo-icon.png'                    ],
         'racket_pickleball'     => [ 'racket-pickleball.png',            $nextjs . 'racket-pickleball.png'            ],
         'racket_padel'          => [ 'racket-padel.png',                 $nextjs . 'racket-padel.png'                 ],
@@ -1370,15 +1381,43 @@ function rq_import_media( string $nextjs, array &$log ): array {
     // Only imported when the file physically exists in wp/assets/images/.
     // If absent — silently skipped; rq_create_amenities() falls back to already-imported
     // theme images (racket_pickleball, racket_padel, about_hero, etc.).
+    $local_videos = [
+        'hero_video'            => 'hero-video.mp4',
+        'memberships_video'     => 'private-events-hero.mp4',
+        'private_events_video'  => 'private-events-hero-new.mp4',
+        'about_video'           => 'events-video.mp4',
+        'careers_video'         => 'careers-hero.mp4',
+        'alexandria_video'      => 'alexandria-placeholder.mp4',
+    ];
+
+    foreach ( $local_videos as $key => $filename ) {
+        $local_path = RACQUETEER_DIR . '/assets/images/' . $filename;
+        if ( ! file_exists( $local_path ) ) {
+            $media[ $key ] = 0;
+            $log[] = "  ⚠ Video missing from theme: {$filename}";
+            continue;
+        }
+
+        $id = rq_sideload_local_image( $local_path, $key );
+        if ( $id ) {
+            $media[ $key ] = $id;
+            $log[] = "  ✔ Video imported to Media Library: {$filename} (ID {$id})";
+        } else {
+            $media[ $key ] = 0;
+            $log[] = "  ⚠ Video could not be imported: {$filename}";
+        }
+    }
+
     $optional_local = [
-        'amenity_courts_1' => 'amenity-courts-1.jpg',
-        'amenity_courts_2' => 'amenity-courts-2.jpg',
-        'amenity_locker'   => 'amenity-locker-rooms.jpg',
-        'amenity_lounge_1' => 'amenity-lounge-1.jpg',
-        'amenity_lounge_2' => 'amenity-lounge-2.jpg',
-        'amenity_cafe'     => 'amenity-cafe.jpg',
-        'amenity_coworking'=> 'amenity-coworking.jpg',
-        'amenity_proshop'  => 'amenity-pro-shop.jpg',
+        'amenity_courts_1'      => 'amenity-courts-1.jpg',
+        'amenity_courts_2'      => 'amenity-courts-2.jpg',
+        'amenity_locker'        => 'amenity-locker-rooms.jpg',
+        'amenity_lounge_1'      => 'amenity-lounge-1.jpg',
+        'amenity_lounge_2'      => 'amenity-lounge-2.jpg',
+        'amenity_cafe'          => 'amenity-cafe.jpg',
+        'amenity_coworking'     => 'amenity-coworking.jpg',
+        'amenity_proshop'       => 'amenity-pro-shop.jpg',
+        'homebush_placeholder'  => 'homebush-placeholder.jpg',
     ];
 
     foreach ( $optional_local as $key => $filename ) {
@@ -1412,7 +1451,7 @@ function rq_create_jobs( array &$log ): void {
         [ 'Lead Barista',         'Manage the club café, craft specialty coffee and drinks, maintain quality standards, and train new barista team members.',                          'Barista', ],
         [ 'Barista',              'Prepare and serve premium beverages, maintain a clean and welcoming café space, and provide excellent customer service to members and guests.',     'Barista', ],
         [ 'Front Desk Associate', 'Welcome members and guests, handle court bookings, answer questions, and ensure smooth check-in and check-out experiences daily.',                 'Manager', ],
-        [ 'Club Manager',         'Lead daily operations, manage staff scheduling, oversee member relations, and ensure an exceptional experience across all club facilities.',        'Manager', ],
+        [ 'Club Manager',         'Lead daily operations, manage staff scheduling, oversee member relations, and ensure an exceptional experience across all club facilities.',         'Manager', ],
     ];
 
     foreach ( $jobs as [ $title, $desc, $cat ] ) {
@@ -1456,6 +1495,10 @@ function rq_create_testimonials( array &$log ): void {
 // ─────────────────────────────────────────────
 
 function rq_create_locations( array $media, array &$log ): void {
+    // Відео зберігається як URL у полі ACF url-type.
+    // Prefer the sideloaded WP Media URL so WordPress serves a valid uploaded MP4.
+    $alexandria_video_url = rq_media_url( $media, 'alexandria_video', 'alexandria-placeholder.mp4' );
+
     $locations = [
         [
             'Alexandria Club', 'coming_soon',
@@ -1469,6 +1512,10 @@ function rq_create_locations( array $media, array &$log ): void {
                 [ 'icon' => 'cafe',      'label' => 'Cafe'          ],
                 [ 'icon' => 'fitness',   'label' => 'Fitness Areas' ],
             ],
+            'amenity_courts_2', // right-panel fallback image (video plays over it)
+            'video',            // Alexandria показує відео
+            $alexandria_video_url,
+            'about_hero',       // bg_image key
         ],
         [
             'Rosehill club', 'coming_soon',
@@ -1481,6 +1528,10 @@ function rq_create_locations( array $media, array &$log ): void {
                 [ 'icon' => 'cafe',      'label' => 'Cafe'          ],
                 [ 'icon' => 'fitness',   'label' => 'Fitness Areas' ],
             ],
+            'amenity_coworking', // right-panel image → amenity-coworking.jpg
+            'image',
+            '',
+            'about_hero',        // bg_image key
         ],
         [
             'Homebush Club', 'available',
@@ -1494,10 +1545,14 @@ function rq_create_locations( array $media, array &$log ): void {
                 [ 'icon' => 'cafe',      'label' => 'Cafe'          ],
                 [ 'icon' => 'fitness',   'label' => 'Fitness Areas' ],
             ],
+            'homebush_placeholder', // right-panel image → homebush-placeholder.jpg
+            'image',
+            '',
+            'about_hero',           // bg_image key
         ],
     ];
 
-    foreach ( $locations as [ $title, $status, $address, $desc, $amenities ] ) {
+    foreach ( $locations as [ $title, $status, $address, $desc, $amenities, $img_key, $media_type, $video_url, $bg_key ] ) {
         // Scalar fields — зберігаємо через update_field (надійно для скалярів)
         $acf = [
             'field_loc_location_id'     => sanitize_title( $title ),
@@ -1505,11 +1560,18 @@ function rq_create_locations( array $media, array &$log ): void {
             'field_loc_status'          => $status,
             'field_loc_address'         => implode( "\n", $address ),
             'field_cpt_loc_description' => $desc,
+            'field_loc_media_type'      => $media_type,
+            'field_loc_video'           => $video_url,
             // Amenities НЕ передаємо через rq_upsert_cpt — зберігаємо окремо через
             // direct update_post_meta, щоб уникнути тихого failure update_field() для repeater.
         ];
-        if ( ! empty( $media['about_hero'] ) ) {
-            $acf['field_loc_image'] = $media['about_hero'];
+        $img_id = ! empty( $media[ $img_key ] ) ? $media[ $img_key ] : ( $media['about_hero'] ?? 0 );
+        if ( $img_id ) {
+            $acf['field_loc_image'] = $img_id;
+        }
+        $bg_id = ! empty( $media[ $bg_key ] ) ? $media[ $bg_key ] : 0;
+        if ( $bg_id ) {
+            $acf['field_loc_bg_image'] = $bg_id;
         }
         $id = rq_upsert_cpt( 'location', $title, $acf );
 
@@ -1517,7 +1579,7 @@ function rq_create_locations( array $media, array &$log ): void {
         if ( $id ) {
             rq_save_location_amenities( $id, $amenities );
         }
-        $log[] = "  ✔ Location: {$title} (ID {$id}, amenities: " . count( $amenities ) . ')';
+        $log[] = "  ✔ Location: {$title} (ID {$id}, media_type: {$media_type}, amenities: " . count( $amenities ) . ')';
     }
 }
 
@@ -1730,7 +1792,7 @@ function rq_create_page_home( string $nextjs, array $media, array &$log ): void 
         '_cta_secondary_text' => 'field_hero_cta_secondary_text',
         'cta_secondary_url'   => '/memberships',
         '_cta_secondary_url'  => 'field_hero_cta_secondary_url',
-        'video_url'           => $nextjs . 'hero-video.mp4',
+        'video_url'           => rq_media_url( $media, 'hero_video', 'hero-video.mp4' ),
         '_video_url'          => 'field_hero_video',
     ] );
 
@@ -1849,7 +1911,7 @@ function rq_create_page_memberships( string $nextjs, array $media, array &$log )
         '_cta_text'       => 'field_mhero_cta_text',
         'cta_url'         => '#memberships-plans',
         '_cta_url'        => 'field_mhero_cta_url',
-        'video_url'       => $nextjs . 'private-events-hero.mp4',
+        'video_url'       => rq_media_url( $media, 'memberships_video', 'private-events-hero.mp4' ),
         '_video_url'      => 'field_mhero_video',
     ] );
 
@@ -1891,7 +1953,7 @@ function rq_create_page_private_events( string $nextjs, array $media, array &$lo
         '_cta_text'    => 'field_pehero_cta_text',
         'cta_url'      => 'mailto:info.racqueteer.club@gmail.com',
         '_cta_url'     => 'field_pehero_cta_url',
-        'video_url'    => $nextjs . 'private-events-hero-new.mp4',
+        'video_url'    => rq_media_url( $media, 'private_events_video', 'private-events-hero-new.mp4' ),
         '_video_url'   => 'field_pehero_video',
     ] );
 
@@ -1936,7 +1998,7 @@ function rq_create_page_about( string $nextjs, array $media, array &$log ): void
         '_title'       => 'field_ahero_title',
         'description'  => 'From first serves to elite-level play, we\'re building Sydney\'s home for players who want to learn, compete, and level up—together.',
         '_description' => 'field_ahero_description',
-        'video_url'    => $nextjs . 'private-events-hero.mp4',
+        'video_url'    => rq_media_url( $media, 'about_video', 'events-video.mp4' ),
         '_video_url'   => 'field_ahero_video',
     ] );
 
@@ -2005,7 +2067,7 @@ function rq_create_page_careers( string $nextjs, array $media, array &$log ): vo
         '_title'       => 'field_chero_title',
         'description'  => 'Be part of something bigger. At Racqueteer, we\'re building a community of passionate individuals who love racquet sports and creating exceptional experiences.',
         '_description' => 'field_chero_description',
-        'video_url'    => $nextjs . 'careers-hero.mp4',
+        'video_url'    => rq_media_url( $media, 'careers_video', 'careers-hero.mp4' ),
         '_video_url'   => 'field_chero_video',
     ] );
 
@@ -2150,10 +2212,11 @@ function rq_set_site_options( array $media, array &$log ): void {
         return;
     }
 
-    $logo_id      = $media['logo']      ?? 0;
     $logo_icon_id = $media['logo_icon'] ?? 0;
 
-    update_field( 'field_nav_logo',      $logo_id,       'options' );
+    // Keep desktop/footer logo empty so the frontend uses the hardcoded Racqueteer wordmark.
+    // The logo*.svg files are partner logos for the marquee (logo2.svg is NVIDIA), not site branding.
+    update_field( 'field_nav_logo',      null,           'options' );
     update_field( 'field_nav_logo_icon', $logo_icon_id,  'options' );
     update_field( 'field_nav_cta_text',  'Book a Court', 'options' );
     update_field( 'field_nav_cta_url',   '#',            'options' );
@@ -2168,7 +2231,7 @@ function rq_set_site_options( array $media, array &$log ): void {
     ], 'options' );
     $log[] = '  ✔ Navbar options saved';
 
-    update_field( 'field_footer_logo',        $logo_id,                           'options' );
+    update_field( 'field_footer_logo',        null,                               'options' );
     update_field( 'field_footer_email',        'info.racqueteer.club@gmail.com',   'options' );
     update_field( 'field_footer_phone',        '+61 4 8123 4567',                  'options' );
     update_field( 'field_footer_cta_text',     'Book a Court',                     'options' );
