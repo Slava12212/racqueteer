@@ -9,6 +9,15 @@ Local working copy: `projects/racqueteer-fresh/`
 > **Rule going forward:** EVERY change made to this project must be appended to this file with date, author (which agent + model), files touched, what changed, and the resulting git commit SHA + push status. No silent edits.
 
 ---
+### 2026-07-03 — site-orchestrator / Claude Opus 4.7
+- Files touched: `components/BookModal.tsx`, `components/ui/dialog.tsx`, `public/book-modal-padel-v2.webp`, `public/book-modal-pickleball-v2.webp`
+- What changed:
+   1. Converted mislabeled PNG images (with `.webp` extension) to proper WebP format to fix image loading in the booking modal.
+   2. Fixed dual close icons in the booking modal by modifying `components/ui/dialog.tsx` to conditionally render the default close button via a `hideClose` prop and updating `components/BookModal.tsx` to use this prop and use a custom close button.
+   3. Switched from Next.js `<Image>` component to standard `<img>` tags in `components/BookModal.tsx` for the sport illustrations to bypass potential Next.js image optimizer caching issues.
+- Commit SHA: `abb93b4`
+- Push status: ✅ pushed
+
 ### 2026-07-03 — site-developer / MiniMax M2.5
 - Files touched: `components/TestimonialsSection.tsx`, `components/ScrollReveal.tsx`, `components/AboutSection.tsx`, `app/globals.css`, `components/Navbar.tsx`, `components/LocationsSection.tsx`
 - What changed: Implemented 5 front-end fixes for Alex Tymoshchenko: (1) Testimonials - added min-h-[400px] for bottom padding stability + touch swipe support on mobile (50px threshold), (2) ScrollReveal - added 2-second fallback timeout, changed threshold to 0.05, added rootMargin '50px 0px 50px 0px', (3) About section mobile - reduced racket image to w-[55%] max-w-[200px], mt-4, negative bottom margin, (4) Tablet responsiveness - added tablet optimization media query block (768-1023px), (5) Performance - added width/height/loading=lazy attributes to img tags in AboutSection, Navbar, LocationsSection
@@ -142,7 +151,7 @@ Re-implement the layout fixes against the **correct** repo (`racqueteer-fresh/` 
 - Generated ed25519 deploy key on agent host: `~/.ssh/racqueteer_deploy` (private) + `.pub`. Public key shared with Alex.
 - Alex added the key to `Slava12212/racqueteer` GitHub Deploy Keys with **write access**.
 - Added SSH config alias `github-racqueteer` → `git@github.com` using that key (`~/.ssh/config`).
-- Switched the `racqueteer-fresh/` remote from HTTPS to SSH: `git@github-racqueteer:Slava12212/racqueteer.git`.
+- Switched the `racqueteer-fresh/` remote from HTTPS to SSH: `git@github-racqueteer:Slava12212/racqueteer.git`
 - Verified auth: `ssh -T git@github-racqueteer` → "Hi Slava12212/racqueteer! You've successfully authenticated".
 - **Pushed all 4 fix commits to `origin/main`. Remote HEAD now `699c125`.** ✅
 
