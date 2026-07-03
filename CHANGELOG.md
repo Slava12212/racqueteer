@@ -9,6 +9,12 @@ Local working copy: `projects/racqueteer-fresh/`
 > **Rule going forward:** EVERY change made to this project must be appended to this file with date, author (which agent + model), files touched, what changed, and the resulting git commit SHA + push status. No silent edits.
 
 ---
+### 2026-07-03 — site-developer / MiniMax M2.5
+- Files touched: `components/TestimonialsSection.tsx`, `components/ScrollReveal.tsx`, `components/AboutSection.tsx`, `app/globals.css`, `components/Navbar.tsx`, `components/LocationsSection.tsx`
+- What changed: Implemented 5 front-end fixes for Alex Tymoshchenko: (1) Testimonials - added min-h-[400px] for bottom padding stability + touch swipe support on mobile (50px threshold), (2) ScrollReveal - added 2-second fallback timeout, changed threshold to 0.05, added rootMargin '50px 0px 50px 0px', (3) About section mobile - reduced racket image to w-[55%] max-w-[200px], mt-4, negative bottom margin, (4) Tablet responsiveness - added tablet optimization media query block (768-1023px), (5) Performance - added width/height/loading=lazy attributes to img tags in AboutSection, Navbar, LocationsSection
+- Commit SHA: `a9d4fb1`
+- Push status: ✅ pushed
+
 ### 2026-06-02 — site-orchestrator / Claude Opus 4.7
 - Files touched: `components/LocationsSection.tsx`
 - What changed: Hotfix — earlier placeholder media commit (`753b502`) wasn't visible on production because WordPress returns real `Location` CPT rows (with the legacy Builder.io stub image and no `video` field), so the FALLBACK_LOCATIONS branch never fired. Added a per-location merge step that overlays the demo media onto WP locations matched by `id`: missing/legacy image → use demo image, missing video → use demo video. Real WP uploads take precedence as soon as the content team adds them in the Location ACF Image/Video fields.
