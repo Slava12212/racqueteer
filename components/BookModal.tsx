@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import {
   Dialog,
   DialogContent,
@@ -38,19 +37,7 @@ export default function BookModal() {
 
   return (
     <Dialog open={isBookModalOpen} onOpenChange={(open) => !open && closeBookModal()}>
-      <DialogContent className="max-w-[777px] p-0 overflow-hidden bg-white border-none rounded-none">
-        {/* Close button - custom SVG X icon */}
-        <button
-          type="button"
-          onClick={() => closeBookModal()}
-          className="absolute top-5 right-5 z-10 text-[#2B2B2B] hover:opacity-60 transition-opacity"
-          aria-label="Close"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 20L20 0M20 20L0 0" stroke="#2B2B2B" strokeWidth="2" strokeLinejoin="round"/>
-          </svg>
-        </button>
-
+      <DialogContent hideClose className="max-w-[777px] p-0 overflow-hidden bg-white border-none rounded-none">
         {/* Title */}
         <DialogTitle className="sr-only">
           {modalTitle}
@@ -60,7 +47,17 @@ export default function BookModal() {
         </DialogDescription>
 
         {/* Header */}
-        <div className="pt-14 pb-8 px-6 text-center">
+        <div className="pt-14 pb-8 px-6 text-center relative">
+          <button
+            type="button"
+            onClick={() => closeBookModal()}
+            className="absolute top-0 right-5 z-10 text-[#2B2B2B] hover:opacity-60 transition-opacity"
+            aria-label="Close"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0 20L20 0M20 20L0 0" stroke="#2B2B2B" strokeWidth="2" strokeLinejoin="round"/>
+            </svg>
+          </button>
           <h1 className="text-[#2B2B2B] font-extrabold text-3xl sm:text-[44px] leading-tight uppercase tracking-wide">
             {modalTitle}
           </h1>
@@ -74,13 +71,13 @@ export default function BookModal() {
           {/* Sport 1 Card (Padel) */}
           <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden min-h-[360px] sm:min-h-[466px]">
             <div className="flex-1 flex items-center justify-center p-5 w-full">
-              <Image
+              <img
                 src={sport1Image}
                 alt={sport1Title}
                 width={287}
                 height={270}
                 className="w-full max-w-[287px] h-auto object-contain"
-                sizes="(max-width: 768px) 100vw, 287px"
+                loading="lazy"
               />
             </div>
             <div className="pb-6 text-center w-full px-6">
@@ -106,13 +103,13 @@ export default function BookModal() {
           {/* Sport 2 Card (Pickleball) */}
           <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden min-h-[360px] sm:min-h-[466px]">
             <div className="flex-1 flex items-center justify-center p-5 w-full">
-              <Image
+              <img
                 src={sport2Image}
                 alt={sport2Title}
                 width={287}
                 height={270}
                 className="w-full max-w-[287px] h-auto object-contain"
-                sizes="(max-width: 768px) 100vw, 287px"
+                loading="lazy"
               />
             </div>
             <div className="pb-6 text-center w-full px-6">
