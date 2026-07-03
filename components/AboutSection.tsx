@@ -66,6 +66,9 @@ export default function AboutSection({ content }: AboutSectionProps) {
               <img
                 src={content.leftImageUrl}
                 alt="Pickleball Paddle"
+                width={450}
+                height={450}
+                loading="lazy"
                 className="w-[85%] max-w-[450px] h-auto object-contain"
                 style={{
                   filter:
@@ -181,6 +184,9 @@ export default function AboutSection({ content }: AboutSectionProps) {
               <img
                 src={content.rightImageUrl}
                 alt="Padel Racket"
+                width={450}
+                height={450}
+                loading="lazy"
                 className="w-[85%] max-w-[450px] h-auto object-contain"
                 style={{
                   filter:
@@ -193,11 +199,14 @@ export default function AboutSection({ content }: AboutSectionProps) {
       </div>
 
       {/* Mobile: show single centered padel racket below content */}
-      <div className="lg:hidden relative flex justify-center mt-8 overflow-hidden pb-0" style={{ marginBottom: '-40px' }}>
+      <div className="lg:hidden relative flex justify-center mt-4 overflow-hidden pb-0" style={{ marginBottom: '-60px' }}>
         <img
           src={content.mobileImageUrl}
           alt="Racqueteer Padel & Pickleball"
-          className="w-[85%] max-w-[380px] h-auto object-contain"
+          width={200}
+          height={200}
+          loading="lazy"
+          className="w-[55%] max-w-[200px] h-auto object-contain"
           style={{
             filter: "drop-shadow(-8px 16px 40px rgba(0,0,0,0.10)) drop-shadow(0px 4px 20px rgba(0,0,0,0.06))",
           }}

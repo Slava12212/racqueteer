@@ -47,10 +47,23 @@ export default function ScrollReveal({
           observer.unobserve(entry.target);
         }
       },
-      { threshold: 0.1 }
+      { 
+        threshold: 0.05,
+        rootMargin: '50px 0px 50px 0px'
+      }
     );
+    
     if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
+    
+    // Fallback safety net: force visible after 2 seconds if observer never triggered
+    const fallbackTimeout = setTimeout(() => {
+      setIsVisible(true);
+    }, 2000);
+    
+    return () => {
+      observer.disconnect();
+      clearTimeout(fallbackTimeout);
+    };
   }, [delay]);
 
   return (

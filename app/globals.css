@@ -370,3 +370,24 @@
     min-height: auto !important;
   }
 }
+
+/* Tablet optimization: 768px - 1023px */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* About section - reduce padding on center content area */
+  /* Hero section - adjust font sizes for tablet */
+  .text-\[56px\] {
+    font-size: 40px !important;
+  }
+  
+  /* Testimonials - ensure grid works properly (already has md:grid-cols-2) */
+  /* Navigation - tablet uses desktop layout by default */
+  
+  /* Locations section - improve spacing on tablet */
+  .lg\:w-\[34\%\] {
+    width: 40% !important;
+  }
+  
+  .lg\:w-\[37\%\] {
+    width: 35% !important;
+  }
+}

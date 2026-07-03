@@ -185,6 +185,8 @@ export default function Navbar({ content }: NavbarProps) {
             <img
               src={content.logoIconUrl}
               alt={content.logoAlt}
+              width={120}
+              height={40}
               className="h-10 w-auto transition-all duration-300"
               style={menuOpen ? {} : (isDark ? {} : { filter: "brightness(0)" })}
             />
@@ -195,6 +197,8 @@ export default function Navbar({ content }: NavbarProps) {
             <img
               src={content.logoUrl}
               alt={content.logoAlt}
+              width={150}
+              height={32}
               className="h-6 md:h-8 w-auto transition-all duration-300"
               style={logoStyle}
             />

@@ -172,6 +172,8 @@ export default function LocationsSection({ content, locations: locationsProp }: 
       <img
         src="https://api.builder.io/api/v1/image/assets/TEMP/d030e821f9fa82fd99e0b0c647c0ee6763233604?width=3840"
         alt="Padel courts background"
+        width={1920}
+        height={1080}
         className="absolute inset-0 w-full h-full object-cover"
       />
       {/* Dark overlay for left panel */}
@@ -330,12 +332,15 @@ export default function LocationsSection({ content, locations: locationsProp }: 
               className="w-full h-full object-cover"
             >
               <source src={selected.videoUrl} type={selected.videoMime ?? 'video/mp4'} />
-              <img src={selected.image} alt="Court" className="w-full h-full object-cover" />
+              <img src={selected.image} alt="Court" width={800} height={600} loading="lazy" className="w-full h-full object-cover" />
             </video>
           ) : (
             <img
               src={selected.image}
               alt="Court"
+              width={800}
+              height={600}
+              loading="lazy"
               className="w-full h-full object-cover"
             />
           )}
@@ -356,12 +361,15 @@ export default function LocationsSection({ content, locations: locationsProp }: 
               className="w-full h-full object-cover"
             >
               <source src={selected.videoUrl} type={selected.videoMime ?? 'video/mp4'} />
-              <img src={selected.image} alt="Court" className="w-full h-full object-cover" />
+              <img src={selected.image} alt="Court" width={600} height={800} loading="lazy" className="w-full h-full object-cover" />
             </video>
           ) : selected.image ? (
             <img
               src={selected.image}
               alt="Court"
+              width={600}
+              height={800}
+              loading="lazy"
               className="w-full h-full object-cover"
             />
           ) : (

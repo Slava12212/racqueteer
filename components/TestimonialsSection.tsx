@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import TestimonialCard, { Testimonial } from "./TestimonialCard";
 import ScrollReveal from "./ScrollReveal";
 import type { TestimonialsContent } from "@/types";
@@ -156,6 +156,10 @@ export default function TestimonialsSection({ content, testimonials: testimonial
   const [page, setPage] = useState(0);
   const [mobileIndex, setMobileIndex] = useState(0);
   const totalPages = Math.ceil(testimonials.length / CARDS_PER_PAGE);
+  
+  // Touch swipe state for mobile
+  const touchStartX = useRef<number | null>(null);
+  const SWIPE_THRESHOLD = 50;
 
   const visibleTestimonials = testimonials.slice(
     page * CARDS_PER_PAGE,
@@ -170,6 +174,33 @@ export default function TestimonialsSection({ content, testimonials: testimonial
   const handleNext = () => {
     setPage((prev) => (prev < totalPages - 1 ? prev + 1 : 0));
     setMobileIndex((prev) => (prev < testimonials.length - 1 ? prev + 1 : 0));
+  };
+
+  // Touch swipe handlers for mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (_e: React.TouchEvent) => {
+    // Just tracking, actual action on touchEnd
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+    
+    // If swipe left (negative diff), go to next
+    if (diff < -SWIPE_THRESHOLD) {
+      handleNext();
+    }
+    // If swipe right (positive diff), go to prev
+    else if (diff > SWIPE_THRESHOLD) {
+      handlePrev();
+    }
+    
+    touchStartX.current = null;
   };
 
   return (
@@ -223,13 +254,19 @@ export default function TestimonialsSection({ content, testimonials: testimonial
 
       {/* Cards - swipeable on mobile, grid on desktop */}
       <ScrollReveal delay={200}>
-        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[400px]">
           {visibleTestimonials.map((testimonial) => (
             <TestimonialCard key={testimonial.id} testimonial={testimonial} />
           ))}
         </div>
       </ScrollReveal>
-      <div className="md:hidden">
+      {/* Mobile carousel with touch swipe support */}
+      <div 
+        className="md:hidden min-h-[400px]"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <TestimonialCard testimonial={testimonials[mobileIndex]} />
       </div>
 
