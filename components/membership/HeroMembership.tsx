@@ -23,6 +23,13 @@ const ProgressiveBlur = () => (
 export default function HeroMembership({ content }: HeroMembershipProps) {
   const [videoReady, setVideoReady] = useState(false);
 
+  const scrollToPlans = () => {
+    const plansSection = document.getElementById('membership-plans');
+    if (plansSection) {
+      plansSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div data-header-theme="dark" className="relative hero-min-h-screen overflow-hidden flex flex-col">
       {/* Background video — always full height */}
@@ -99,10 +106,14 @@ export default function HeroMembership({ content }: HeroMembershipProps) {
                 </svg>
               </div>
               <div className="block sm:hidden w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <a href={content.ctaUrl || '#'} className="btn-cta btn-cta-red flex items-center justify-center gap-3 text-white font-bold text-sm uppercase tracking-wider px-10 py-4 rounded-sm w-full sm:w-auto whitespace-nowrap transition-colors">
+              <button 
+                onClick={scrollToPlans}
+                type="button"
+                className="btn-cta btn-cta-red flex items-center justify-center gap-3 text-white font-bold text-sm uppercase tracking-wider px-10 py-4 rounded-sm w-full sm:w-auto whitespace-nowrap transition-colors"
+              >
                 {content.ctaText}
                 <ButtonArrow color="white" />
-              </a>
+              </button>
             </div>
           </div>
           </ScrollReveal>

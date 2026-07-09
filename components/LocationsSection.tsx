@@ -298,7 +298,8 @@ export default function LocationsSection({ content, locations: locationsProp }: 
               )}
             </div>
 
-            {/* CTA Button */}
+            {/* CTA Button - only show for available locations */}
+            {selected.status === "available" && (
             <div className="mt-auto flex-shrink-0 pt-6">
               <ScrollReveal from="bottom" delay={400}>
                 <button
@@ -317,6 +318,7 @@ export default function LocationsSection({ content, locations: locationsProp }: 
                 </button>
               </ScrollReveal>
             </div>
+            )}
           </div>
         </div>
 
@@ -412,6 +414,8 @@ export default function LocationsSection({ content, locations: locationsProp }: 
           </>
         )}
 
+        {/* CTA Button - only show for available locations */}
+        {selected.status === "available" && (
         <button
           type="button"
           onClick={openBookModal}
@@ -424,6 +428,7 @@ export default function LocationsSection({ content, locations: locationsProp }: 
             <path d="M7 17L17 7M17 7L16.9993 16.0526M17 7L7 7" stroke="#003E6B" strokeWidth="2" strokeLinejoin="round"/>
           </svg>
         </button>
+        )}
       </div>
     </section>
   );

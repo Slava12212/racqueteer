@@ -71,8 +71,10 @@ function ArrowIcon({ className }: { className?: string }) {
 
 function ProgramRow({
   program,
+  onClick,
 }: {
   program: Program;
+  onClick?: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const isRed = program.color === "red";
@@ -96,13 +98,14 @@ function ProgramRow({
 
   return (
     <div
-      className={`flex flex-col lg:flex-row px-5 md:px-10 lg:px-[80px] py-8 md:py-9 items-start lg:items-center gap-4 lg:gap-6 md:gap-10 border-t border-brand-border transition-colors duration-300 cursor-pointer ${bgClass}`}
+      className={`flex flex-col lg:flex-row px-5 md:px-10 lg:px-[80px] py-8 md:py-9 items-start lg:items-center gap-4 lg:gap-6 md:gap-10 border-t border-brand-border transition-colors duration-150 cursor-pointer ${bgClass}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={onClick}
     >
       {/* Title */}
       <div
-        className={`lg:flex-1 lg:min-w-0 font-bold text-base md:text-2xl lg:text-[32px] uppercase leading-tight tracking-wide transition-colors duration-300 ${titleColorClass}`}
+        className={`lg:flex-1 lg:min-w-0 font-bold text-base md:text-2xl lg:text-[32px] uppercase leading-tight tracking-wide transition-colors duration-150 ${titleColorClass}`}
         style={{ fontFamily: '"Mona Sans", sans-serif' }}
       >
         {program.title}
@@ -112,7 +115,7 @@ function ProgramRow({
       <div className="flex flex-col lg:flex-row items-start justify-between gap-4 lg:gap-10 lg:w-[870px] flex-shrink-0 w-full">
         {/* Description - shown below title on mobile/tablet, right on desktop */}
         <div
-          className={`md:block w-full text-sm font-medium leading-6 line-clamp-3 transition-colors duration-300 ${descColor}`}
+          className={`md:block w-full text-sm font-medium leading-6 line-clamp-3 transition-colors duration-150 ${descColor}`}
           style={{ fontFamily: '"Mona Sans", sans-serif' }}
         >
           {program.description}
@@ -121,18 +124,18 @@ function ProgramRow({
         {/* Price - always visible on right */}
         <div className="flex items-center gap-2 flex-shrink-0 lg:ml-auto">
           <span
-            className={`text-xl md:text-3xl lg:text-4xl font-semibold leading-tight transition-colors duration-300 ${priceColor}`}
+            className={`text-xl md:text-3xl lg:text-4xl font-semibold leading-tight transition-colors duration-150 ${priceColor}`}
             style={{ fontFamily: '"Mona Sans", sans-serif' }}
           >
             {program.price}
           </span>
           {program.price && (
-            <span className={`text-base transition-colors duration-300 ${sepColor}`}>
+            <span className={`text-base transition-colors duration-150 ${sepColor}`}>
               /
             </span>
           )}
           <span
-            className={`text-xs uppercase tracking-wide transition-colors duration-300 ${unitColor}`}
+            className={`text-xs uppercase tracking-wide transition-colors duration-150 ${unitColor}`}
             style={{ fontFamily: '"Mona Sans", sans-serif' }}
           >
             {program.unit}
@@ -141,7 +144,7 @@ function ProgramRow({
 
         {/* Arrow (visible on hover) */}
         <div
-          className={`flex-shrink-0 transition-all duration-300 ${hovered ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"}`}
+          className={`flex-shrink-0 transition-all duration-150 ${hovered ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"}`}
         >
           <ArrowIcon className="text-white w-6 h-6" />
         </div>
@@ -219,7 +222,10 @@ export default function ProgramsSection({ content, programs: programsProp }: Pro
       <div className="mt-6 lg:mt-10 flex flex-col">
         {programs.map((program, index) => (
           <ScrollReveal key={program.title} delay={index * 100}>
-            <ProgramRow program={program} />
+            <ProgramRow program={program} onClick={() => {
+              // Navigate to memberships page for now
+              window.location.href = '/memberships';
+            }} />
           </ScrollReveal>
         ))}
       </div>

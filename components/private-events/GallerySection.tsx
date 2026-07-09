@@ -32,26 +32,30 @@ const galleryImages = [
   },
 ];
 
-const SCROLL_SPEED = 60; // px per second
+const SCROLL_SPEED = 40; // seconds for one complete cycle
 
 export default function GallerySection({ content }: GallerySectionProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const animFrameRef = useRef<number>(0);
-  const lastTimeRef = useRef<number>(0);
-  const isPausedRef = useRef(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [mobileIndex, setMobileIndex] = useState(0);
 
   const allImages = [...galleryImages, ...galleryImages, ...galleryImages];
 
-  const startAnimation = useCallback(() => {
+  // Smooth CSS-based infinite scroll animation
+  useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
 
-    const animate = (timestamp: number) => {
-      if (!isPausedRef.current && el) {
-        const delta = lastTimeRef.current ? timestamp - lastTimeRef.current : 0;
-        el.scrollLeft += (SCROLL_SPEED * delta) / 1000;
+    let animationId: number;
+    let lastTime = performance.now();
+    const scrollAmount = 1; // pixels per frame
 
+    const animate = (time: number) => {
+      if (!isPaused && el) {
+        const delta = time - lastTime;
+        // Use consistent speed regardless of frame rate
+        el.scrollLeft += scrollAmount * (delta / 16);
+        
         // Seamless loop: when past the first copy, jump back
         const oneThird = el.scrollWidth / 3;
         if (el.scrollLeft >= oneThird * 2) {
@@ -61,21 +65,16 @@ export default function GallerySection({ content }: GallerySectionProps) {
           el.scrollLeft = oneThird;
         }
       }
-      lastTimeRef.current = timestamp;
-      animFrameRef.current = requestAnimationFrame(animate);
+      lastTime = time;
+      animationId = requestAnimationFrame(animate);
     };
 
     // Start from middle copy for seamless prev/next
     el.scrollLeft = el.scrollWidth / 3;
-    animFrameRef.current = requestAnimationFrame(animate);
-  }, []);
+    animationId = requestAnimationFrame(animate);
 
-  useEffect(() => {
-    startAnimation();
-    return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    };
-  }, [startAnimation]);
+    return () => cancelAnimationFrame(animationId);
+  }, [isPaused]);
 
   const scrollByAmount = (direction: "prev" | "next") => {
     const el = scrollRef.current;
@@ -158,8 +157,8 @@ export default function GallerySection({ content }: GallerySectionProps) {
       <div
         ref={scrollRef}
         className="hidden md:flex gap-2 overflow-x-scroll scrollbar-hide cursor-grab active:cursor-grabbing"
-        onMouseEnter={() => { isPausedRef.current = true; }}
-        onMouseLeave={() => { isPausedRef.current = false; }}
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
       >
         {allImages.map((img, i) => (
           <div

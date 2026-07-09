@@ -60,6 +60,7 @@ const NavProgressiveBlur = () => (
 export default function Navbar({ content }: NavbarProps) {
   const [visible, setVisible] = useState(true);
   const [isDark, setIsDark] = useState(true);
+  const [useRedButton, setUseRedButton] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const lastScrollY = useRef(0);
   const pathname = usePathname();
@@ -109,18 +110,22 @@ export default function Navbar({ content }: NavbarProps) {
 
     const sections = Array.from(document.querySelectorAll("[data-header-theme]"));
     let foundTheme = true; // default to dark (for dark heroes)
+    let isGradient = false;
 
     for (const section of sections) {
       const rect = section.getBoundingClientRect();
       // Check if the navbar's bottom edge is within this section
       if (navbarBottom >= rect.top && navbarBottom <= rect.bottom) {
         const theme = (section as HTMLElement).dataset.headerTheme;
-        foundTheme = theme === "dark";
+        // "gradient" theme means dark background with red button
+        foundTheme = theme === "dark" || theme === "gradient";
+        isGradient = theme === "gradient";
         break;
       }
     }
 
     setIsDark(foundTheme);
+    setUseRedButton(isGradient);
   };
 
   // Theme detection: position-based checking instead of IntersectionObserver
@@ -146,15 +151,21 @@ export default function Navbar({ content }: NavbarProps) {
 
   const textColor = isDark ? "text-white" : "text-black";
   const hoverClass = isDark ? "hover:opacity-70" : "hover:opacity-60";
-  const linkClasses = `${textColor} text-[11px] lg:text-[14px] font-bold uppercase tracking-[1.4px] ${hoverClass} transition-all duration-300`;
+  const baseLinkClasses = `${textColor} text-[11px] lg:text-[14px] font-bold uppercase tracking-[1.4px] ${hoverClass} transition-all duration-300`;
   
-  const ctaBg = isDark ? "btn-cta-white text-[#003E6B]" : "btn-cta-red text-white";
+  const ctaBg = isDark && !useRedButton ? "btn-cta-white text-[#003E6B]" : "btn-cta-red text-white";
   const ctaArrowColor = isDark ? "#003E6B" : "white";
   
   const logoStyle = isDark ? {} : { filter: "brightness(0)" };
 
   // Burger/close icon color
   const iconColor = menuOpen ? "white" : (isDark ? "white" : "black");
+
+  // Helper to get link classes with active state
+  const getLinkClasses = (url: string) => {
+    const isActive = pathname === url;
+    return `${baseLinkClasses} ${isActive ? "opacity-100" : "opacity-80"}`;
+  };
 
   return (
     <>
@@ -168,20 +179,20 @@ export default function Navbar({ content }: NavbarProps) {
       >
         {!menuOpen && <NavProgressiveBlur />}
         <div className="flex items-center justify-between max-w-[1920px] mx-auto px-6 md:px-10 lg:px-[80px] py-5 md:py-[55px] relative min-h-[80px] md:min-h-[139px]">
-          {/* Left: Logo (mobile) / nav links (desktop) */}
-          <div className="hidden md:flex items-center gap-6 lg:gap-10">
+          {/* Left: Logo (mobile) / nav links (desktop - tablet matches mobile) */}
+          <div className="hidden lg:flex items-center gap-6 lg:gap-10">
             {content.menuLinks.slice(1, 4).map((link) => {
               const LinkEl = link.url.startsWith("#") ? "a" : Link;
               return (
-                <LinkEl key={link.label} href={link.url} className={linkClasses}>
+                <LinkEl key={link.label} href={link.url} className={getLinkClasses(link.url)}>
                   {link.label}
                 </LinkEl>
               );
             })}
           </div>
 
-          {/* Mobile: Logo icon left (provided icon, recolorable) */}
-          <Link href="/" className="md:hidden relative z-[60]" onClick={() => setMenuOpen(false)}>
+          {/* Mobile/Tablet: Logo icon left */}
+          <Link href="/" className="lg:hidden relative z-[60]" onClick={() => setMenuOpen(false)}>
             <img
               src={content.logoIconUrl}
               alt={content.logoAlt}
@@ -193,7 +204,7 @@ export default function Navbar({ content }: NavbarProps) {
           </Link>
 
           {/* Desktop: Center logo only on 3xl+ (1920px+) to prevent overlap at <1600px */}
-          <Link href="/" className="hidden md:block 2xl:absolute 2xl:left-1/2 2xl:-translate-x-1/2">
+          <Link href="/" className="hidden lg:block 2xl:absolute 2xl:left-1/2 2xl:-translate-x-1/2">
             <img
               src={content.logoUrl}
               alt={content.logoAlt}
@@ -204,8 +215,8 @@ export default function Navbar({ content }: NavbarProps) {
             />
           </Link>
 
-          {/* Mobile: Centered CTA button */}
-          <div className="md:hidden absolute left-1/2 -translate-x-1/2 z-[60]">
+          {/* Mobile/Tablet: Centered CTA button */}
+          <div className="lg:hidden absolute left-1/2 -translate-x-1/2 z-[60]">
             {!menuOpen && (
               <button
                 type="button"
@@ -218,12 +229,12 @@ export default function Navbar({ content }: NavbarProps) {
             )}
           </div>
 
-          {/* Right nav links + CTA (desktop) */}
-          <div className="hidden md:flex items-center gap-6 lg:gap-10">
+          {/* Right nav links + CTA (desktop - tablet matches mobile) */}
+          <div className="hidden lg:flex items-center gap-6 lg:gap-10">
             {content.menuLinks.slice(4, 7).map((link) => {
               const LinkEl = link.url.startsWith("#") ? "a" : Link;
               return (
-                <LinkEl key={link.label} href={link.url} className={linkClasses}>
+                <LinkEl key={link.label} href={link.url} className={getLinkClasses(link.url)}>
                   {link.label}
                 </LinkEl>
               );
@@ -238,9 +249,9 @@ export default function Navbar({ content }: NavbarProps) {
             </button>
           </div>
 
-          {/* Mobile: Burger / Close button */}
+          {/* Mobile/Tablet: Burger / Close button */}
           <button
-            className="md:hidden relative z-[60] flex items-center justify-center w-10 h-10"
+            className="lg:hidden relative z-[60] flex items-center justify-center w-10 h-10"
             onClick={() => setMenuOpen((v) => !v)}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
           >
@@ -259,9 +270,9 @@ export default function Navbar({ content }: NavbarProps) {
         </div>
       </nav>
 
-      {/* ──── Fullscreen Mobile Menu ──── */}
+      {/* ──── Fullscreen Mobile Menu (also for tablet) ──── */}
       <div
-        className={`fixed inset-0 z-[55] md:hidden flex flex-col transition-all duration-300 ease-in-out ${
+        className={`fixed inset-0 z-[55] lg:hidden flex flex-col transition-all duration-300 ease-in-out ${
           menuOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"

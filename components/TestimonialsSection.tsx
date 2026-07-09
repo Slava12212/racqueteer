@@ -155,6 +155,7 @@ export default function TestimonialsSection({ content, testimonials: testimonial
   const testimonials = testimonialsProp && testimonialsProp.length > 0 ? testimonialsProp : FALLBACK_TESTIMONIALS;
   const [page, setPage] = useState(0);
   const [mobileIndex, setMobileIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const totalPages = Math.ceil(testimonials.length / CARDS_PER_PAGE);
   
   // Touch swipe state for mobile
@@ -167,13 +168,23 @@ export default function TestimonialsSection({ content, testimonials: testimonial
   );
 
   const handlePrev = () => {
-    setPage((prev) => (prev > 0 ? prev - 1 : totalPages - 1));
-    setMobileIndex((prev) => (prev > 0 ? prev - 1 : testimonials.length - 1));
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setPage((prev) => (prev > 0 ? prev - 1 : totalPages - 1));
+      setMobileIndex((prev) => (prev > 0 ? prev - 1 : testimonials.length - 1));
+      setIsTransitioning(false);
+    }, 150);
   };
 
   const handleNext = () => {
-    setPage((prev) => (prev < totalPages - 1 ? prev + 1 : 0));
-    setMobileIndex((prev) => (prev < testimonials.length - 1 ? prev + 1 : 0));
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setPage((prev) => (prev < totalPages - 1 ? prev + 1 : 0));
+      setMobileIndex((prev) => (prev < testimonials.length - 1 ? prev + 1 : 0));
+      setIsTransitioning(false);
+    }, 150);
   };
 
   // Touch swipe handlers for mobile
@@ -254,7 +265,7 @@ export default function TestimonialsSection({ content, testimonials: testimonial
 
       {/* Cards - swipeable on mobile, grid on desktop */}
       <ScrollReveal delay={200}>
-        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[400px]">
+        <div className={`hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[400px] transition-opacity duration-150 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
           {visibleTestimonials.map((testimonial) => (
             <TestimonialCard key={testimonial.id} testimonial={testimonial} />
           ))}
@@ -262,7 +273,7 @@ export default function TestimonialsSection({ content, testimonials: testimonial
       </ScrollReveal>
       {/* Mobile carousel with touch swipe support */}
       <div 
-        className="md:hidden min-h-[400px]"
+        className={`md:hidden min-h-[400px] transition-opacity duration-150 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}

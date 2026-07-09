@@ -136,7 +136,7 @@ export default function SubscriptionsSection({ content, plans: plansProp }: Subs
   const [mobileIndex, setMobileIndex] = useState(0);
 
   return (
-    <section data-header-theme="light" className="bg-[#F4F6F9] min-h-screen pt-[120px] pb-16 px-6 sm:px-8 lg:px-[80px]">
+    <section id="membership-plans" data-header-theme="light" className="bg-[#F4F6F9] min-h-screen pt-[120px] pb-16 px-6 sm:px-8 lg:px-[80px]">
       <div className="max-w-[1920px] mx-auto relative z-20">
         {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-16">

@@ -37,7 +37,7 @@ export default function BookModal() {
 
   return (
     <Dialog open={isBookModalOpen} onOpenChange={(open) => !open && closeBookModal()}>
-      <DialogContent hideClose className="max-w-[777px] p-0 overflow-hidden bg-white border-none rounded-none">
+      <DialogContent hideClose className="max-w-[777px] p-0 overflow-hidden bg-white border-none rounded-none max-h-[90vh] overflow-y-auto">
         {/* Title */}
         <DialogTitle className="sr-only">
           {modalTitle}
@@ -51,7 +51,7 @@ export default function BookModal() {
           <button
             type="button"
             onClick={() => closeBookModal()}
-            className="absolute top-0 right-5 z-10 text-[#2B2B2B] hover:opacity-60 transition-opacity"
+            className="absolute top-6 right-6 z-10 text-[#2B2B2B] hover:opacity-60 transition-opacity"
             aria-label="Close"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">

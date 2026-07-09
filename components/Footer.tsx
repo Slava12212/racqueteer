@@ -21,11 +21,13 @@ export default function Footer({ content }: FooterProps) {
           {/* Logo */}
           <div className="lg:w-[200px] xl:w-[240px] flex-shrink-0">
             <ScrollReveal from="bottom" delay={0}>
-              <img
-                src={content.logoUrl}
-                alt={content.logoAlt}
-                className="w-16 h-auto lg:w-20 brightness-0 invert"
-              />
+              <Link href="/">
+                <img
+                  src={content.logoUrl}
+                  alt={content.logoAlt}
+                  className="w-16 h-auto lg:w-20 brightness-0 invert"
+                />
+              </Link>
             </ScrollReveal>
           </div>
 
