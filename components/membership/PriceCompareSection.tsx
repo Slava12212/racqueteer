@@ -77,15 +77,17 @@ export default function PriceCompareSection({ features, plans, ctaText, ctaUrl }
       <img
         src="/price-compare-mobile-bg.png"
         alt=""
-        className="absolute inset-0 w-full h-full object-cover sm:hidden"
+        loading="eager"
+        className="absolute inset-0 w-full h-full object-cover lg:hidden"
       />
       <img
         src="https://api.builder.io/api/v1/image/assets/TEMP/abdde78f97bddb5ab2a74ed28c91e664a3427290?width=3840"
         alt=""
-        className="absolute inset-0 w-full h-full object-cover hidden sm:block"
+        loading="eager"
+        className="absolute inset-0 w-full h-full object-cover hidden lg:block"
       />
 
-      <div className="relative z-10 flex flex-col items-center pt-20 sm:pt-32 lg:pt-48 pb-10 sm:pb-[80px]">
+      <div className="relative z-10 flex flex-col items-center pt-20 lg:pt-48 pb-10 lg:pb-[80px]">
         {/* Heading + Tabs — shared */}
         <div className="w-full max-w-[1920px] mx-auto px-6 sm:px-8 lg:px-[80px]">
           <div className="flex flex-col items-center gap-4 sm:gap-6 mb-8 sm:mb-10">
@@ -107,8 +109,8 @@ export default function PriceCompareSection({ features, plans, ctaText, ctaUrl }
           </ScrollReveal>
         </div>
 
-        {/* ════════ DESKTOP VERSION (sm+) — original layout ════════ */}
-        <div className="hidden sm:block w-full">
+        {/* ════════ DESKTOP VERSION (lg+) — original layout ════════ */}
+        <div className="hidden lg:block w-full">
           <ScrollReveal from="bottom" delay={300}>
             {/* Blue header bar — FULL WIDTH */}
             <div className="w-full bg-[rgba(0,0,64,0.10)]">
@@ -159,8 +161,8 @@ export default function PriceCompareSection({ features, plans, ctaText, ctaUrl }
           </ScrollReveal>
         </div>
 
-        {/* ════════ MOBILE VERSION (below sm) — adapted layout ════════ */}
-        <div className="sm:hidden w-full">
+        {/* ════════ MOBILE/TABLET VERSION (below lg) — adapted layout ════════ */}
+        <div className="lg:hidden w-full">
           <ScrollReveal from="bottom" delay={300}>
             {/* Column header — full bleed */}
             <div className="w-full border-b border-white/20 bg-[rgba(0,0,64,0.10)]">

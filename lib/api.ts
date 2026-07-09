@@ -744,8 +744,6 @@ export async function getNavbarContent(): Promise<NavbarContent> {
     ctaUrl: "#",
     menuLinks: [
       { label: "Home", url: "/" },
-      { label: "Coaching", url: "#" },
-      { label: "Events & Programs", url: "#" },
       { label: "Membership", url: "/memberships" },
       { label: "Private Events", url: "/private-events" },
       { label: "About Us", url: "/about" },
@@ -771,9 +769,7 @@ export async function getFooterContent(): Promise<FooterContent> {
     menuLabel: "Menu",
     menuLinks: [
       { label: "Membership", url: "/memberships" },
-      { label: "Events & Programs", url: "#" },
       { label: "Private Events", url: "/private-events" },
-      { label: "Coaching", url: "#" },
       { label: "About Us", url: "/about" },
       { label: "Careers", url: "/careers" },
     ],
@@ -790,9 +786,8 @@ export async function getFooterContent(): Promise<FooterContent> {
     ],
     copyrightText: "©2026 Racqueteer. All Rights Reserved.",
     legalLinks: [
-      { label: "Conditions", url: "#" },
-      { label: "Terms of Service", url: "#" },
-      { label: "Privacy Policy", url: "#" },
+      { label: "Terms of Service", url: "/terms" },
+      { label: "Privacy Policy", url: "/privacy" },
     ],
   };
 }

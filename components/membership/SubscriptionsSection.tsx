@@ -206,9 +206,38 @@ export default function SubscriptionsSection({ content, plans: plansProp }: Subs
         </div>
         </ScrollReveal>
 
+        {/* ──── Tablet: 2x2 grid of cards (no slider) ──── */}
+        <ScrollReveal from="bottom" delay={300}>
+        <div className="hidden md:block lg:hidden">
+          <div className="grid grid-cols-2 gap-4">
+            {plans.map((plan, i) => (
+              <div key={i} className={`flex flex-col border border-[#E5E7EB] rounded-lg ${plan.bgClass} overflow-hidden relative`}>
+                {plan.hasImage && (
+                  <div className="absolute inset-x-0 top-0 h-24 overflow-hidden pointer-events-none">
+                    <img src="https://api.builder.io/api/v1/image/assets/TEMP/3790c42ed93ac41d4734a0fc6c6f3d6d70513e9d?width=678" alt="" className="w-full object-cover object-top opacity-80" />
+                  </div>
+                )}
+                <div className="flex flex-col gap-2 p-5 relative z-10">
+                  <div className="text-[18px] font-bold text-black leading-5">{plan.name}</div>
+                  <div className="text-[14px] text-[#6B7280] leading-5">{plan.description}</div>
+                  <div className="mt-1">
+                    <span className="text-[20px] font-bold text-black">{plan.price}</span>
+                    <span className="text-[10px] text-[#6B7280]"> / per month</span>
+                  </div>
+                  <a href={plan.ctaUrl || '#'} className={`btn-cta flex items-center justify-center gap-2 w-full py-3 rounded-sm font-bold text-xs uppercase tracking-wider text-white transition-colors ${plan.buttonVariant === "red" ? "btn-cta-red" : "btn-cta-blue"}`}>
+                    <span>{plan.ctaText || 'JOIN NOW'}</span>
+                    <ButtonArrow color="white" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        </ScrollReveal>
+
         {/* ──── Desktop: original grid table ──── */}
         <ScrollReveal from="bottom" delay={300}>
-        <div className="hidden md:block overflow-x-auto">
+        <div className="hidden lg:block overflow-x-auto">
           <div className="min-w-[700px]">
             <div className="grid grid-cols-[minmax(180px,280px)_repeat(4,1fr)]">
               <div className="bg-transparent" />

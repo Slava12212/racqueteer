@@ -91,7 +91,7 @@ function MobilePlanCard({ plan }: { plan: Plan }) {
     <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-hidden relative">
       {plan.hasImage && (
         <div className="absolute inset-x-0 top-0 h-28 overflow-hidden pointer-events-none">
-          <img src="https://api.builder.io/api/v1/image/assets/TEMP/3790c42ed93ac41d4734a0fc6c6f3d6d70513e9d?width=678" alt="" className="w-full object-cover object-top opacity-80" />
+          <img src="https://api.builder.io/api/v1/image/assets/TEMP/3790c42ed93ac41d4734a0fc6c6f3d6d70513e9d?width=678" alt="" className="w-full object-cover object-top opacity-80" loading="lazy" />
         </div>
       )}
       <div className="relative z-10 p-8">
@@ -113,10 +113,12 @@ function MobilePlanCard({ plan }: { plan: Plan }) {
 
         <Link
           href="/memberships"
-          className="flex items-center gap-2 group"
+          className="inline-flex items-center gap-2 group"
         >
           <span className="text-[#B40023] font-semibold text-sm uppercase tracking-wider group-hover:underline">Learn more</span>
-          <ButtonArrow color="#B40023" />
+          <span className="btn-arrow-wrapper inline-block transition-transform duration-300 group-hover:rotate-45">
+            <ButtonArrow color="#B40023" />
+          </span>
         </Link>
       </div>
     </div>
@@ -232,10 +234,12 @@ export default function HomeSubscriptionsSection({ content }: HomeSubscriptionsS
                 <div className="flex flex-col gap-2 px-8 pb-8 relative z-10 mt-auto">
                   <Link
                     href="/memberships"
-                    className="flex items-center gap-2 group"
+                    className="inline-flex items-center gap-2 group w-fit"
                   >
                     <span className="text-[#B40023] font-semibold text-sm uppercase tracking-wider group-hover:underline">Learn more</span>
-                    <ButtonArrow color="#B40023" />
+                    <span className="btn-arrow-wrapper inline-block transition-transform duration-300 group-hover:rotate-45">
+                      <ButtonArrow color="#B40023" />
+                    </span>
                   </Link>
                 </div>
               </div>
@@ -290,9 +294,12 @@ export default function HomeSubscriptionsSection({ content }: HomeSubscriptionsS
             '--s-end-3': '35%',
             '--y-3': '97.93079304245283%',
             '--x-3': '94.50694984447901%',
+            '--c-red': 'hsla(352,100%,42%,1)',
+            '--y-red': '95%',
+            '--x-red': '30%',
             backgroundColor: 'hsla(0, 0%, 0%, 0)',
-            backgroundImage: 'radial-gradient(circle at var(--x-0) var(--y-0), var(--c-0) var(--s-start-0), transparent var(--s-end-0)),radial-gradient(circle at var(--x-1) var(--y-1), var(--c-1) var(--s-start-1), transparent var(--s-end-1)),radial-gradient(circle at var(--x-2) var(--y-2), var(--c-2) var(--s-start-2), transparent var(--s-end-2)),radial-gradient(circle at var(--x-3) var(--y-3), var(--c-3) var(--s-start-3), transparent var(--s-end-3))',
-            backgroundBlendMode: 'normal,normal,normal,normal',
+            backgroundImage: 'radial-gradient(circle at var(--x-0) var(--y-0), var(--c-0) var(--s-start-0), transparent var(--s-end-0)),radial-gradient(circle at var(--x-1) var(--y-1), var(--c-1) var(--s-start-1), transparent var(--s-end-1)),radial-gradient(circle at var(--x-2) var(--y-2), var(--c-2) var(--s-start-2), transparent var(--s-end-2)),radial-gradient(circle at var(--x-3) var(--y-3), var(--c-3) var(--s-start-3), transparent var(--s-end-3)),radial-gradient(circle at var(--x-red) var(--y-red), var(--c-red) 5%, transparent 40%)',
+            backgroundBlendMode: 'normal,normal,normal,normal,normal',
             willChange: 'transform, opacity',
             animation: 'ani-animateMesh 15s linear infinite alternate',
           } as React.CSSProperties}

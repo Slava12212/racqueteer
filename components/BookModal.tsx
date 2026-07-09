@@ -37,7 +37,7 @@ export default function BookModal() {
 
   return (
     <Dialog open={isBookModalOpen} onOpenChange={(open) => !open && closeBookModal()}>
-      <DialogContent hideClose className="max-w-[777px] p-0 overflow-hidden bg-white border-none rounded-none max-h-[90vh] overflow-y-auto">
+      <DialogContent hideClose className="max-w-[777px] p-0 overflow-hidden bg-white border-none rounded-none max-h-[100vh] overflow-y-auto">
         {/* Title */}
         <DialogTitle className="sr-only">
           {modalTitle}
@@ -77,7 +77,6 @@ export default function BookModal() {
                 width={287}
                 height={270}
                 className="w-full max-w-[287px] h-auto object-contain"
-                loading="lazy"
               />
             </div>
             <div className="pb-6 text-center w-full px-6">
