@@ -10,7 +10,7 @@ interface CareerContactSectionProps {
 export default function CareerContactSection({ content }: CareerContactSectionProps) {
   return (
     <div
-      data-header-theme="dark"
+      data-header-theme="gradient"
       className="min-h-screen w-full relative overflow-hidden flex items-center"
     >
       {/* Background image */}

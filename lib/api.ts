@@ -744,7 +744,7 @@ export async function getNavbarContent(): Promise<NavbarContent> {
     ctaUrl: "#",
     menuLinks: [
       { label: "Home", url: "/" },
-      { label: "Membership", url: "/memberships" },
+      { label: "Memberships", url: "/memberships" },
       { label: "Private Events", url: "/private-events" },
       { label: "About Us", url: "/about" },
       { label: "Careers", url: "/careers" },
@@ -768,7 +768,7 @@ export async function getFooterContent(): Promise<FooterContent> {
     ctaUrl: "#",
     menuLabel: "Menu",
     menuLinks: [
-      { label: "Membership", url: "/memberships" },
+      { label: "Memberships", url: "/memberships" },
       { label: "Private Events", url: "/private-events" },
       { label: "About Us", url: "/about" },
       { label: "Careers", url: "/careers" },

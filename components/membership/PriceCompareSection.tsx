@@ -72,7 +72,7 @@ export default function PriceCompareSection({ features, plans, ctaText, ctaUrl }
   const displayNonMemberPrices = nonMemberPrices;
 
   return (
-    <section data-header-theme="dark" className="relative min-h-screen overflow-hidden font-['Mona_Sans',_-apple-system,_Roboto,_Helvetica,_sans-serif]">
+    <section data-header-theme="gradient" className="relative min-h-screen overflow-hidden font-['Mona_Sans',_-apple-system,_Roboto,_Helvetica,_sans-serif]">
       {/* Background — mobile-specific image, desktop original */}
       <img
         src="/price-compare-mobile-bg.png"
