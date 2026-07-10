@@ -63,13 +63,36 @@ export default async function RootLayout({
     // Prefer WP logo URL; fall back to hardcoded logo (not the sponsor /logo2.svg)
     const wpLogoUrl = navbar.navLogo?.sourceUrl;
     const wpLogoIconUrl = navbar.navLogoIcon?.sourceUrl;
+
+    // Normalise WP navLinks: strip full domain → relative path for Next.js <Link>
+    const wpNavLinks = navbar.navLinks.map((link) => {
+      let url = link.url;
+      try {
+        const parsed = new URL(url);
+        url = parsed.pathname; // strip domain, keep path only
+      } catch {
+        // already relative — leave as-is
+      }
+      return { label: link.label, url };
+    });
+
+    // Build a lookup from WP links by label (lowercased)
+    const wpLookup = new Map(wpNavLinks.map((l) => [l.label.toLowerCase(), l.url]));
+
+    // Use the hardcoded menuLinks order as the base, but pull URLs from WP when available.
+    // This ensures the correct order and all desired links, even if WP is incomplete.
+    const mergedLinks = hardcodedNavbar.menuLinks.map((link) => {
+      const wpUrl = wpLookup.get(link.label.toLowerCase());
+      return { label: link.label, url: wpUrl ?? link.url };
+    });
+
     navbarContent = {
       logoUrl:     wpLogoUrl     || hardcodedNavbar.logoUrl,
       logoAlt:     navbar.navLogo?.altText ?? "Racqueteer",
       logoIconUrl: wpLogoIconUrl || hardcodedNavbar.logoIconUrl,
       ctaText:     navbar.navCtaText ?? "Book a Court",
       ctaUrl:      navbar.navCtaUrl  ?? "#",
-      menuLinks:   navbar.navLinks,
+      menuLinks:   mergedLinks,
     };
   } else {
     navbarContent = hardcodedNavbar;
