@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import type { FooterContent } from "@/types";
 import ScrollReveal from "./ScrollReveal";
 import { useCta } from "@/lib/navbar-cta";
@@ -21,13 +20,13 @@ export default function Footer({ content }: FooterProps) {
           {/* Logo */}
           <div className="lg:w-[200px] xl:w-[240px] flex-shrink-0">
             <ScrollReveal from="bottom" delay={0}>
-              <Link href="/">
+              <a href="/">
                 <img
                   src={content.logoUrl}
                   alt={content.logoAlt}
                   className="w-16 h-auto lg:w-20 brightness-0 invert"
                 />
-              </Link>
+              </a>
             </ScrollReveal>
           </div>
 
@@ -81,19 +80,16 @@ export default function Footer({ content }: FooterProps) {
             </ScrollReveal>
             <ScrollReveal from="bottom" delay={250}>
               <nav className="flex flex-col gap-3">
-                {content.menuLinks.map((item) => {
-                  const LinkEl = item.url.startsWith("#") ? "a" : Link;
-                  return (
-                    <LinkEl
-                      key={item.label}
-                      href={item.url}
-                      className="text-white text-base lg:text-[24px] hover:text-white/80 transition-colors"
-                      style={{ fontFamily: '"Mona Sans", sans-serif', fontWeight: 500, fontStretch: '125%', lineHeight: '120%', letterSpacing: '0' }}
-                    >
-                      {item.label}
-                    </LinkEl>
-                  );
-                })}
+                {content.menuLinks.map((item) => (
+                  <a
+                    key={item.label}
+                    href={item.url}
+                    className="text-white text-base lg:text-[24px] hover:text-white/80 transition-colors"
+                    style={{ fontFamily: '"Mona Sans", sans-serif', fontWeight: 500, fontStretch: '125%', lineHeight: '120%', letterSpacing: '0' }}
+                  >
+                    {item.label}
+                  </a>
+                ))}
               </nav>
             </ScrollReveal>
           </div>
@@ -137,7 +133,8 @@ export default function Footer({ content }: FooterProps) {
             {content.legalLinks.map((link) => (
               <a
                 key={link.label}
-                href={link.url}
+                href="#"
+                onClick={(e) => e.preventDefault()} // Prevent navigation
                 className="text-white/40 text-sm font-normal hover:text-white/60 transition-colors"
               >
                 {link.label}
