@@ -37,7 +37,7 @@ export default function BookModal() {
 
   return (
     <Dialog open={isBookModalOpen} onOpenChange={(open) => !open && closeBookModal()}>
-      <DialogContent className="max-w-[777px] p-0 overflow-hidden bg-white border-none rounded-none max-h-[90dvh] sm:max-h-[85vh] overflow-y-auto">
+      <DialogContent hideClose className="mx-6 max-w-[calc(100vw-48px)] sm:mx-auto sm:max-w-md lg:max-w-[777px] p-0 overflow-hidden bg-white border-none rounded-none max-h-[90dvh] sm:max-h-[85vh] overflow-y-auto">
         {/* Title */}
         <DialogTitle className="sr-only">
           {modalTitle}
@@ -58,18 +58,18 @@ export default function BookModal() {
               <path d="M0 20L20 0M20 20L0 0" stroke="#2B2B2B" strokeWidth="2" strokeLinejoin="round"/>
             </svg>
           </button>
-          <h1 className="text-[#2B2B2B] font-extrabold text-3xl sm:text-[44px] leading-tight uppercase tracking-wide">
+          <h1 className="text-[#2B2B2B] font-extrabold text-[24px] sm:text-3xl lg:text-[44px] leading-tight uppercase tracking-wide">
             {modalTitle}
           </h1>
-          <p className="mt-3 text-[#6B7280] text-base font-normal">
+          <p className="mt-3 text-[#6B7280] text-[14px] sm:text-base font-normal">
             {modalSubtitle}
           </p>
         </div>
 
         {/* Cards */}
-        <div className="flex flex-col sm:flex-row gap-8 px-10 pb-10 items-stretch">
+        <div className="flex flex-col sm:flex-row gap-8 px-4 sm:px-10 pb-10 items-stretch">
           {/* Sport 1 Card (Padel) */}
-          <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden min-h-[360px] sm:min-h-[466px]">
+          <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden h-[312px] sm:h-[466px]">
             <div className="flex-1 flex items-center justify-center p-5 w-full">
               <img
                 src={sport1Image}
@@ -88,7 +88,7 @@ export default function BookModal() {
                   type="button"
                   onClick={() => handleOpenBooking(sport1Url)}
                   aria-label={`${sport1ButtonText} ${sport1Title} (opens in new tab)`}
-                  className="flex items-center gap-3 px-8 py-4 border border-[#D2352B] rounded-sm text-[#D2352B] font-bold text-sm uppercase tracking-wide hover:bg-[#D2352B]/5 transition-colors w-full max-w-[260px] justify-center cursor-pointer"
+                  className="flex items-center gap-3 px-6 sm:px-8 py-4 border border-[#D2352B] rounded-sm text-[#D2352B] font-bold text-sm uppercase tracking-wide hover:bg-[#D2352B]/5 transition-colors w-full max-w-[260px] justify-center cursor-pointer"
                 >
                   {sport1ButtonText}
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -100,7 +100,7 @@ export default function BookModal() {
           </div>
 
           {/* Sport 2 Card (Pickleball) */}
-          <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden min-h-[360px] sm:min-h-[466px]">
+          <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden h-[312px] sm:h-[466px]">
             <div className="flex-1 flex items-center justify-center p-5 w-full">
               <img
                 src={sport2Image}
@@ -120,7 +120,7 @@ export default function BookModal() {
                   type="button"
                   onClick={() => handleOpenBooking(sport2Url)}
                   aria-label={`${sport2ButtonText} ${sport2Title} (opens in new tab)`}
-                  className="flex items-center gap-3 px-8 py-4 border border-[#003E6B] rounded-sm text-[#003E6B] font-bold text-sm uppercase tracking-wide hover:bg-[#003E6B]/5 transition-colors w-full max-w-[260px] justify-center cursor-pointer"
+                  className="flex items-center gap-3 px-6 sm:px-8 py-4 border border-[#003E6B] rounded-sm text-[#003E6B] font-bold text-sm uppercase tracking-wide hover:bg-[#003E6B]/5 transition-colors w-full max-w-[260px] justify-center cursor-pointer"
                 >
                   {sport2ButtonText}
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
