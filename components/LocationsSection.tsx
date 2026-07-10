@@ -468,13 +468,13 @@ export default function LocationsSection({ content, locations: locationsProp }: 
                   {selected.amenities.map((amenity, i) => (
                     <div key={i}>
                       <div
-                        className="flex items-center gap-3 py-1"
+                        className="flex items-center gap-3 py-0"
                       >
                         <span className="flex-shrink-0 scale-75">{resolveIcon(amenity)}</span>
                         <span className="text-white text-sm">{amenity.label}</span>
                       </div>
                       <div
-                        className="h-px mt-1"
+                        className="h-px mt-0"
                         style={{ background: 'linear-gradient(to right, rgba(255, 255, 255, 0.2), rgba(153, 153, 153, 0))' }}
                       />
                     </div>
