@@ -181,20 +181,14 @@ export default function Navbar({ content }: NavbarProps) {
         <div className="flex items-center justify-between max-w-[1920px] mx-auto px-6 md:px-10 lg:px-[80px] py-5 md:py-[55px] relative min-h-[80px] md:min-h-[139px]">
           {/* Left: Logo (mobile/tablet) / nav links (desktop) */}
           <div className="hidden lg:flex items-center gap-6 lg:gap-10">
-            {(() => {
-              // Split remaining links (after skipping index 0 = Home) roughly evenly
-              const remaining = content.menuLinks.slice(1);
-              const mid = Math.ceil(remaining.length / 2);
-              const leftLinks = remaining.slice(0, mid);
-              return leftLinks.map((link) => {
-                const LinkEl = link.url.startsWith("#") ? "a" : Link;
-                return (
-                  <LinkEl key={link.label} href={link.url} className={getLinkClasses(link.url)}>
-                    {link.label}
-                  </LinkEl>
-                );
-              });
-            })()}
+            {content.menuLinks.slice(1).map((link) => {
+              const LinkEl = link.url.startsWith("#") ? "a" : Link;
+              return (
+                <LinkEl key={link.label} href={link.url} className={getLinkClasses(link.url)}>
+                  {link.label}
+                </LinkEl>
+              );
+            })}
           </div>
 
           {/* Mobile/Tablet: Logo icon left */}
@@ -237,19 +231,6 @@ export default function Navbar({ content }: NavbarProps) {
 
           {/* Right nav links + CTA (desktop - tablet matches mobile) */}
           <div className="hidden lg:flex items-center gap-6 lg:gap-10">
-            {(() => {
-              const remaining = content.menuLinks.slice(1);
-              const mid = Math.ceil(remaining.length / 2);
-              const rightLinks = remaining.slice(mid);
-              return rightLinks.map((link) => {
-                const LinkEl = link.url.startsWith("#") ? "a" : Link;
-                return (
-                  <LinkEl key={link.label} href={link.url} className={getLinkClasses(link.url)}>
-                    {link.label}
-                  </LinkEl>
-                );
-              });
-            })()}
             <button
               type="button"
               onClick={openBookModal}

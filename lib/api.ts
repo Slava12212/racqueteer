@@ -744,10 +744,10 @@ export async function getNavbarContent(): Promise<NavbarContent> {
     ctaUrl: "#",
     menuLinks: [
       { label: "Home", url: "/" },
-      { label: "Memberships", url: "/memberships" },
       { label: "Private Events", url: "/private-events" },
-      { label: "About Us", url: "/about" },
-      { label: "Careers", url: "/careers" },
+      { label: "Memberships", url: "/memberships" },
+      { label: "About", url: "/about" },
+      { label: "Career", url: "/careers" },
     ],
   };
 }
