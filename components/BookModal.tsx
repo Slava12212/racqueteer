@@ -37,7 +37,7 @@ export default function BookModal() {
 
   return (
     <Dialog open={isBookModalOpen} onOpenChange={(open) => !open && closeBookModal()}>
-      <DialogContent hideClose className="w-[calc(100vw-48px)] lg:w-auto lg:max-w-md xl:max-w-[777px] p-0 overflow-hidden bg-white border-none rounded-none max-h-[90dvh] sm:max-h-[85vh] overflow-y-auto">
+      <DialogContent hideClose className="w-[calc(100vw-48px)] xl:w-auto xl:max-w-[777px] p-0 overflow-hidden bg-white border-none rounded-none max-h-[90dvh] sm:max-h-[85vh] overflow-y-auto">
         {/* Title */}
         <DialogTitle className="sr-only">
           {modalTitle}
@@ -67,20 +67,20 @@ export default function BookModal() {
         </div>
 
         {/* Cards */}
-        <div className="flex flex-col lg:flex-row gap-8 px-4 lg:px-10 pb-10 items-stretch">
+        <div className="flex flex-col xl:flex-row gap-8 px-4 lg:px-10 pb-10 items-stretch">
           {/* Sport 1 Card (Padel) */}
-          <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden h-[245px] lg:h-[466px]">
+          <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden h-[245px] xl:h-[466px]">
             <div className="flex-1 flex items-center justify-center p-3 w-full">
               <img
                 src={sport1Image}
                 alt={sport1Title}
                 width={287}
                 height={270}
-                className="w-full max-w-[140px] h-auto object-contain"
+                className="w-full max-w-[140px] xl:max-w-[287px] h-auto object-contain"
               />
             </div>
             <div className="pb-6 text-center w-full px-6">
-              <h2 className="text-[#D2352B] font-extrabold text-[16px] uppercase text-center mb-6">
+              <h2 className="text-[#D2352B] font-extrabold text-[16px] xl:text-[36px] uppercase text-center mb-6">
                 {sport1Title}
               </h2>
               <div className="flex justify-center">
@@ -88,7 +88,7 @@ export default function BookModal() {
                   type="button"
                   onClick={() => handleOpenBooking(sport1Url)}
                   aria-label={`${sport1ButtonText} ${sport1Title} (opens in new tab)`}
-                  className="flex items-center gap-3 px-6 lg:px-8 py-4 border border-[#D2352B] rounded-sm text-[#D2352B] font-bold text-sm uppercase tracking-wide hover:bg-[#D2352B]/5 transition-colors w-full max-w-[260px] justify-center cursor-pointer"
+                  className="flex items-center gap-3 px-6 xl:px-8 py-4 border border-[#D2352B] rounded-sm text-[#D2352B] font-bold text-sm uppercase tracking-wide hover:bg-[#D2352B]/5 transition-colors w-full max-w-[260px] justify-center cursor-pointer"
                 >
                   {sport1ButtonText}
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -100,19 +100,19 @@ export default function BookModal() {
           </div>
 
           {/* Sport 2 Card (Pickleball) */}
-          <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden h-[245px] lg:h-[466px]">
+          <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden h-[245px] xl:h-[466px]">
             <div className="flex-1 flex items-center justify-center p-3 w-full">
               <img
                 src={sport2Image}
                 alt={sport2Title}
                 width={287}
                 height={270}
-                className="w-full max-w-[140px] h-auto object-contain"
+                className="w-full max-w-[140px] xl:max-w-[287px] h-auto object-contain"
                 loading="lazy"
               />
             </div>
             <div className="pb-6 text-center w-full px-6">
-              <h2 className="text-[#003E6B] font-extrabold text-[16px] uppercase text-center mb-6">
+              <h2 className="text-[#003E6B] font-extrabold text-[16px] xl:text-[36px] uppercase text-center mb-6">
                 {sport2Title}
               </h2>
               <div className="flex justify-center">
@@ -120,7 +120,7 @@ export default function BookModal() {
                   type="button"
                   onClick={() => handleOpenBooking(sport2Url)}
                   aria-label={`${sport2ButtonText} ${sport2Title} (opens in new tab)`}
-                  className="flex items-center gap-3 px-6 lg:px-8 py-4 border border-[#003E6B] rounded-sm text-[#003E6B] font-bold text-sm uppercase tracking-wide hover:bg-[#003E6B]/5 transition-colors w-full max-w-[260px] justify-center cursor-pointer"
+                  className="flex items-center gap-3 px-6 xl:px-8 py-4 border border-[#003E6B] rounded-sm text-[#003E6B] font-bold text-sm uppercase tracking-wide hover:bg-[#003E6B]/5 transition-colors w-full max-w-[260px] justify-center cursor-pointer"
                 >
                   {sport2ButtonText}
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
