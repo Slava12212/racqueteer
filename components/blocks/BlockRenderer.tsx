@@ -74,8 +74,21 @@ interface BlockRendererProps {
   blocks: WPBlock[];
 }
 
+// Block names (both __typename and legacy "acf/" keys) that map to a Programs block
+const PROGRAMS_BLOCK_NAMES = new Set([
+  'AcfRacqueteerProgramsBlock',
+  'acf/racqueteer-programs',
+]);
+
+/** Check if a block name is a Programs block */
+function isProgramsBlock(name: string): boolean {
+  return PROGRAMS_BLOCK_NAMES.has(name);
+}
+
 export default function BlockRenderer({ blocks }: BlockRendererProps) {
   if (!blocks || blocks.length === 0) return null;
+
+  let programsRendered = false;
 
   return (
     <>
@@ -85,6 +98,13 @@ export default function BlockRenderer({ blocks }: BlockRendererProps) {
           console.warn(`[BlockRenderer] Unknown block: ${block.name}`);
           return null;
         }
+
+        // Skip duplicate Programs blocks (only render the first one)
+        if (isProgramsBlock(block.name)) {
+          if (programsRendered) return null;
+          programsRendered = true;
+        }
+
         return <Component key={i} {...(block.attributes as Record<string, unknown>)} />;
       })}
     </>
