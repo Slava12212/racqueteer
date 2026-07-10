@@ -222,7 +222,8 @@ export default function LocationsSection({ content, locations: locationsProp }: 
                 setSelectedId(locations[prev].id);
               }}
               aria-label="Previous location"
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-colors bg-transparent border border-white text-white"
+              className="absolute top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-colors bg-transparent border border-white text-white"
+              style={{ left: '-8px' }}
             >
               <span className="block w-9 h-9">
                 <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
@@ -238,7 +239,8 @@ export default function LocationsSection({ content, locations: locationsProp }: 
                 setSelectedId(locations[next].id);
               }}
               aria-label="Next location"
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-colors bg-transparent border border-white text-white"
+              className="absolute top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-colors bg-transparent border border-white text-white"
+              style={{ right: '-8px' }}
             >
               <span className="block w-9 h-9">
                 <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
