@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import BookModal from "@/components/BookModal";
 import type { WPBookModalOptions } from "@/types";
+import { usePathname } from "next/navigation"; // Import usePathname
+import { useEffect } from "react"; // Import useEffect
 
 export interface CtaData {
   ctaText: string;
@@ -35,6 +37,12 @@ export function CtaProvider({
   bookModalOptions?: WPBookModalOptions | null;
 }) {
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Close modal on route change (client-side navigation)
+  useEffect(() => {
+    setIsBookModalOpen(false);
+  }, [pathname]);
 
   const openBookModal = useCallback(() => {
     setIsBookModalOpen(true);
