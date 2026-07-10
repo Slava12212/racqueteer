@@ -206,7 +206,7 @@ export default function SubscriptionsSection({ content, plans: plansProp }: Subs
         </div>
         </ScrollReveal>
 
-        {/* ──── Tablet: 2x2 grid of cards (no slider) ──── */}
+        {/* ──── Tablet: 2x2 grid of cards with full feature details (like mobile) ──── */}
         <ScrollReveal from="bottom" delay={300}>
         <div className="hidden md:block lg:hidden">
           <div className="grid grid-cols-2 gap-4">
@@ -228,6 +228,15 @@ export default function SubscriptionsSection({ content, plans: plansProp }: Subs
                     <span>{plan.ctaText || 'JOIN NOW'}</span>
                     <ButtonArrow color="white" />
                   </a>
+                  {/* Features list — same as mobile card */}
+                  <div className="mt-4 border-t border-[#E5E7EB] pt-4">
+                    {features.map((label, fi) => (
+                      <div key={fi} className="flex items-center justify-between py-2.5 border-b border-[#E5E7EB] last:border-b-0">
+                        <span className="text-[11px] font-semibold text-black uppercase leading-4 flex-1 pr-3">{label}</span>
+                        <FeatureCell value={plan.values[fi]} />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
