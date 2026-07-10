@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+
 import { usePathname } from "next/navigation";
 import type { NavbarContent } from "@/types";
 import ButtonArrow from "./ButtonArrow";
@@ -171,7 +171,7 @@ export default function Navbar({ content }: NavbarProps) {
     <>
       <nav
         ref={navRef}
-        className={`fixed top-0 left-0 right-0 w-full transition-all duration-300 ease-in-out ${menuOpen ? "z-[60]" : "z-50"}`}
+        className={`fixed top-0 left-0 right-0 w-full transition-all duration-300 ease-in-out ${menuOpen ? "z-[999]" : "z-[999]"}`}
         style={{
           background: menuOpen ? "transparent" : "rgba(210,212,223,0.01)",
           transform: visible || menuOpen ? "translateY(0)" : "translateY(-100%)",
@@ -179,20 +179,16 @@ export default function Navbar({ content }: NavbarProps) {
       >
         {!menuOpen && <NavProgressiveBlur />}
         <div className="flex items-center justify-between max-w-[1920px] mx-auto px-6 md:px-10 lg:px-[80px] py-5 md:py-[55px] relative min-h-[80px] md:min-h-[139px]">
-          {/* Left: Logo (mobile/tablet) / nav links (desktop) */}
           <div className="hidden lg:flex items-center gap-6 lg:gap-10">
-            {content.menuLinks.slice(1).map((link) => {
-              const LinkEl = link.url.startsWith("#") ? "a" : Link;
-              return (
-                <LinkEl key={link.label} href={link.url} className={getLinkClasses(link.url)}>
-                  {link.label}
-                </LinkEl>
-              );
-            })}
+            {content.menuLinks.slice(1).map((link) => (
+              <a key={link.label} href={link.url} className={getLinkClasses(link.url)}>
+                {link.label}
+              </a>
+            ))}
           </div>
 
           {/* Mobile/Tablet: Logo icon left */}
-          <Link href="/" className="lg:hidden relative z-[60]" onClick={() => setMenuOpen(false)}>
+          <a href="/" className="lg:hidden relative z-[60]" onClick={() => setMenuOpen(false)}>
             <img
               src={content.logoIconUrl}
               alt={content.logoAlt}
@@ -201,10 +197,10 @@ export default function Navbar({ content }: NavbarProps) {
               className="h-10 w-auto transition-all duration-300"
               style={menuOpen ? {} : (isDark ? {} : { filter: "brightness(0)" })}
             />
-          </Link>
+          </a>
 
           {/* Desktop: Center logo only on 3xl+ (1920px+) to prevent overlap at <1600px */}
-          <Link href="/" className="hidden lg:block 2xl:absolute 2xl:left-1/2 2xl:-translate-x-1/2">
+          <a href="/" className="hidden lg:block 2xl:absolute 2xl:left-1/2 2xl:-translate-x-1/2">
             <img
               src={content.logoUrl}
               alt={content.logoAlt}
@@ -213,7 +209,7 @@ export default function Navbar({ content }: NavbarProps) {
               className="h-6 md:h-8 w-auto transition-all duration-300"
               style={logoStyle}
             />
-          </Link>
+          </a>
 
           {/* Mobile/Tablet: Centered CTA button */}
           <div className="lg:hidden absolute left-1/2 -translate-x-1/2 z-[60]">
@@ -264,7 +260,7 @@ export default function Navbar({ content }: NavbarProps) {
 
       {/* ──── Fullscreen Mobile Menu (also for tablet) ──── */}
       <div
-        className={`fixed inset-0 z-[55] lg:hidden flex flex-col transition-all duration-300 ease-in-out ${
+        className={`fixed inset-0 z-[998] lg:hidden flex flex-col transition-all duration-300 ease-in-out ${
           menuOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
@@ -282,15 +278,11 @@ export default function Navbar({ content }: NavbarProps) {
         <div className="flex-1 flex flex-col items-center justify-center gap-5 px-6">
           {content.menuLinks.map((link) => {
             const isActive = pathname === link.url;
-            const LinkEl = link.url.startsWith("#") ? "a" : Link;
-            const props = link.url.startsWith("#")
-              ? { href: link.url, onClick: () => setMenuOpen(false) }
-              : { href: link.url, onClick: () => setMenuOpen(false) };
-
             return (
-              <LinkEl
+              <a
                 key={link.label}
-                {...(props as any)}
+                href={link.url}
+                onClick={() => setMenuOpen(false)}
                 className={`text-white transition-opacity ${
                   isActive ? "opacity-100" : "opacity-60 hover:opacity-100"
                 }`}
@@ -304,7 +296,7 @@ export default function Navbar({ content }: NavbarProps) {
                 }}
               >
                 {link.label}
-              </LinkEl>
+              </a>
             );
           })}
         </div>
