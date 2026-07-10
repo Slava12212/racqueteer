@@ -182,7 +182,7 @@ export default function LocationsSection({ content, locations: locationsProp }: 
       {/* Main layout */}
       <div className="relative flex flex-col lg:flex-row h-auto lg:h-screen">
         {/* LEFT PANEL */}
-        <div className="relative flex flex-col justify-between w-full lg:w-[34%] px-6 md:px-10 lg:px-[80px] py-16 lg:py-[66px]">
+        <div className="relative flex flex-col justify-between w-full lg:w-[34%] px-6 md:px-10 lg:px-[80px] pt-16 pb-0 lg:pt-[66px] lg:pb-[66px]">
           {/* Header label — centered on mobile, left on desktop */}
           <ScrollReveal from="bottom" delay={0}>
             <p className="text-white text-xs font-extrabold tracking-[2.8px] uppercase mb-0 lg:text-left text-center">
