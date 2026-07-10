@@ -80,16 +80,22 @@ export default function Footer({ content }: FooterProps) {
             </ScrollReveal>
             <ScrollReveal from="bottom" delay={250}>
               <nav className="flex flex-col gap-3">
-                {content.menuLinks.map((item) => (
-                  <a
-                    key={item.label}
-                    href={item.url}
-                    className="text-white text-base lg:text-[24px] hover:text-white/80 transition-colors"
-                    style={{ fontFamily: '"Mona Sans", sans-serif', fontWeight: 500, fontStretch: '125%', lineHeight: '120%', letterSpacing: '0' }}
-                  >
-                    {item.label}
-                  </a>
-                ))}
+                {content.menuLinks.map((item) => {
+                  // Disable specific footer links (Events, Coaching)
+                  const disabledLabels = new Set(["events", "coaching"]);
+                  const isDisabled = disabledLabels.has(item.label.toLowerCase());
+                  return (
+                    <a
+                      key={item.label}
+                      href={isDisabled ? "#" : item.url}
+                      onClick={isDisabled ? (e: React.MouseEvent) => e.preventDefault() : undefined}
+                      className={`text-white text-base lg:text-[24px] transition-colors ${isDisabled ? 'cursor-default opacity-60' : 'hover:text-white/80'}`}
+                      style={{ fontFamily: '"Mona Sans", sans-serif', fontWeight: 500, fontStretch: '125%', lineHeight: '120%', letterSpacing: '0' }}
+                    >
+                      {item.label}
+                    </a>
+                  );
+                })}
               </nav>
             </ScrollReveal>
           </div>
