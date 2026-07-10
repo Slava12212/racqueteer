@@ -462,21 +462,19 @@ export default function LocationsSection({ content, locations: locationsProp }: 
                 <p className="text-white/40 text-[11px] font-normal tracking-[1.68px] uppercase mb-3">
                   Club Amenities
                 </p>
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-2 gap-2 mb-4">
                   {selected.amenities.map((amenity, i) => (
                     <div key={i}>
                       <div
-                        className="flex items-center gap-3 py-2"
+                        className="flex items-center gap-3 py-1"
                       >
                         <span className="flex-shrink-0 scale-75">{resolveIcon(amenity)}</span>
                         <span className="text-white text-sm">{amenity.label}</span>
                       </div>
-                      {i < selected.amenities.length - 1 && (
-                        <div
-                          className="h-px mt-2"
-                          style={{ background: 'linear-gradient(to right, rgba(255, 255, 255, 0.2), rgba(153, 153, 153, 0))' }}
-                        />
-                      )}
+                      <div
+                        className="h-px mt-1"
+                        style={{ background: 'linear-gradient(to right, rgba(255, 255, 255, 0.2), rgba(153, 153, 153, 0))' }}
+                      />
                     </div>
                   ))}
                 </div>
