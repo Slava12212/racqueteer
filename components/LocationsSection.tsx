@@ -180,7 +180,7 @@ export default function LocationsSection({ content, locations: locationsProp }: 
       <div className="absolute inset-0 bg-black/40" />
 
       {/* Main layout */}
-      <div className="relative flex flex-col lg:flex-row h-auto lg:h-screen">
+      <div className="relative flex flex-col xl:flex-row h-auto xl:h-screen">
         {/* LEFT PANEL */}
         <div className="relative flex flex-col justify-between w-full lg:w-[34%] px-6 md:px-10 lg:px-[80px] pt-16 pb-0 lg:pt-[66px] lg:pb-[66px]">
           {/* Header label — centered on mobile, left on desktop */}
@@ -191,10 +191,10 @@ export default function LocationsSection({ content, locations: locationsProp }: 
           </ScrollReveal>
 
           {/* Mobile: club name + arrows + badge (above the card) */}
-          <div className="lg:hidden relative flex flex-col items-center mt-8 mb-10 w-full">
+          <div className="xl:hidden relative flex flex-col items-center mt-8 mb-10 w-full">
             {/* Club name */}
             <h2
-              className="text-white text-[20px] font-extrabold uppercase text-center leading-tight"
+              className="text-white text-[20px] md:text-[24px] font-extrabold uppercase text-center leading-tight"
               style={{ fontFamily: '"Mona Sans", sans-serif', fontStretch: '125%', letterSpacing: '0.05em' }}
             >
               {selected.name}
@@ -222,10 +222,10 @@ export default function LocationsSection({ content, locations: locationsProp }: 
                 setSelectedId(locations[prev].id);
               }}
               aria-label="Previous location"
-              className="absolute top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-colors bg-transparent border border-white text-white"
+              className="absolute top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-colors bg-transparent border border-white text-white w-9 h-9 md:w-12 md:h-12"
               style={{ left: '-8px' }}
             >
-              <span className="block w-9 h-9">
+              <span className="block w-9 h-9 md:w-12 md:h-12">
                 <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
                   <rect x="0.5" y="0.5" width="79" height="79" rx="39.5" stroke="white" />
                   <path fillRule="evenodd" clipRule="evenodd" d="M38.5297 33.4606C38.6701 33.6012 38.749 33.7918 38.749 33.9906C38.749 34.1893 38.6701 34.3799 38.5297 34.5206L33.8097 39.2406H47.9997C48.1986 39.2406 48.3894 39.3196 48.53 39.4602C48.6707 39.6009 48.7497 39.7916 48.7497 39.9906C48.7497 40.1895 48.6707 40.3802 48.53 40.5209C48.3894 40.6615 48.1986 40.7406 47.9997 40.7406H33.8097L38.5297 45.4606C38.6034 45.5292 38.6625 45.612 38.7035 45.704C38.7444 45.796 38.7665 45.8953 38.7683 45.996C38.77 46.0967 38.7515 46.1968 38.7138 46.2901C38.6761 46.3835 38.6199 46.4684 38.5487 46.5396C38.4775 46.6108 38.3927 46.667 38.2993 46.7047C38.2059 46.7424 38.1059 46.7609 38.0052 46.7591C37.9045 46.7574 37.8051 46.7353 37.7131 46.6943C37.6211 46.6533 37.5383 46.5942 37.4697 46.5206L31.4697 40.5206C31.3292 40.3799 31.2503 40.1893 31.2503 39.9906C31.2503 39.7918 31.3292 39.6012 31.4697 39.4606L37.4697 33.4606C37.6103 33.3201 37.8009 33.2412 37.9997 33.2412C38.1984 33.2412 38.3891 33.3201 38.5297 33.4606Z" fill="white" />
@@ -239,7 +239,7 @@ export default function LocationsSection({ content, locations: locationsProp }: 
                 setSelectedId(locations[next].id);
               }}
               aria-label="Next location"
-              className="absolute top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-colors bg-transparent border border-white text-white"
+              className="absolute top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-colors bg-transparent border border-white text-white w-9 h-9 md:w-12 md:h-12"
               style={{ right: '-8px' }}
             >
               <span className="block w-9 h-9">
@@ -252,7 +252,7 @@ export default function LocationsSection({ content, locations: locationsProp }: 
           </div>
 
           {/* Location list — desktop only (hidden on mobile) */}
-          <div ref={containerRef} className="hidden lg:flex relative flex-col gap-10 mt-10 flex-1 justify-center">
+          <div ref={containerRef} className="hidden xl:flex relative flex-col gap-10 mt-10 flex-1 justify-center">
             {/* Animated vertical bar indicator — flush against center panel */}
             <div
               className="absolute w-1 bg-white transition-all duration-300 ease-out z-10"
@@ -300,11 +300,11 @@ export default function LocationsSection({ content, locations: locationsProp }: 
           </div>
 
           {/* Spacer bottom */}
-          <div className="hidden lg:block" />
+          <div className="hidden xl:block" />
         </div>
 
         {/* CENTER PANEL — details */}
-        <div className="hidden lg:flex flex-col w-[37%] h-screen px-[75px] pt-[100px] pb-[78px] bg-[#D2D4DF]/10 backdrop-blur-[100px]">
+        <div className="hidden xl:flex flex-col w-[37%] h-screen px-[75px] pt-[100px] pb-[78px] bg-[#D2D4DF]/10 backdrop-blur-[100px]">
           <div className="flex flex-col h-full">
             {/* Address + description */}
             <div className="flex flex-col gap-[40px] flex-1 min-h-0 overflow-y-auto">
@@ -384,7 +384,7 @@ export default function LocationsSection({ content, locations: locationsProp }: 
         </div>
 
         {/* RIGHT PANEL — court photo fills remaining space to right edge */}
-        <ScrollReveal from="right" delay={200} distance={40} duration={900} className="hidden lg:block flex-1 lg:h-screen">
+        <ScrollReveal from="right" delay={200} distance={40} duration={900} className="hidden xl:block flex-1 xl:h-screen">
           {selected.videoUrl ? (
             <video
               autoPlay
@@ -411,7 +411,7 @@ export default function LocationsSection({ content, locations: locationsProp }: 
       </div>
 
       {/* MOBILE detail panel */}
-      <div className="lg:hidden mx-4 mb-8">
+      <div className="xl:hidden mx-4 mb-8">
         <div className="bg-white/10 backdrop-blur-[50px] rounded-sm">
           {/* Media - full width, 260px height */}
           <div className="w-full h-[260px] overflow-hidden rounded-sm">
