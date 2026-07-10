@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import TestimonialCard, { Testimonial } from "./TestimonialCard";
 import ScrollReveal from "./ScrollReveal";
 import type { TestimonialsContent } from "@/types";
@@ -104,96 +104,78 @@ const FALLBACK_TESTIMONIALS: Testimonial[] = [
   },
 ];
 
-const CARDS_PER_PAGE = 3;
-
-
-const ArrowLeftIcon = () => (
-  <svg
-    width="80"
-    height="80"
-    viewBox="0 0 80 80"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <rect x="0.5" y="0.5" width="79" height="79" rx="39.5" stroke="#265090" />
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M38.5297 33.4606C38.6702 33.6012 38.749 33.7918 38.749 33.9906C38.749 34.1893 38.6702 34.3799 38.5297 34.5206L33.8097 39.2406H47.9997C48.1986 39.2406 48.3894 39.3196 48.53 39.4602C48.6707 39.6009 48.7497 39.7916 48.7497 39.9906C48.7497 40.1895 48.6707 40.3802 48.53 40.5209C48.3894 40.6615 48.1986 40.7406 47.9997 40.7406H33.8097L38.5297 45.4606C38.6034 45.5292 38.6625 45.612 38.7035 45.704C38.7445 45.796 38.7665 45.8953 38.7683 45.996C38.7701 46.0967 38.7516 46.1968 38.7138 46.2901C38.6761 46.3835 38.62 46.4684 38.5487 46.5396C38.4775 46.6108 38.3927 46.667 38.2993 46.7047C38.2059 46.7424 38.1059 46.7609 38.0052 46.7591C37.9045 46.7574 37.8052 46.7353 37.7132 46.6943C37.6212 46.6533 37.5384 46.5942 37.4697 46.5206L31.4697 40.5206C31.3293 40.3799 31.2504 40.1893 31.2504 39.9906C31.2504 39.7918 31.3293 39.6012 31.4697 39.4606L37.4697 33.4606C37.6103 33.3201 37.801 33.2412 37.9997 33.2412C38.1985 33.2412 38.3891 33.3201 38.5297 33.4606Z"
-      fill="#265090"
-    />
-  </svg>
-);
-
-const ArrowRightIcon = () => (
-  <svg
-    width="80"
-    height="80"
-    viewBox="0 0 80 80"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <rect
-      x="-0.5"
-      y="0.5"
-      width="79"
-      height="79"
-      rx="39.5"
-      transform="matrix(-1 0 0 1 79 0)"
-      stroke="#265090"
-    />
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M41.4703 33.4606C41.3299 33.6012 41.251 33.7918 41.251 33.9906C41.251 34.1893 41.3299 34.3799 41.4703 34.5206L46.1903 39.2406L32.0003 39.2406C31.8014 39.2406 31.6106 39.3196 31.47 39.4602C31.3293 39.6009 31.2503 39.7916 31.2503 39.9906C31.2503 40.1895 31.3293 40.3802 31.47 40.5209C31.6106 40.6615 31.8014 40.7406 32.0003 40.7406L46.1903 40.7406L41.4703 45.4606C41.3966 45.5292 41.3375 45.612 41.2965 45.704C41.2555 45.796 41.2335 45.8953 41.2317 45.996C41.2299 46.0967 41.2485 46.1968 41.2862 46.2902C41.3239 46.3835 41.38 46.4684 41.4513 46.5396C41.5225 46.6108 41.6073 46.667 41.7007 46.7047C41.7941 46.7424 41.8941 46.7609 41.9948 46.7591C42.0955 46.7574 42.1948 46.7353 42.2868 46.6943C42.3788 46.6533 42.4616 46.5942 42.5303 46.5206L48.5303 40.5206C48.6708 40.3799 48.7496 40.1893 48.7496 39.9906C48.7496 39.7918 48.6708 39.6012 48.5303 39.4606L42.5303 33.4606C42.3897 33.3201 42.1991 33.2412 42.0003 33.2412C41.8016 33.2412 41.6109 33.3201 41.4703 33.4606Z"
-      fill="#265090"
-    />
-  </svg>
-);
-
 export default function TestimonialsSection({ content, testimonials: testimonialsProp }: TestimonialsSectionProps) {
   const testimonials = testimonialsProp && testimonialsProp.length > 0 ? testimonialsProp : FALLBACK_TESTIMONIALS;
-  const [page, setPage] = useState(0);
-  const [mobileIndex, setMobileIndex] = useState(0);
+  const [startIndex, setStartIndex] = useState(0);
+  const [cardsVisible, setCardsVisible] = useState(3);
+  const [cardWidth, setCardWidth] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const totalPages = Math.ceil(testimonials.length / CARDS_PER_PAGE);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
   
-  // Touch swipe state for mobile
+  // Touch swipe state
   const touchStartX = useRef<number | null>(null);
-  const SWIPE_THRESHOLD = 50;
+  const touchStartScroll = useRef<number>(0);
+  const SWIPE_THRESHOLD = 30;
 
-  const visibleTestimonials = testimonials.slice(
-    page * CARDS_PER_PAGE,
-    page * CARDS_PER_PAGE + CARDS_PER_PAGE
-  );
+  // Measure container and determine cards visible per breakpoint
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const w = el.offsetWidth;
+      let visible: number;
+      if (w >= 1024) visible = 3;
+      else if (w >= 768) visible = 2;
+      else visible = 1;
+      setCardsVisible(visible);
+      setCardWidth(w / visible);
+    };
+
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Shared carousel gap (matches the gap-4 below)
+  const GAP = 16;
+
+  // Max start position so we don't slide past the last card
+  const maxStartIndex = Math.max(0, testimonials.length - cardsVisible);
 
   const handlePrev = () => {
-    if (isTransitioning) return;
+    if (isTransitioning || cardsVisible === 0) return;
     setIsTransitioning(true);
-    setTimeout(() => {
-      setPage((prev) => (prev > 0 ? prev - 1 : totalPages - 1));
-      setMobileIndex((prev) => (prev > 0 ? prev - 1 : testimonials.length - 1));
-      setIsTransitioning(false);
-    }, 150);
+    setStartIndex((prev) => (prev > 0 ? prev - 1 : maxStartIndex));
+    setTimeout(() => setIsTransitioning(false), 300);
   };
 
   const handleNext = () => {
-    if (isTransitioning) return;
+    if (isTransitioning || cardsVisible === 0) return;
     setIsTransitioning(true);
-    setTimeout(() => {
-      setPage((prev) => (prev < totalPages - 1 ? prev + 1 : 0));
-      setMobileIndex((prev) => (prev < testimonials.length - 1 ? prev + 1 : 0));
-      setIsTransitioning(false);
-    }, 150);
+    setStartIndex((prev) => (prev < maxStartIndex ? prev + 1 : 0));
+    setTimeout(() => setIsTransitioning(false), 300);
   };
 
-  // Touch swipe handlers for mobile
+  // Touch swipe handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
+    touchStartScroll.current = startIndex;
   };
 
-  const handleTouchMove = (_e: React.TouchEvent) => {
-    // Just tracking, actual action on touchEnd
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const currentX = e.touches[0].clientX;
+    const diff = touchStartX.current - currentX;
+
+    // Apply a slight visual drag offset while touching
+    if (trackRef.current && cardWidth > 0) {
+      const baseOffset = -(touchStartScroll.current * (cardWidth + GAP));
+      trackRef.current.style.transform = `translateX(${baseOffset - diff}px)`;
+      trackRef.current.style.transition = 'none';
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
@@ -202,24 +184,31 @@ export default function TestimonialsSection({ content, testimonials: testimonial
     const touchEndX = e.changedTouches[0].clientX;
     const diff = touchStartX.current - touchEndX;
     
-    // If swipe left (negative diff), go to next
-    if (diff < -SWIPE_THRESHOLD) {
-      handleNext();
+    // Reset inline style
+    if (trackRef.current) {
+      trackRef.current.style.transform = '';
+      trackRef.current.style.transition = '';
     }
-    // If swipe right (positive diff), go to prev
-    else if (diff > SWIPE_THRESHOLD) {
+
+    // If swipe left (negative diff means finger moved right), go to prev
+    if (diff < -SWIPE_THRESHOLD) {
       handlePrev();
+    }
+    // If swipe right (positive diff), go to next
+    else if (diff > SWIPE_THRESHOLD) {
+      handleNext();
     }
     
     touchStartX.current = null;
   };
+
+  const slideOffset = -(startIndex * (cardWidth + GAP));
 
   return (
     <section data-header-theme="light" className="relative z-10 w-full bg-[#F4F6F9] py-16">
       <div className="max-w-[1920px] mx-auto px-5 sm:px-10 lg:px-[80px]">
       {/* Header Row */}
       <div className="flex items-center justify-between mb-10">
-        {/* Title */}
         <ScrollReveal>
           <div className="flex flex-col gap-4">
             <span className="text-[#265090] text-xs font-medium tracking-[2.4px] uppercase leading-[120%]">
@@ -263,56 +252,47 @@ export default function TestimonialsSection({ content, testimonials: testimonial
         </div>
       </div>
 
-      {/* Cards - swipeable on mobile, grid on desktop */}
+      {/* Carousel track (all breakpoints) */}
       <ScrollReveal delay={200}>
-        <div className={`hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[400px] transition-opacity duration-150 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-          {visibleTestimonials.map((testimonial) => (
-            <TestimonialCard key={testimonial.id} testimonial={testimonial} />
-          ))}
+        <div
+          ref={containerRef}
+          className="overflow-hidden"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div
+            ref={trackRef}
+            className="flex gap-4 transition-transform duration-300 ease-in-out"
+            style={{ transform: `translateX(${slideOffset}px)` }}
+          >
+            {testimonials.map((testimonial) => (
+              <div
+                key={testimonial.id}
+                className="flex-shrink-0"
+                style={{ width: cardWidth > 0 ? `${cardWidth}px` : 'auto' }}
+              >
+                <TestimonialCard testimonial={testimonial} />
+              </div>
+            ))}
+          </div>
         </div>
       </ScrollReveal>
-      {/* Mobile carousel with touch swipe support */}
-      <div 
-        className={`md:hidden min-h-[400px] transition-opacity duration-150 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <TestimonialCard testimonial={testimonials[mobileIndex]} />
-      </div>
 
       {/* Page Dots */}
       <div className="flex items-center justify-center gap-2 mt-4">
-        {/* Mobile: one dot per testimonial */}
-        <div className="md:hidden flex items-center justify-center gap-2">
-          {testimonials.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setMobileIndex(i)}
-              aria-label={`Go to review ${i + 1}`}
-              className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                i === mobileIndex
-                  ? "bg-[#265090] w-6"
-                  : "bg-[#265090]/30 hover:bg-[#265090]/50"
-              }`}
-            />
-          ))}
-        </div>
-        {/* Desktop: one dot per page */}
-        <div className="hidden md:flex items-center justify-center gap-2">
-          {Array.from({ length: totalPages }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setPage(i)}
-              aria-label={`Go to page ${i + 1}`}
-              className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                i === page
-                  ? "bg-[#265090] w-6"
-                  : "bg-[#265090]/30 hover:bg-[#265090]/50"
-              }`}
-            />
-          ))}
-        </div>
+        {Array.from({ length: testimonials.length }).map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setStartIndex(i)}
+            aria-label={`Go to review ${i + 1}`}
+            className={`w-2 h-2 rounded-full transition-all duration-200 ${
+              i === startIndex
+                ? "bg-[#265090] w-6"
+                : "bg-[#265090]/30 hover:bg-[#265090]/50"
+            }`}
+          />
+        ))}
       </div>
       </div>
     </section>

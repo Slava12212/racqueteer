@@ -79,7 +79,9 @@ export default function GallerySection({ content }: GallerySectionProps) {
     const el = scrollRef.current;
     if (!el) return;
 
-    const amount = 440;
+    // Calculate amount to scroll dynamically: width of one image + gap-2 (8px)
+    const firstImageElement = el.querySelector(".flex-shrink-0");
+    const amount = firstImageElement ? (firstImageElement.clientWidth + 8) : 440;
     const oneThird = el.scrollWidth / 3;
 
     if (direction === "next") {
