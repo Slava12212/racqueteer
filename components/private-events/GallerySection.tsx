@@ -36,7 +36,6 @@ const SCROLL_SPEED = 40; // seconds for one complete cycle
 
 export default function GallerySection({ content }: GallerySectionProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [isPaused, setIsPaused] = useState(false);
   const [mobileIndex, setMobileIndex] = useState(0);
 
   const allImages = [...galleryImages, ...galleryImages, ...galleryImages];
@@ -51,8 +50,9 @@ export default function GallerySection({ content }: GallerySectionProps) {
     const scrollAmount = 1; // pixels per frame
 
     const animate = (time: number) => {
-      if (!isPaused && el) {
+      if (el) {
         const delta = time - lastTime;
+        lastTime = time;
         // Use consistent speed regardless of frame rate
         el.scrollLeft += scrollAmount * (delta / 16);
         
@@ -65,7 +65,6 @@ export default function GallerySection({ content }: GallerySectionProps) {
           el.scrollLeft = oneThird;
         }
       }
-      lastTime = time;
       animationId = requestAnimationFrame(animate);
     };
 
@@ -74,7 +73,7 @@ export default function GallerySection({ content }: GallerySectionProps) {
     animationId = requestAnimationFrame(animate);
 
     return () => cancelAnimationFrame(animationId);
-  }, [isPaused]);
+  }, []);
 
   const scrollByAmount = (direction: "prev" | "next") => {
     const el = scrollRef.current;
@@ -157,8 +156,6 @@ export default function GallerySection({ content }: GallerySectionProps) {
       <div
         ref={scrollRef}
         className="hidden md:flex gap-2 overflow-x-scroll scrollbar-hide cursor-grab active:cursor-grabbing"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
       >
         {allImages.map((img, i) => (
           <div
