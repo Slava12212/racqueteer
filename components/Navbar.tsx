@@ -211,21 +211,7 @@ export default function Navbar({ content }: NavbarProps) {
             />
           </a>
 
-          {/* Mobile/Tablet: Centered CTA button */}
-          <div className="lg:hidden absolute left-1/2 -translate-x-1/2 z-[60]">
-            {!menuOpen && (
-              <button
-                type="button"
-                onClick={openBookModal}
-                className={`btn-cta flex items-center gap-2 ${ctaBg} text-[11px] font-bold uppercase tracking-[1.4px] px-4 py-2 rounded-sm transition-all duration-300`}
-              >
-                {content.ctaText}
-                <ButtonArrow color={ctaArrowColor} />
-              </button>
-            )}
-          </div>
-
-          {/* Right nav links + CTA (desktop - tablet matches mobile) */}
+          {/* Desktop: Right side - CTA button */}
           <div className="hidden lg:flex items-center gap-6 lg:gap-10">
             <button
               type="button"
@@ -237,24 +223,36 @@ export default function Navbar({ content }: NavbarProps) {
             </button>
           </div>
 
-          {/* Mobile/Tablet: Burger / Close button */}
-          <button
-            className="lg:hidden relative z-[60] flex items-center justify-center w-10 h-10"
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-          >
-            {menuOpen ? (
-              /* Close (X) icon */
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18M6 6L18 18" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            ) : (
-              /* Burger icon */
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 6H21M3 12H21M3 18H21" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+          {/* Mobile/Tablet: Right side - CTA button + 32px gap + Burger / Close */}
+          <div className="lg:hidden flex items-center gap-8">
+            {!menuOpen && (
+              <button
+                type="button"
+                onClick={openBookModal}
+                className={`btn-cta flex items-center gap-2 ${ctaBg} text-[11px] font-bold uppercase tracking-[1.4px] px-4 py-2 rounded-sm transition-all duration-300`}
+              >
+                {content.ctaText}
+                <ButtonArrow color={ctaArrowColor} />
+              </button>
             )}
-          </button>
+            <button
+              className="relative z-[60] flex items-center justify-center w-10 h-10"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+            >
+              {menuOpen ? (
+                /* Close (X) icon */
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6L18 18" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              ) : (
+                /* Burger icon */
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 6H21M3 12H21M3 18H21" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
       </nav>
 
