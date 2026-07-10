@@ -4,6 +4,7 @@ import AboutSection from "@/components/AboutSection";
 import LocationsSection from "@/components/LocationsSection";
 import ProgramsSection from "@/components/ProgramsSection";
 import HomeSubscriptionsSection from "@/components/HomeSubscriptionsSection";
+import MembershipSection from "@/components/MembershipSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import EventsSection from "@/components/EventsSection";
 import { AmenitiesSection } from "@/components/amenities/AmenitiesSection";
@@ -61,9 +62,8 @@ export default async function HomePage() {
       <AboutSection content={content.about} />
       <LocationsSection content={content.locations} locations={locations} />
       <AmenitiesSection amenities={amenities} />
-      <ProgramsSection content={content.programs} />
-      {/* Hidden per Alex's request */}
-      {/* <MembershipSection content={content.membership} /> */}
+      {/* ProgramsSection removed as per Alex's request to avoid duplication after Membership sections */}
+      <MembershipSection content={content.membership} />
       <HomeSubscriptionsSection content={content.subscriptions} />
       <TestimonialsSection content={content.testimonials} />
       <EventsSection content={content.events} />
