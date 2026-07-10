@@ -69,18 +69,18 @@ export default function BookModal() {
         {/* Cards */}
         <div className="flex flex-col sm:flex-row gap-8 px-4 sm:px-10 pb-10 items-stretch">
           {/* Sport 1 Card (Padel) */}
-          <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden h-[312px] sm:h-[466px]">
-            <div className="flex-1 flex items-center justify-center p-5 w-full">
+          <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden h-[245px] sm:h-[466px]">
+            <div className="flex-1 flex items-center justify-center p-3 w-full">
               <img
                 src={sport1Image}
                 alt={sport1Title}
                 width={287}
                 height={270}
-                className="w-full max-w-[287px] h-auto object-contain"
+                className="w-full max-w-[140px] h-auto object-contain"
               />
             </div>
             <div className="pb-6 text-center w-full px-6">
-              <h2 className="text-[#D2352B] font-extrabold text-[36px] uppercase text-center mb-6">
+              <h2 className="text-[#D2352B] font-extrabold text-[16px] uppercase text-center mb-6">
                 {sport1Title}
               </h2>
               <div className="flex justify-center">
@@ -100,19 +100,19 @@ export default function BookModal() {
           </div>
 
           {/* Sport 2 Card (Pickleball) */}
-          <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden h-[312px] sm:h-[466px]">
-            <div className="flex-1 flex items-center justify-center p-5 w-full">
+          <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden h-[245px] sm:h-[466px]">
+            <div className="flex-1 flex items-center justify-center p-3 w-full">
               <img
                 src={sport2Image}
                 alt={sport2Title}
                 width={287}
                 height={270}
-                className="w-full max-w-[287px] h-auto object-contain"
+                className="w-full max-w-[140px] h-auto object-contain"
                 loading="lazy"
               />
             </div>
             <div className="pb-6 text-center w-full px-6">
-              <h2 className="text-[#003E6B] font-extrabold text-[36px] uppercase text-center mb-6">
+              <h2 className="text-[#003E6B] font-extrabold text-[16px] uppercase text-center mb-6">
                 {sport2Title}
               </h2>
               <div className="flex justify-center">
