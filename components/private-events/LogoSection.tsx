@@ -21,7 +21,7 @@ const logos = [
 export default function LogoSection({ content }: LogoSectionProps) {
   return (
     <div
-      data-header-theme="gradient"
+      data-header-theme="light"
       className="min-h-screen flex flex-col relative overflow-hidden"
       style={{
         backgroundImage: `url('https://api.builder.io/api/v1/image/assets/TEMP/ee1938ed88d2b24601b7c8804d2307c1b96f79f7?width=3840')`,

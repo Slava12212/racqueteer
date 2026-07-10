@@ -10,7 +10,7 @@ interface ContactSectionProps {
 export default function ContactSection({ content }: ContactSectionProps) {
   return (
     <div
-      data-header-theme="gradient"
+      data-header-theme="light"
       className="min-h-screen w-full relative overflow-hidden flex items-center"
     >
       {/* Background image — bottom layer */}
