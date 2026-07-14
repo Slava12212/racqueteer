@@ -112,7 +112,8 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
   const maxIndex = cardStep > 0 ? Math.max(0, Math.ceil(maxScrollPx / cardStep)) : 0;
 
   const canGoBackDesktop = currentIndex > 0;
-  const canGoForwardDesktop = currentIndex < maxIndex;
+  const exactMaxDesktopScroll = Math.max(0, itemCount * cardStep - GAP - visibleWidth);
+  const canGoForwardDesktop = currentIndex * cardStep < exactMaxDesktopScroll;
 
   const goBackDesktop = () => {
     if (canGoBackDesktop) setCurrentIndex((prev) => prev - 1);
@@ -183,7 +184,8 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
   const displayLabel = content?.label || 'amenities';
   const displayTitle = content?.title || 'our amenities';
   const slideOffsetMobile = -(mobileStartIndex * (mobileCardWidth + GAP));
-  const slideOffsetDesktop = -(currentIndex * cardStep);
+  // Clamp desktop scroll so the last card is flush with the right padding
+  const slideOffsetDesktop = Math.max(-(currentIndex * cardStep), -exactMaxDesktopScroll);
 
   return (
     <section data-header-theme="light" className="min-h-screen bg-[#F4F6F9] flex flex-col justify-center py-12 xl:py-16 overflow-hidden">
@@ -280,7 +282,7 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
           <>
             <div
               ref={mobileContainerCallbackRef}
-              className="overflow-hidden px-5 sm:px-10 lg:px-[80px]"
+              className="overflow-hidden px-[24px] sm:px-10 lg:px-[80px]"
               onTouchStart={handleMobileTouchStart}
               onTouchEnd={handleMobileTouchEnd}
             >
