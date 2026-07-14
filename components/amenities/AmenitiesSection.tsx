@@ -262,55 +262,80 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
 
       {/* Cards carousel */}
       <ScrollReveal from="bottom" delay={200} distance={30}>
-        <div
-          ref={isMobile ? mobileContainerRef : containerRef} // Use mobileContainerRef for mobile
-          className={isMobile ? "overflow-hidden px-5 sm:px-10 lg:px-[80px]" : "overflow-x-auto snap-x snap-mandatory lg:overflow-hidden pl-5 sm:pl-10 lg:pl-[80px] scrollbar-hide"}
-          onTouchStart={isMobile ? handleMobileTouchStart : (e) => {
-            const touch = e.touches[0];
-            containerRef.current?.setAttribute('data-touch-start', String(touch.clientX));
-          }}
-          onTouchEnd={isMobile ? handleMobileTouchEnd : (e) => {
-            const startX = Number(containerRef.current?.getAttribute('data-touch-start') || 0);
-            const endX = e.changedTouches[0].clientX;
-            const diff = startX - endX;
-            if (Math.abs(diff) > 50) {
-              if (diff > 0) goForwardDesktop();
-              else goBackDesktop();
-            }
-          }}
-        >
-          <div
-            ref={isMobile ? mobileTrackRef : undefined} // Use mobileTrackRef for mobile
-            className="flex gap-4 items-stretch transition-transform duration-300 ease-in-out" // Changed to 300ms for mobile
-            style={{ transform: `translateX(${isMobile ? slideOffsetMobile : slideOffsetDesktop}px)` }}
-          >
-            {amenitiesList.map((amenity, index) => (
+        {/* Mobile carousel branch */}
+        {isMobile ? (
+          <>
+            <div
+              ref={mobileContainerRef}
+              className="overflow-hidden px-5 sm:px-10 lg:px-[80px]"
+              onTouchStart={handleMobileTouchStart}
+              onTouchEnd={handleMobileTouchEnd}
+            >
               <div
-                key={amenity.id}
-                ref={index === 0 && !isMobile ? firstCardRef : undefined} // Only assign firstCardRef for desktop
-                className="flex-shrink-0 self-stretch snap-center"
-                style={isMobile ? { width: mobileCardWidth > 0 ? `${mobileCardWidth}px` : 'auto' } : undefined}
+                ref={mobileTrackRef}
+                className="flex gap-4 items-stretch transition-transform duration-300 ease-in-out"
+                style={{ transform: `translateX(${slideOffsetMobile}px)` }}
               >
-                <AmenityCard amenity={amenity} total={itemCount} />
+                {amenitiesList.map((amenity, index) => (
+                  <div
+                    key={amenity.id}
+                    className="flex-shrink-0 self-stretch"
+                    style={{ width: mobileCardWidth > 0 ? `${mobileCardWidth}px` : 'auto' }}
+                  >
+                    <AmenityCard amenity={amenity} total={itemCount} />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-        {/* Mobile Page Dots */}
-        {isMobile && (
-          <div className="flex items-center justify-center gap-2 mt-4 pb-4">
-            {amenitiesList.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setMobileStartIndex(i)}
-                aria-label={`Go to amenity ${i + 1}`}
-                className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                  i === mobileStartIndex
-                    ? "bg-[#265090] w-6"
-                    : "bg-[#265090]/30 hover:bg-[#265090]/50"
-                }`}
-              />
-            ))}
+            </div>
+            {/* Mobile Page Dots */}
+            <div className="flex items-center justify-center gap-2 mt-4 pb-4">
+              {amenitiesList.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setMobileStartIndex(i)}
+                  aria-label={`Go to amenity ${i + 1}`}
+                  className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                    i === mobileStartIndex
+                      ? "bg-[#265090] w-6"
+                      : "bg-[#265090]/30 hover:bg-[#265090]/50"
+                  }`}
+                />
+              ))}
+            </div>
+          </>
+        ) : (
+          /* Desktop carousel branch */
+          <div
+            ref={containerRef}
+            className="overflow-x-auto snap-x snap-mandatory lg:overflow-hidden pl-5 sm:pl-10 lg:pl-[80px] scrollbar-hide"
+            onTouchStart={(e) => {
+              const touch = e.touches[0];
+              containerRef.current?.setAttribute('data-touch-start', String(touch.clientX));
+            }}
+            onTouchEnd={(e) => {
+              const startX = Number(containerRef.current?.getAttribute('data-touch-start') || 0);
+              const endX = e.changedTouches[0].clientX;
+              const diff = startX - endX;
+              if (Math.abs(diff) > 50) {
+                if (diff > 0) goForwardDesktop();
+                else goBackDesktop();
+              }
+            }}
+          >
+            <div
+              className="flex gap-4 items-stretch transition-transform duration-300 ease-in-out"
+              style={{ transform: `translateX(${slideOffsetDesktop}px)` }}
+            >
+              {amenitiesList.map((amenity, index) => (
+                <div
+                  key={amenity.id}
+                  ref={index === 0 ? firstCardRef : undefined}
+                  className="flex-shrink-0 self-stretch snap-center"
+                >
+                  <AmenityCard amenity={amenity} total={itemCount} />
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </ScrollReveal>

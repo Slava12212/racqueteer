@@ -40,7 +40,7 @@ export default function HeroMembership({ content }: HeroMembershipProps) {
           loop
           muted
           playsInline
-          onCanPlayThrough={() => setVideoReady(true)}
+          onCanPlay={() => setVideoReady(true)}
           style={{ opacity: videoReady ? 1 : 0, transition: 'opacity 0.5s ease-in' }}
           className="w-full h-full object-cover object-center"
         >

@@ -235,7 +235,7 @@ export default function SubscriptionsSection({ content, plans: plansProp }: Subs
 
         {/* ──── Mobile: swipeable cards with arrows ──── */}
         <ScrollReveal from="bottom" delay={300}>
-        <div className="md:hidden px-5" ref={mobileContainerRef}
+        <div className="md:hidden px-[24px]" ref={mobileContainerRef}
           onTouchStart={handleMobileTouchStart}
           onTouchMove={handleMobileTouchMove}
           onTouchEnd={handleMobileTouchEnd}>
