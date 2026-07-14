@@ -95,8 +95,7 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
       const style = window.getComputedStyle(el);
       const padX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
       const fullWidth = w - padX;
-      // On mobile, make cards narrower to show the swipe gesture
-      setMobileCardWidth(w < 768 ? fullWidth * 0.85 : fullWidth);
+      setMobileCardWidth(fullWidth);
     };
     
     update();
@@ -109,8 +108,8 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
   // Desktop carousel logic
   const totalCardsWidth = itemCount * cardStep;
   const visibleWidth = containerWidth;
-  const maxScrollPx = Math.max(0, totalCardsWidth - visibleWidth);
-  const maxIndex = cardStep > 0 ? Math.max(0, Math.ceil(maxScrollPx / cardStep) -1) : 0;
+  const maxScrollPx = Math.max(0, totalCardsWidth - GAP - visibleWidth);
+  const maxIndex = cardStep > 0 ? Math.max(0, Math.ceil(maxScrollPx / cardStep)) : 0;
 
   const canGoBackDesktop = currentIndex > 0;
   const canGoForwardDesktop = currentIndex < maxIndex;
@@ -321,7 +320,7 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
           /* Desktop carousel branch */
           <div
             ref={containerRef}
-            className="overflow-hidden pl-5 sm:pl-10 lg:pl-[80px] scrollbar-hide"
+            className="overflow-hidden pl-5 sm:pl-10 lg:pl-[80px] pr-5 sm:pr-10 lg:pr-[80px] scrollbar-hide"
             onTouchStart={(e) => {
               const touch = e.touches[0];
               containerRef.current?.setAttribute('data-touch-start', String(touch.clientX));
