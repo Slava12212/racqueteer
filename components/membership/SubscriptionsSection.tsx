@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import ButtonArrow from "../ButtonArrow";
 import ScrollReveal from "../ScrollReveal";
 import type { SubscriptionsHeaderContent, MembershipPlan } from "@/types";
@@ -134,6 +134,79 @@ function MobilePlanCard({ plan }: { plan: Plan }) {
 export default function SubscriptionsSection({ content, plans: plansProp }: SubscriptionsSectionProps) {
   const plans = plansProp && plansProp.length > 0 ? plansProp : FALLBACK_PLANS;
   const [mobileIndex, setMobileIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [mobileCardWidth, setMobileCardWidth] = useState(0);
+  const mobileContainerRef = useRef<HTMLDivElement>(null);
+  const mobileTrackRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
+  const touchStartScroll = useRef<number>(0);
+  const SWIPE_THRESHOLD = 30;
+  const GAP = 16;
+
+  // Measure mobile carousel card width
+  useEffect(() => {
+    const el = mobileContainerRef.current;
+    if (!el) return;
+    const update = () => {
+      // Adjust for padding so cards don't overflow the visible area
+      const style = window.getComputedStyle(el);
+      const padX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      setMobileCardWidth(el.offsetWidth - padX);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const itemCount = plans.length;
+
+  const goBackMobile = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setMobileIndex((prev) => (prev > 0 ? prev - 1 : itemCount - 1));
+    setTimeout(() => setIsTransitioning(false), 300);
+  };
+
+  const goForwardMobile = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setMobileIndex((prev) => (prev < itemCount - 1 ? prev + 1 : 0));
+    setTimeout(() => setIsTransitioning(false), 300);
+  };
+
+  const handleMobileTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartScroll.current = mobileIndex;
+  };
+
+  const handleMobileTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || !mobileTrackRef.current) return;
+    const currentX = e.touches[0].clientX;
+    const diff = touchStartX.current - currentX;
+    const baseOffset = -(touchStartScroll.current * (mobileCardWidth + GAP));
+    mobileTrackRef.current.style.transform = `translateX(${baseOffset - diff}px)`;
+    mobileTrackRef.current.style.transition = 'none';
+  };
+
+  const handleMobileTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || !mobileTrackRef.current) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+
+    mobileTrackRef.current.style.transform = '';
+    mobileTrackRef.current.style.transition = '';
+
+    if (diff < -SWIPE_THRESHOLD) {
+      goBackMobile();
+    } else if (diff > SWIPE_THRESHOLD) {
+      goForwardMobile();
+    }
+    
+    touchStartX.current = null;
+  };
+
+  const slideOffsetMobile = -(mobileIndex * (mobileCardWidth + GAP));
 
   return (
     <section id="membership-plans" data-header-theme="light" className="bg-[#F4F6F9] min-h-screen pt-[120px] pb-16 px-6 sm:px-8 lg:px-[80px]">
@@ -162,12 +235,25 @@ export default function SubscriptionsSection({ content, plans: plansProp }: Subs
 
         {/* ──── Mobile: swipeable cards with arrows ──── */}
         <ScrollReveal from="bottom" delay={300}>
-        <div className="md:hidden">
-          <MobilePlanCard plan={plans[mobileIndex]} />
+        <div className="md:hidden px-5" ref={mobileContainerRef}
+          onTouchStart={handleMobileTouchStart}
+          onTouchMove={handleMobileTouchMove}
+          onTouchEnd={handleMobileTouchEnd}>
+          <div
+            ref={mobileTrackRef}
+            className="flex gap-4 transition-transform duration-300 ease-in-out"
+            style={{ transform: `translateX(${slideOffsetMobile}px)` }}
+          >
+            {plans.map((plan, i) => (
+              <div key={i} className="flex-shrink-0" style={{ width: mobileCardWidth > 0 ? `${mobileCardWidth}px` : 'auto' }}>
+                <MobilePlanCard plan={plan} />
+              </div>
+            ))}
+          </div>
           {/* Navigation arrows + dots */}
           <div className="flex items-center justify-between mt-6">
             <button
-              onClick={() => setMobileIndex((p) => (p > 0 ? p - 1 : plans.length - 1))}
+              onClick={goBackMobile}
               aria-label="Previous plan"
               className="btn-circle-arrow flex items-center justify-center rounded-full transition-colors"
             >
@@ -191,7 +277,7 @@ export default function SubscriptionsSection({ content, plans: plansProp }: Subs
               ))}
             </div>
             <button
-              onClick={() => setMobileIndex((p) => (p < plans.length - 1 ? p + 1 : 0))}
+              onClick={goForwardMobile}
               aria-label="Next plan"
               className="btn-circle-arrow flex items-center justify-center rounded-full transition-colors"
             >

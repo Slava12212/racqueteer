@@ -36,27 +36,32 @@ const SCROLL_SPEED = 40; // seconds for one complete cycle
 
 export default function GallerySection({ content }: GallerySectionProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [mobileIndex, setMobileIndex] = useState(0);
+  const [mobileStartIndex, setMobileStartIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [mobileCardWidth, setMobileCardWidth] = useState(0);
+  const mobileContainerRef = useRef<HTMLDivElement>(null);
+  const mobileTrackRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
+  const touchStartScroll = useRef<number>(0);
+  const SWIPE_THRESHOLD = 30;
 
   const allImages = [...galleryImages, ...galleryImages, ...galleryImages];
 
-  // Smooth CSS-based infinite scroll animation
+  // Desktop auto-scroll
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
 
     let animationId: number;
     let lastTime = performance.now();
-    const scrollAmount = 1; // pixels per frame
+    const scrollAmount = 1;
 
     const animate = (time: number) => {
       if (el) {
         const delta = time - lastTime;
         lastTime = time;
-        // Use consistent speed regardless of frame rate
         el.scrollLeft += scrollAmount * (delta / 16);
         
-        // Seamless loop: when past the first copy, jump back
         const oneThird = el.scrollWidth / 3;
         if (el.scrollLeft >= oneThird * 2) {
           el.scrollLeft -= oneThird;
@@ -68,22 +73,34 @@ export default function GallerySection({ content }: GallerySectionProps) {
       animationId = requestAnimationFrame(animate);
     };
 
-    // Start from middle copy for seamless prev/next
     el.scrollLeft = el.scrollWidth / 3;
     animationId = requestAnimationFrame(animate);
 
     return () => cancelAnimationFrame(animationId);
   }, []);
 
+  // Measure mobile card width
+  useEffect(() => {
+    const el = mobileContainerRef.current;
+    if (!el) return;
+    const update = () => {
+      // Adjust for padding so cards don't overflow the visible area
+      const style = window.getComputedStyle(el);
+      const padX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      setMobileCardWidth(el.offsetWidth - padX);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const scrollByAmount = (direction: "prev" | "next") => {
     const el = scrollRef.current;
     if (!el) return;
-
-    // Calculate amount to scroll dynamically: width of one image + gap-2 (8px)
     const firstImageElement = el.querySelector(".flex-shrink-0");
     const amount = firstImageElement ? (firstImageElement.clientWidth + 8) : 440;
     const oneThird = el.scrollWidth / 3;
-
     if (direction === "next") {
       el.scrollLeft += amount;
       if (el.scrollLeft >= oneThird * 2) el.scrollLeft -= oneThird;
@@ -93,13 +110,56 @@ export default function GallerySection({ content }: GallerySectionProps) {
     }
   };
 
-  const handleMobilePrev = () => {
-    setMobileIndex((prev) => (prev > 0 ? prev - 1 : galleryImages.length - 1));
+  // Mobile wrapping logic (mimicking TestimonialsSection)
+  const mobileMaxIndex = galleryImages.length - 1;
+
+  const goBackMobile = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setMobileStartIndex((prev) => (prev > 0 ? prev - 1 : mobileMaxIndex));
+    setTimeout(() => setIsTransitioning(false), 300);
   };
 
-  const handleMobileNext = () => {
-    setMobileIndex((prev) => (prev < galleryImages.length - 1 ? prev + 1 : 0));
+  const goForwardMobile = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setMobileStartIndex((prev) => (prev < mobileMaxIndex ? prev + 1 : 0));
+    setTimeout(() => setIsTransitioning(false), 300);
   };
+
+  // Touch swipe
+  const handleMobileTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartScroll.current = mobileStartIndex;
+  };
+
+  const handleMobileTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || !mobileTrackRef.current) return;
+    const currentX = e.touches[0].clientX;
+    const diff = touchStartX.current - currentX;
+    const baseOffset = -(touchStartScroll.current * (mobileCardWidth + 8)); // gap-2 = 8px
+    mobileTrackRef.current.style.transform = `translateX(${baseOffset - diff}px)`;
+    mobileTrackRef.current.style.transition = 'none';
+  };
+
+  const handleMobileTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || !mobileTrackRef.current) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+
+    mobileTrackRef.current.style.transform = '';
+    mobileTrackRef.current.style.transition = '';
+
+    if (diff < -SWIPE_THRESHOLD) {
+      goBackMobile();
+    } else if (diff > SWIPE_THRESHOLD) {
+      goForwardMobile();
+    }
+    
+    touchStartX.current = null;
+  };
+
+  const slideOffset = -(mobileStartIndex * (mobileCardWidth + 8)); // gap-2 = 8px
 
   return (
     <section data-header-theme="light" className="bg-[#F4F6F9] pt-16 pb-0 overflow-hidden">
@@ -122,8 +182,11 @@ export default function GallerySection({ content }: GallerySectionProps) {
           <div className="flex items-center gap-3 sm:gap-6 mt-3 sm:mt-4">
             <button
               onClick={() => {
-                handleMobilePrev();
-                scrollByAmount("prev");
+                if (window.innerWidth < 768) {
+                  goBackMobile();
+                } else {
+                  scrollByAmount("prev");
+                }
               }}
               aria-label="Previous"
               className="btn-circle-arrow flex items-center justify-center rounded-full transition-colors duration-200"
@@ -137,8 +200,11 @@ export default function GallerySection({ content }: GallerySectionProps) {
             </button>
             <button
               onClick={() => {
-                handleMobileNext();
-                scrollByAmount("next");
+                if (window.innerWidth < 768) {
+                  goForwardMobile();
+                } else {
+                  scrollByAmount("next");
+                }
               }}
               aria-label="Next"
               className="btn-circle-arrow flex items-center justify-center rounded-full transition-colors duration-200"
@@ -178,25 +244,40 @@ export default function GallerySection({ content }: GallerySectionProps) {
         ))}
       </div>
 
-      {/* Mobile: Single image with arrow navigation */}
-      <div className="md:hidden px-5">
-        <div className="w-full overflow-hidden rounded-lg">
-          <img
-            src={galleryImages[mobileIndex].src}
-            alt={galleryImages[mobileIndex].alt}
-            className="w-full h-[60vh] object-cover transition-opacity duration-300"
-            draggable={false}
-          />
+      {/* Mobile: Sliding image carousel (matching TestimonialsSection logic) */}
+      <div className="md:hidden px-5" ref={mobileContainerRef}
+        onTouchStart={handleMobileTouchStart}
+        onTouchMove={handleMobileTouchMove}
+        onTouchEnd={handleMobileTouchEnd}>
+        <div
+          ref={mobileTrackRef}
+          className="flex gap-2 transition-transform duration-300 ease-in-out"
+          style={{ transform: `translateX(${slideOffset}px)` }}
+        >
+          {galleryImages.map((img, i) => (
+            <div
+              key={i}
+              className="flex-shrink-0 overflow-hidden rounded-lg"
+              style={{ width: mobileCardWidth > 0 ? `${mobileCardWidth}px` : 'auto' }}
+            >
+              <img
+                src={img.src}
+                alt={img.alt}
+                className="w-full h-[60vh] object-cover"
+                draggable={false}
+              />
+            </div>
+          ))}
         </div>
         {/* Dots */}
         <div className="flex items-center justify-center gap-2 mt-4 pb-4">
           {galleryImages.map((_, i) => (
             <button
               key={i}
-              onClick={() => setMobileIndex(i)}
+              onClick={() => setMobileStartIndex(i)}
               aria-label={`Go to image ${i + 1}`}
               className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                i === mobileIndex
+                i === mobileStartIndex
                   ? "bg-[#265090] w-6"
                   : "bg-[#265090]/30 hover:bg-[#265090]/50"
               }`}
