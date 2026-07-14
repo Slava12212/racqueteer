@@ -54,6 +54,13 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
     }
   }, []);
 
+  // Measure card on mount and resize
+  useEffect(() => {
+    measureCard();
+    window.addEventListener("resize", measureCard);
+    return () => window.removeEventListener("resize", measureCard);
+  }, [measureCard]);
+
   // Measure container for desktop to determine max scroll
   const [containerWidth, setContainerWidth] = useState(0);
 
@@ -100,12 +107,8 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
   // Desktop carousel logic
   const totalCardsWidth = itemCount * cardStep;
   const visibleWidth = containerWidth;
-  // Adjusted maxScrollPx to only make space for the last card to be fully visible
-  // The 16 = gap compensation and 80px is minimum right padding
-  const maxScrollPx = Math.max(0, totalCardsWidth - visibleWidth + GAP);
-  
-  // Calculate max index so we don't scroll past the last visible card
-  const maxIndex = Math.max(0, Math.ceil(maxScrollPx / cardStep) -1); // Adjusted for 0-indexed and single card steps
+  const maxScrollPx = Math.max(0, totalCardsWidth - visibleWidth);
+  const maxIndex = cardStep > 0 ? Math.max(0, Math.ceil(maxScrollPx / cardStep)) : 0;
 
   const canGoBackDesktop = currentIndex > 0;
   const canGoForwardDesktop = currentIndex < maxIndex;
