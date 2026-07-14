@@ -67,7 +67,10 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
   useEffect(() => {
     const measure = () => {
       if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth);
+        const style = window.getComputedStyle(containerRef.current);
+        const padLeft = parseFloat(style.paddingLeft);
+        const padRight = parseFloat(style.paddingRight);
+        setContainerWidth(containerRef.current.offsetWidth - padLeft - padRight);
       }
     };
     measure();
@@ -106,10 +109,7 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
 
 
   // Desktop carousel logic
-  const totalCardsWidth = itemCount * cardStep;
   const visibleWidth = containerWidth;
-  const maxScrollPx = Math.max(0, totalCardsWidth - GAP - visibleWidth);
-  const maxIndex = cardStep > 0 ? Math.max(0, Math.ceil(maxScrollPx / cardStep)) : 0;
 
   const canGoBackDesktop = currentIndex > 0;
   const exactMaxDesktopScroll = Math.max(0, itemCount * cardStep - GAP - visibleWidth);
