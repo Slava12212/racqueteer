@@ -34,12 +34,13 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
   const containerRef = useRef<HTMLDivElement>(null); // For desktop carousel
 
   // Mobile State (mimicking TestimonialsSection)
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const [mobileStartIndex, setMobileStartIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [mobileCardWidth, setMobileCardWidth] = useState(0);
   const mobileTrackRef = useRef<HTMLDivElement>(null); // For mobile carousel track
   const mobileContainerRef = useRef<HTMLDivElement>(null); // For mobile carousel container
+  const mobileObserverRef = useRef<ResizeObserver | null>(null);
   const touchStartX = useRef<number | null>(null);
   const touchStartScroll = useRef<number>(0); // To support visual drag
   const SWIPE_THRESHOLD = 30; // pixels
@@ -68,10 +69,18 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
   }, []);
 
   // Mobile detection and card width measurement for mobile carousel
-  useEffect(() => {
-    const el = mobileContainerRef.current;
+  // Use callback ref to ensure observer is set up whenever the mobile container renders
+  const mobileContainerCallbackRef = useCallback((el: HTMLDivElement | null) => {
+    // Clean up old observer
+    if (mobileObserverRef.current) {
+      mobileObserverRef.current.disconnect();
+      mobileObserverRef.current = null;
+    }
+    
+    (mobileContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+    
     if (!el) return;
-
+    
     const update = () => {
       const w = el.offsetWidth;
       setIsMobile(w < 768); // Mobile breakpoint below 768px (md)
@@ -80,11 +89,11 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
       const padX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
       setMobileCardWidth(w - padX);
     };
-
+    
     update();
     const observer = new ResizeObserver(update);
+    mobileObserverRef.current = observer;
     observer.observe(el);
-    return () => observer.disconnect();
   }, []);
 
 
@@ -266,7 +275,7 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
         {isMobile ? (
           <>
             <div
-              ref={mobileContainerRef}
+              ref={mobileContainerCallbackRef}
               className="overflow-hidden px-5 sm:px-10 lg:px-[80px]"
               onTouchStart={handleMobileTouchStart}
               onTouchEnd={handleMobileTouchEnd}

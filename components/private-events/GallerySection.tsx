@@ -40,6 +40,7 @@ export default function GallerySection({ content }: GallerySectionProps) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [mobileCardWidth, setMobileCardWidth] = useState(0);
   const mobileContainerRef = useRef<HTMLDivElement>(null);
+  const mobileObserverRef = useRef<ResizeObserver | null>(null);
   const mobileTrackRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number | null>(null);
   const touchStartScroll = useRef<number>(0);
@@ -79,20 +80,25 @@ export default function GallerySection({ content }: GallerySectionProps) {
     return () => cancelAnimationFrame(animationId);
   }, []);
 
-  // Measure mobile card width
-  useEffect(() => {
-    const el = mobileContainerRef.current;
+  // Measure mobile card width — use callback ref to handle conditional rendering
+  const mobileContainerCallbackRef = useCallback((el: HTMLDivElement | null) => {
+    if (mobileObserverRef.current) {
+      mobileObserverRef.current.disconnect();
+      mobileObserverRef.current = null;
+    }
+    
+    (mobileContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
     if (!el) return;
+    
     const update = () => {
-      // Adjust for padding so cards don't overflow the visible area
       const style = window.getComputedStyle(el);
       const padX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
       setMobileCardWidth(el.offsetWidth - padX);
     };
     update();
     const observer = new ResizeObserver(update);
+    mobileObserverRef.current = observer;
     observer.observe(el);
-    return () => observer.disconnect();
   }, []);
 
   const scrollByAmount = (direction: "prev" | "next") => {
@@ -245,7 +251,7 @@ export default function GallerySection({ content }: GallerySectionProps) {
       </div>
 
       {/* Mobile: Sliding image carousel (matching TestimonialsSection logic) */}
-      <div className="md:hidden px-5" ref={mobileContainerRef}
+      <div className="md:hidden px-5" ref={mobileContainerCallbackRef}
         onTouchStart={handleMobileTouchStart}
         onTouchMove={handleMobileTouchMove}
         onTouchEnd={handleMobileTouchEnd}>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import ButtonArrow from "../ButtonArrow";
 import ScrollReveal from "../ScrollReveal";
 import type { SubscriptionsHeaderContent, MembershipPlan } from "@/types";
@@ -137,26 +137,32 @@ export default function SubscriptionsSection({ content, plans: plansProp }: Subs
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [mobileCardWidth, setMobileCardWidth] = useState(0);
   const mobileContainerRef = useRef<HTMLDivElement>(null);
+  const mobileObserverRef = useRef<ResizeObserver | null>(null);
   const mobileTrackRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number | null>(null);
   const touchStartScroll = useRef<number>(0);
   const SWIPE_THRESHOLD = 30;
   const GAP = 16;
 
-  // Measure mobile carousel card width
-  useEffect(() => {
-    const el = mobileContainerRef.current;
+  // Measure mobile carousel card width — use callback ref to handle conditional rendering
+  const mobileContainerCallbackRef = useCallback((el: HTMLDivElement | null) => {
+    if (mobileObserverRef.current) {
+      mobileObserverRef.current.disconnect();
+      mobileObserverRef.current = null;
+    }
+    
+    (mobileContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
     if (!el) return;
+    
     const update = () => {
-      // Adjust for padding so cards don't overflow the visible area
       const style = window.getComputedStyle(el);
       const padX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
       setMobileCardWidth(el.offsetWidth - padX);
     };
     update();
     const observer = new ResizeObserver(update);
+    mobileObserverRef.current = observer;
     observer.observe(el);
-    return () => observer.disconnect();
   }, []);
 
   const itemCount = plans.length;
@@ -235,7 +241,7 @@ export default function SubscriptionsSection({ content, plans: plansProp }: Subs
 
         {/* ──── Mobile: swipeable cards with arrows ──── */}
         <ScrollReveal from="bottom" delay={300}>
-        <div className="md:hidden px-[24px]" ref={mobileContainerRef}
+        <div className="md:hidden px-[24px]" ref={mobileContainerCallbackRef}
           onTouchStart={handleMobileTouchStart}
           onTouchMove={handleMobileTouchMove}
           onTouchEnd={handleMobileTouchEnd}>
