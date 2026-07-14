@@ -20,7 +20,7 @@ const GradientDivider = () => (
 
 export function AmenityCard({ amenity, total }: AmenityCardProps) {
   return (
-    <div className="relative flex-shrink-0 w-[85vw] sm:w-[70vw] md:w-[48vw] lg:w-[330px] xl:w-[420px] 2xl:w-[500px] flex flex-col rounded-lg overflow-hidden bg-white shadow-sm h-full">
+    <div className="relative flex-shrink-0 w-[85vw] sm:w-[70vw] md:w-[48vw] lg:w-[400px] xl:w-[500px] 2xl:w-[580px] flex flex-col rounded-lg overflow-hidden bg-white shadow-sm h-full">
       {/* Bottom gradient overlay */}
       <div
         className="absolute bottom-0 left-0 right-0 h-[120px] pointer-events-none z-10 rounded-b-lg"

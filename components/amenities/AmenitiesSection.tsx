@@ -90,11 +90,13 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
     
     const update = () => {
       const w = el.offsetWidth;
-      setIsMobile(w < 768); // Mobile breakpoint below 768px (md)
+      setIsMobile(w < 768);
       // Adjust for padding so cards don't overflow the visible area
       const style = window.getComputedStyle(el);
       const padX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
-      setMobileCardWidth(w - padX);
+      const fullWidth = w - padX;
+      // On mobile, make cards narrower to show the swipe gesture
+      setMobileCardWidth(w < 768 ? fullWidth * 0.85 : fullWidth);
     };
     
     update();
@@ -319,7 +321,7 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
           /* Desktop carousel branch */
           <div
             ref={containerRef}
-            className="overflow-x-auto snap-x snap-mandatory lg:overflow-hidden pl-5 sm:pl-10 lg:pl-[80px] scrollbar-hide"
+            className="overflow-hidden pl-5 sm:pl-10 lg:pl-[80px] scrollbar-hide"
             onTouchStart={(e) => {
               const touch = e.touches[0];
               containerRef.current?.setAttribute('data-touch-start', String(touch.clientX));
