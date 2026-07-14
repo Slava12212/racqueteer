@@ -110,7 +110,7 @@ export function AmenitiesSection({ content, amenities }: AmenitiesSectionProps) 
   const totalCardsWidth = itemCount * cardStep;
   const visibleWidth = containerWidth;
   const maxScrollPx = Math.max(0, totalCardsWidth - visibleWidth);
-  const maxIndex = cardStep > 0 ? Math.max(0, Math.ceil(maxScrollPx / cardStep)) : 0;
+  const maxIndex = cardStep > 0 ? Math.max(0, Math.ceil(maxScrollPx / cardStep) -1) : 0;
 
   const canGoBackDesktop = currentIndex > 0;
   const canGoForwardDesktop = currentIndex < maxIndex;
