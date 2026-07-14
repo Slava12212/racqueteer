@@ -20,10 +20,10 @@ export const metadata: Metadata = {
     siteName: "Racqueteer",
     images: [
       {
-        url: "https://cdn.builder.io/api/v1/image/assets/1e8c7b62118c49ceb84fba99d4c44471/44e9d92b87a543418f5003c61070b2df?format=webp&width=1200",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Racqueteer - Pickleball & Padel Club",
+        alt: "Racqueteer - Premier Pickleball & Padel Club",
       },
     ],
     locale: "en_AU",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Racqueteer - Premier Pickleball & Padel Club",
     description: "Experience world-class pickleball and padel. Premium courts, expert coaching, luxury amenities.",
-    images: ["https://cdn.builder.io/api/v1/image/assets/1e8c7b62118c49ceb84fba99d4c44471/44e9d92b87a543418f5003c61070b2df?format=webp&width=1200"],
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
