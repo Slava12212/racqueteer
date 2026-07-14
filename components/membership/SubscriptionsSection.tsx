@@ -106,7 +106,7 @@ function MobilePlanCard({ plan }: { plan: Plan }) {
         </div>
       )}
       {/* Header */}
-      <div className="relative z-10 p-6 pb-0">
+      <div className="relative z-10 p-3 pb-0">
         <div className="text-[20px] font-bold text-black leading-6 mb-1">{plan.name}</div>
         <div className="text-sm text-[#6B7280] leading-5 mb-4">{plan.description}</div>
         <div className="mb-4">
@@ -119,7 +119,7 @@ function MobilePlanCard({ plan }: { plan: Plan }) {
         </a>
       </div>
       {/* Features list */}
-      <div className="p-6 pt-4">
+      <div className="p-3 pt-2">
         {features.map((label, i) => (
           <div key={i} className="flex items-center justify-between py-3 border-b border-[#E5E7EB] last:border-b-0">
             <span className="text-xs font-semibold text-black uppercase leading-4 flex-1 pr-4">{label}</span>
@@ -241,7 +241,7 @@ export default function SubscriptionsSection({ content, plans: plansProp }: Subs
 
         {/* ──── Mobile: swipeable cards with arrows ──── */}
         <ScrollReveal from="bottom" delay={300}>
-        <div className="md:hidden px-[24px]" ref={mobileContainerCallbackRef}
+        <div className="md:hidden" ref={mobileContainerCallbackRef}
           onTouchStart={handleMobileTouchStart}
           onTouchMove={handleMobileTouchMove}
           onTouchEnd={handleMobileTouchEnd}>
