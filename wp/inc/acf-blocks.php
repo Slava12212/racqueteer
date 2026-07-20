@@ -107,6 +107,7 @@ add_action( 'acf/init', function () {
             ['key'=>'field_subs_label','label'=>'Label','name'=>'label','type'=>'text'],
             ['key'=>'field_subs_title','label'=>'Title','name'=>'title','type'=>'text'],
             ['key'=>'field_subs_description','label'=>'Description','name'=>'description','type'=>'textarea'],
+            ['key'=>'field_subs_cta_url','label'=>'Explore Membership Options URL','name'=>'cta_url','type'=>'text','instructions'=>'e.g. /memberships or https://...'],
         ]],
         ['name'=>'racqueteer-testimonials','title'=>'Testimonials Section','icon'=>'format-quote','keywords'=>['testimonials'],'fields'=>[
             ['key'=>'field_test_label','label'=>'Label','name'=>'label','type'=>'text'],
@@ -690,6 +691,7 @@ add_action( 'acf/init', function () {
             ],
             [ 'key' => 'field_prog_price',           'label' => 'Price',       'name' => 'price',       'type' => 'text'     ],
             [ 'key' => 'field_prog_unit',            'label' => 'Unit',        'name' => 'unit',        'type' => 'text'     ],
+            [ 'key' => 'field_prog_link',            'label' => 'Link',        'name' => 'link',        'type' => 'text', 'instructions' => 'Optional link for this program row. e.g. /programs/padel-101 or https://...' ],
             [ 'key' => 'field_cpt_prog_description', 'label' => 'Description', 'name' => 'description', 'type' => 'textarea' ],
         ],
         'location' => [ [ [ 'param' => 'post_type', 'operator' => '==', 'value' => 'program' ] ] ],

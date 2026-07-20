@@ -478,6 +478,7 @@ export async function getPrograms(): Promise<Program[]> {
           price:       (f.price       as string) ?? '',
           unit:        (f.unit        as string) ?? '',
           description: (f.description as string) ?? '',
+          link:        (f.link        as string) ?? '',
         } as Program;
       })
       .filter(Boolean) as Program[];

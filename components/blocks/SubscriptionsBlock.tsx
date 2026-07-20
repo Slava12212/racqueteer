@@ -8,6 +8,7 @@ export default function SubscriptionsBlock(attrs: WPSubscriptionsAttributes) {
         label: attrs.label,
         title: attrs.title,
         description: attrs.description,
+        ctaUrl: attrs.ctaUrl,
       }}
     />
   );

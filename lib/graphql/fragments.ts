@@ -59,6 +59,7 @@ export const SUBSCRIPTIONS_FIELDS = `
     label
     title
     description
+    ctaUrl: cta_url
   }
 `;
 
@@ -88,6 +89,7 @@ export const MEMBERSHIP_HERO_FIELDS = `
     priceStarting: price_starting
     priceUnit: price_unit
     ctaText: cta_text
+    ctaUrl: cta_url
     videoUrl: video_url
   }
 `;

@@ -62,6 +62,7 @@ export interface WPSubscriptionsAttributes {
   label: string;
   title: string;
   description: string;
+  ctaUrl?: string;
 }
 
 export interface WPTestimonialsAttributes {
