@@ -87,6 +87,7 @@ export interface Program {
   price: string;
   unit: string;
   description: string;
+  link?: string;
 }
 
 // ========================================
@@ -144,6 +145,7 @@ export interface HomeSubscriptionsContent {
   label: string;
   title: string;
   description: string;
+  ctaUrl?: string;
 }
 
 export interface TestimonialsContent {

@@ -76,6 +76,11 @@ function ProgramRow({
 }) {
   const [hovered, setHovered] = useState(false);
   const isRed = program.color === "red";
+  const link = program.link?.trim() ?? "";
+  const hasLink = link.length > 0;
+  const price = program.price?.trim() ?? "";
+  const unit = program.unit?.trim() ?? "";
+  const hasPrice = price.length > 0;
 
   const bgClass = hovered
     ? isRed
@@ -93,13 +98,9 @@ function ProgramRow({
   const priceColor = hovered ? "text-white" : "text-brand-blue";
   const unitColor = hovered ? "text-white/80" : "text-brand-gray";
   const sepColor = hovered ? "text-white/50" : "text-brand-gray/50";
-
-  return (
-    <div
-      className={`flex flex-col lg:flex-row px-5 md:px-10 lg:px-[80px] py-8 md:py-9 items-start lg:items-center gap-4 lg:gap-6 md:gap-10 border-t border-brand-border transition-colors duration-300 cursor-pointer ${bgClass}`}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
+  const rowClass = `flex flex-col lg:flex-row px-5 md:px-10 lg:px-[80px] py-8 md:py-9 items-start lg:items-center gap-4 lg:gap-6 md:gap-10 border-t border-brand-border transition-colors duration-300 ${hasLink ? "cursor-pointer" : "cursor-default"} ${bgClass}`;
+  const rowContent = (
+    <>
       {/* Title */}
       <div
         className={`lg:flex-1 lg:min-w-0 font-bold text-base md:text-2xl lg:text-[32px] uppercase leading-tight tracking-wide transition-colors duration-300 ${titleColorClass}`}
@@ -118,41 +119,73 @@ function ProgramRow({
           {program.description}
         </div>
 
-        {/* Price - always visible on right */}
-        <div className="flex items-center gap-2 flex-shrink-0 lg:ml-auto">
-          <span
-            className={`text-xl md:text-3xl lg:text-4xl font-semibold leading-tight transition-colors duration-300 ${priceColor}`}
-            style={{ fontFamily: '"Mona Sans", sans-serif' }}
-          >
-            {program.price}
-          </span>
-          {program.price && (
-            <span className={`text-base transition-colors duration-300 ${sepColor}`}>
-              /
+        {/* Price */}
+        {hasPrice && (
+          <div className="flex items-center gap-2 flex-shrink-0 lg:ml-auto">
+            <span
+              className={`text-xl md:text-3xl lg:text-4xl font-semibold leading-tight transition-colors duration-300 ${priceColor}`}
+              style={{ fontFamily: '"Mona Sans", sans-serif' }}
+            >
+              {price}
             </span>
-          )}
-          <span
-            className={`text-xs uppercase tracking-wide transition-colors duration-300 ${unitColor}`}
-            style={{ fontFamily: '"Mona Sans", sans-serif' }}
-          >
-            {program.unit}
-          </span>
-        </div>
+            {unit && (
+              <>
+                <span className={`text-base transition-colors duration-300 ${sepColor}`}>
+                  /
+                </span>
+                <span
+                  className={`text-xs uppercase tracking-wide transition-colors duration-300 ${unitColor}`}
+                  style={{ fontFamily: '"Mona Sans", sans-serif' }}
+                >
+                  {unit}
+                </span>
+              </>
+            )}
+          </div>
+        )}
 
-        {/* Arrow (visible on hover) */}
-        <div
-          className={`flex-shrink-0 transition-all duration-300 ${hovered ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"}`}
-        >
-          <ArrowIcon className="text-white w-6 h-6" />
-        </div>
+        {/* Arrow (visible on hover when a link is configured) */}
+        {hasLink && (
+          <div
+            className={`flex-shrink-0 transition-all duration-300 ${hovered ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"}`}
+          >
+            <ArrowIcon className="text-white w-6 h-6" />
+          </div>
+        )}
       </div>
+    </>
+  );
+
+  if (hasLink) {
+    const isExternal = /^https?:\/\//i.test(link);
+    return (
+      <a
+        href={link}
+        target={isExternal ? "_blank" : undefined}
+        rel={isExternal ? "noopener noreferrer" : undefined}
+        className={rowClass}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        {rowContent}
+      </a>
+    );
+  }
+
+  return (
+    <div
+      className={rowClass}
+      onMouseEnter={() => setHovered(false)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {rowContent}
     </div>
   );
 }
 
 export default function ProgramsSection({ content, programs: programsProp }: ProgramsSectionProps) {
   const programs = programsProp && programsProp.length > 0 ? programsProp : FALLBACK_PROGRAMS;
-  const { ctaText, ctaUrl, openBookModal } = useCta();
+  const { ctaText, openBookModal } = useCta();
 
   // The new headline with text-wrap:balance to prevent orphan words
   const displayTitle = content.title;

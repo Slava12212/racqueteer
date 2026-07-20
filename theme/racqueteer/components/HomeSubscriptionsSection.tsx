@@ -124,6 +124,8 @@ function MobilePlanCard({ plan }: { plan: Plan }) {
 }
 
 export default function HomeSubscriptionsSection({ content }: HomeSubscriptionsSectionProps) {
+  const membershipOptionsUrl = content.ctaUrl?.trim() || "/memberships";
+
   return (
     <section data-header-theme="light" className="relative overflow-hidden bg-[#F4F6F9] pt-16 sm:pt-[120px] pb-16 sm:pb-[180px] px-6 sm:px-8 lg:px-[80px]">
       {/* Left racket - pickleball paddle (same layout as Membership Amenities block) */}
@@ -247,7 +249,7 @@ export default function HomeSubscriptionsSection({ content }: HomeSubscriptionsS
         <ScrollReveal from="bottom" delay={400}>
           <div className="flex justify-center mt-8">
             <Link
-              href="/memberships"
+              href={membershipOptionsUrl}
               className="btn-cta btn-cta-red group flex items-center justify-center gap-3 w-full md:w-auto px-10 py-4 text-white text-sm font-bold uppercase tracking-wider transition-colors active:scale-95 cursor-pointer rounded-sm"
             >
               <span>Explore Membership Options</span>

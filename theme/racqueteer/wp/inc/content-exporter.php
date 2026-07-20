@@ -321,7 +321,8 @@ function rq_export_programs(): string {
         $price = (string) ( get_post_meta($p->ID, 'price', true) ?: '' );
         $unit  = (string) ( get_post_meta($p->ID, 'unit', true)  ?: 'per game' );
         $desc  = (string) ( get_post_meta($p->ID, 'description', true) ?: '' );
-        $lines[] = '        [ ' . implode(', ', [rq_ex($title), rq_ex($color), rq_ex($price), rq_ex($unit), rq_ex($desc)]) . ' ],';
+        $link  = (string) ( get_post_meta($p->ID, 'link', true)  ?: '' );
+        $lines[] = '        [ ' . implode(', ', [rq_ex($title), rq_ex($color), rq_ex($price), rq_ex($unit), rq_ex($desc), rq_ex($link)]) . ' ],';
     }
 
     $body = implode("\n", $lines);
