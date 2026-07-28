@@ -437,42 +437,29 @@ export async function getTestimonials(): Promise<Testimonial[]> {
  * TODO: Replace with WP REST API fetch — GET /wp-json/wp/v2/locations
  */
 export async function getLocations(): Promise<Location[]> {
+  // Icons will be imported in the component that uses this data
   return [
-    {
-      id: "alexandria",
-      name: "Alexandria Club",
-      status: "coming_soon",
-      address: ["Alexandria,", "82-86 Bourke Rd, Alexandria NSW 2015"],
-      description:
-        "Our newest location coming soon to Alexandria. A world-class facility designed for serious players and casual enthusiasts alike.",
-      amenities: [],
-      image: "/amenity-courts-2.jpg",
-      mediaType: "video",
-      video: "/locations/alexandria-placeholder.mp4",
-    },
-    {
-      id: "rosehill",
-      name: "Rosehill Club",
-      status: "coming_soon",
-      address: ["Rosehill,", "11A Grand Ave, Camellia NSW 2142"],
-      description:
-        "Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.",
-      amenities: [],
-      image: "/amenity-coworking.jpg",
-      mediaType: "image",
-      video: undefined,
-    },
     {
       id: "homebush",
       name: "Homebush Club",
       status: "available",
-      address: ["Homebush,", "10 Carter St, Lidcombe NSW 2141"],
+      address: ["Homebush, Sydney", "New South Wales 2140, Australia"],
       description:
         "Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.",
-      amenities: [],
-      image: "/homebush-placeholder.jpg",
-      mediaType: "image",
-      video: undefined,
+      amenities: [], // Will be populated in component with icon components
+      image:
+        "https://api.builder.io/api/v1/image/assets/TEMP/edca0eb2071de6afc816146f03f622629c2fb896?width=1182",
+    },
+    {
+      id: "alexandria",
+      name: "Alexandria Club",
+      status: "coming_soon",
+      address: ["Alexandria, Sydney", "New South Wales 2015, Australia"],
+      description:
+        "Our newest location coming soon to Alexandria. A world-class facility designed for serious players and casual enthusiasts alike.",
+      amenities: [], // Will be populated in component with icon components
+      image:
+        "https://api.builder.io/api/v1/image/assets/TEMP/edca0eb2071de6afc816146f03f622629c2fb896?width=1182",
     },
   ];
 }
@@ -585,7 +572,6 @@ export async function getHomepageContent(): Promise<HomepageContent> {
       label: "memberships",
       title: "Choose Your Perfect Membership Plan",
       description: "Select the plan that best fits your lifestyle and playing frequency. All memberships include access to our world-class facilities, expert coaching, and vibrant community.",
-      ctaUrl: "/memberships",
     },
     testimonials: {
       label: "testimonials",
@@ -758,12 +744,10 @@ export async function getNavbarContent(): Promise<NavbarContent> {
     ctaUrl: "#",
     menuLinks: [
       { label: "Home", url: "/" },
-      { label: "Coaching", url: "#" },
-      { label: "Events & Programs", url: "#" },
-      { label: "Membership", url: "/memberships" },
       { label: "Private Events", url: "/private-events" },
-      { label: "About Us", url: "/about" },
-      { label: "Careers", url: "/careers" },
+      { label: "Memberships", url: "/memberships" },
+      { label: "About", url: "/about" },
+      { label: "Career", url: "/careers" },
     ],
   };
 }
@@ -784,10 +768,8 @@ export async function getFooterContent(): Promise<FooterContent> {
     ctaUrl: "#",
     menuLabel: "Menu",
     menuLinks: [
-      { label: "Membership", url: "/memberships" },
-      { label: "Events & Programs", url: "#" },
+      { label: "Memberships", url: "/memberships" },
       { label: "Private Events", url: "/private-events" },
-      { label: "Coaching", url: "#" },
       { label: "About Us", url: "/about" },
       { label: "Careers", url: "/careers" },
     ],
@@ -804,9 +786,8 @@ export async function getFooterContent(): Promise<FooterContent> {
     ],
     copyrightText: "©2026 Racqueteer. All Rights Reserved.",
     legalLinks: [
-      { label: "Conditions", url: "#" },
-      { label: "Terms of Service", url: "#" },
-      { label: "Privacy Policy", url: "#" },
+      { label: "Terms of Service", url: "/terms" },
+      { label: "Privacy Policy", url: "/privacy" },
     ],
   };
 }

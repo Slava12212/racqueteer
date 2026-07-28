@@ -417,6 +417,8 @@ function mapLocationNode(node: {
     description: lf.description ?? '',
     amenities: amenities.length > 0 ? amenities : fallbackAmenities,
     image:       lf.image?.node?.sourceUrl ?? '',
+    videoUrl:    lf.video ?? undefined,
+    videoMime:   lf.video ? 'video/mp4' : undefined,
     mediaType:   (node.locationMediaType === 'video' ? 'video' : 'image') as 'image' | 'video',
     video:       lf.video ?? '',
     bgImage:     node.locationBgImage ?? undefined,

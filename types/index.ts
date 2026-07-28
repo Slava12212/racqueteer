@@ -78,6 +78,10 @@ export interface Location {
   mediaType?: "image" | "video";
   /** Video URL for the right panel (used when mediaType === 'video') */
   video?: string;
+  /** Legacy field used by the baseline LocationsSection layout. */
+  videoUrl?: string;
+  /** Legacy MIME type used by the baseline LocationsSection layout. */
+  videoMime?: string;
 }
 
 // Programs
