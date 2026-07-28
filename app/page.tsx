@@ -1,16 +1,16 @@
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import HeroSection from "@/components/HeroSection";
 import AboutSection from "@/components/AboutSection";
 import LocationsSection from "@/components/LocationsSection";
 import ProgramsSection from "@/components/ProgramsSection";
 import HomeSubscriptionsSection from "@/components/HomeSubscriptionsSection";
-import MembershipSection from "@/components/MembershipSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import EventsSection from "@/components/EventsSection";
 import { AmenitiesSection } from "@/components/amenities/AmenitiesSection";
 import BlockRenderer from "@/components/blocks/BlockRenderer";
-import { getPageBlocks, getAmenities } from "@/lib/wp-api";
-import { getHomepageContent, getLocations } from "@/lib/api";
+import { getPageLookup, getAmenities, getLocations } from "@/lib/wp-api";
+import { getHomepageContent } from "@/lib/api";
 import { resolveAmenityIcon } from "@/lib/amenity-resolver";
 import type { Amenity } from "@/components/amenities/amenitiesData";
 
@@ -22,15 +22,23 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const blocks = await getPageBlocks("/");
+  const pageLookup = await getPageLookup("/");
 
   // If WP blocks available — render via BlockRenderer
-  if (blocks.length > 0) {
-    return (
-      <div className="overflow-x-hidden">
-        <BlockRenderer blocks={blocks} />
-      </div>
-    );
+  if (!pageLookup.failed) {
+    const page = pageLookup.page;
+
+    if (!page || page.status !== "publish") {
+      notFound();
+    }
+
+    if (page.blocks.length > 0) {
+      return (
+        <div className="overflow-x-hidden">
+          <BlockRenderer blocks={page.blocks} />
+        </div>
+      );
+    }
   }
 
   // Fallback — hardcoded content while WP isn't configured yet
@@ -62,8 +70,9 @@ export default async function HomePage() {
       <AboutSection content={content.about} />
       <LocationsSection content={content.locations} locations={locations} />
       <AmenitiesSection amenities={amenities} />
-      {/* ProgramsSection removed as per Alex's request to avoid duplication after Membership sections */}
-      <MembershipSection content={content.membership} />
+      <ProgramsSection content={content.programs} />
+      {/* Hidden per Alex's request */}
+      {/* <MembershipSection content={content.membership} /> */}
       <HomeSubscriptionsSection content={content.subscriptions} />
       <TestimonialsSection content={content.testimonials} />
       <EventsSection content={content.events} />

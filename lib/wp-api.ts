@@ -15,6 +15,7 @@ import {
   GET_TESTIMONIALS,
   GET_AMENITIES,
   GET_LOCATIONS,
+  GET_LOCATIONS_MINIMAL,
   GET_PROGRAMS,
   GET_PRICE_COMPARE,
   GET_SITE_OPTIONS,
@@ -83,6 +84,24 @@ interface RawBlock {
   [key: string]: unknown;
 }
 
+type RawAmenity = { icon?: unknown; label?: unknown };
+
+function normalizeAmenities(input: unknown): Array<{ label: string; iconName: string }> {
+  if (!Array.isArray(input)) return [];
+
+  return input
+    .map((item) => {
+      const amenity = (item ?? {}) as RawAmenity;
+      const label = typeof amenity.label === 'string' ? amenity.label.trim() : '';
+      const rawIcon = Array.isArray(amenity.icon)
+        ? amenity.icon.find((v) => typeof v === 'string')
+        : amenity.icon;
+      const iconName = typeof rawIcon === 'string' ? rawIcon.trim() : '';
+      return { label, iconName };
+    })
+    .filter((a) => a.label.length > 0);
+}
+
 // Standard Block interface fields that are NOT ACF data
 const BLOCK_INTERFACE_FIELDS = new Set(['__typename', 'id', 'type', 'tagName', 'innerHtml', 'attributes', 'connections']);
 
@@ -95,8 +114,15 @@ const BLOCK_INTERFACE_FIELDS = new Set(['__typename', 'id', 'type', 'tagName', '
  * backwards compatibility.
  */
 function flattenBlockAttributes(raw: RawBlock): Record<string, unknown> {
-  // New flat schema: look for the first non-standard field that is an object
+  // New flat schema: prefer explicit Racqueteer ACF field groups to avoid
+  // accidentally picking unrelated object fields returned by WPGraphQL.
   const acfKey = Object.keys(raw).find(
+    (k) =>
+      !BLOCK_INTERFACE_FIELDS.has(k) &&
+      k.startsWith('racqueteer') &&
+      raw[k] !== null &&
+      typeof raw[k] === 'object'
+  ) ?? Object.keys(raw).find(
     (k) => !BLOCK_INTERFACE_FIELDS.has(k) && raw[k] !== null && typeof raw[k] === 'object'
   );
   if (acfKey && raw[acfKey]) {
@@ -156,32 +182,57 @@ export interface WPPageData {
   blocks: WPBlock[];
 }
 
+export interface WPPageLookupResult {
+  page: WPPageData | null;
+  failed: boolean;
+}
+
+async function fetchPageBySlug(slug: string): Promise<WPPageData | null> {
+  const data = await wpGraphQL<{
+    pageBy: {
+      title: string;
+      status: string;
+      blocks: RawBlock[];
+    } | null;
+  }>(GET_PAGE_BY_SLUG, { slug });
+
+  const page = data.pageBy;
+  if (!page) return null;
+
+  return {
+    title: page.title,
+    status: page.status,
+    seoDescription: '',
+    blocks: (page.blocks ?? []).map(rawBlockToWPBlock),
+  };
+}
+
 /**
  * Fetch a page by slug with its status and blocks.
  * Draft or missing → returns null.
  */
 export async function getPageBySlug(slug: string): Promise<WPPageData | null> {
   try {
-    const data = await wpGraphQL<{
-      pageBy: {
-        title: string;
-        status: string;
-        blocks: RawBlock[];
-      } | null;
-    }>(GET_PAGE_BY_SLUG, { slug });
-
-    const page = data.pageBy;
-    if (!page) return null;
-
-    return {
-      title: page.title,
-      status: page.status,
-      seoDescription: '',
-      blocks: (page.blocks ?? []).map(rawBlockToWPBlock),
-    };
+    return await fetchPageBySlug(slug);
   } catch (err) {
     console.error(`getPageBySlug("${slug}") failed:`, err);
     return null;
+  }
+}
+
+/**
+ * Fetch a page for a first-class Next.js route.
+ *
+ * failed=false means WordPress answered, so a null/non-published page should
+ * be treated as intentionally unavailable. failed=true lets static routes keep
+ * their legacy hardcoded fallback when WP is temporarily unreachable.
+ */
+export async function getPageLookup(slug: string): Promise<WPPageLookupResult> {
+  try {
+    return { page: await fetchPageBySlug(slug), failed: false };
+  } catch (err) {
+    console.error(`getPageLookup("${slug}") failed:`, err);
+    return { page: null, failed: true };
   }
 }
 
@@ -335,63 +386,89 @@ export async function getTestimonials(): Promise<Testimonial[]> {
 // LOCATIONS
 // ========================================
 
+/** Internal helper: map raw WP node to Location */
+function mapLocationNode(node: {
+  databaseId: number;
+  locationStatus?: string | null;
+  locationMediaType?: string | null;
+  locationBgImage?: string | null;
+  locationAmenities?: unknown;
+  locationFields: {
+    locationId?: string | null;
+    name?: string | null;
+    address?: string | null;
+    description?: string | null;
+    amenities?: unknown;
+    image?: { node?: { sourceUrl?: string } | null } | null;
+    video?: string | null;
+  } | null;
+}): Location {
+  const lf = node.locationFields ?? {};
+  const rawSt = node.locationStatus ?? '';
+  const status: 'available' | 'coming_soon' =
+    rawSt === 'coming_soon' ? 'coming_soon' : 'available';
+  const amenities = normalizeAmenities(node.locationAmenities);
+  const fallbackAmenities = normalizeAmenities(lf.amenities);
+  return {
+    id:          lf.locationId ?? String(node.databaseId),
+    name:        lf.name        ?? '',
+    status,
+    address:     (lf.address ?? '').split('\n').filter(Boolean),
+    description: lf.description ?? '',
+    amenities: amenities.length > 0 ? amenities : fallbackAmenities,
+    image:       lf.image?.node?.sourceUrl ?? '',
+    mediaType:   (node.locationMediaType === 'video' ? 'video' : 'image') as 'image' | 'video',
+    video:       lf.video ?? '',
+    bgImage:     node.locationBgImage ?? undefined,
+  };
+}
+
 export async function getLocations(): Promise<Location[]> {
+  // Try full query (includes custom WPGraphQL resolvers: locationStatus, locationMediaType, etc.)
+  try {
+    const data = await wpGraphQL<{
+      locations: { nodes: Array<Parameters<typeof mapLocationNode>[0]> };
+    }>(GET_LOCATIONS);
+    const nodes = data.locations.nodes ?? [];
+    if (nodes.length > 0) return nodes.map(mapLocationNode);
+  } catch (err) {
+    console.warn(
+      'getLocations() full query failed (custom resolvers may not be registered in WPGraphQL). ' +
+      'Trying minimal query…\n', err
+    );
+  }
+
+  // Fallback: minimal query — only locationFields ACF group
   try {
     const data = await wpGraphQL<{
       locations: {
         nodes: Array<{
           databaseId: number;
-          locationStatus?: string | null;
-          locationAmenities?: Array<{ icon?: string; label?: string }> | null;
           locationFields: {
-            locationId: string;
-            name: string;
-            address: string;
-            description: string;
-            image: { node: { sourceUrl: string } };
+            locationId?: string | null;
+            name?: string | null;
+            address?: string | null;
+            description?: string | null;
+            amenities?: unknown;
+            image?: { node?: { sourceUrl?: string } | null } | null;
             video?: string | null;
-          };
+          } | null;
         }>;
       };
-    }>(GET_LOCATIONS);
-
-    return data.locations.nodes.map((node) => {
-      const lf = node.locationFields ?? {};
-
-      // locationStatus comes from Location.locationStatus (manual resolver, v24).
-      // Resolver already normalises to lowercase 'available' | 'coming_soon'.
-      const rawSt = node.locationStatus ?? '';
-      const status: 'available' | 'coming_soon' =
-        rawSt === 'coming_soon' ? 'coming_soon' : 'available';
-
-      // Map amenities from WP repeater rows to LocationAmenity objects.
-      // The icon SVG is resolved by the component via LOCATION_ICON_MAP.
-      const amenities = Array.isArray(node.locationAmenities)
-        ? node.locationAmenities
-            .filter((a) => a && a.label)
-            .map((a) => ({
-              label: a.label ?? '',
-              iconName: Array.isArray(a.icon) ? (a.icon[0] ?? '') : (a.icon ?? ''),
-            }))
-        : [];
-
-      return {
-        id:          lf.locationId ?? String(node.databaseId),
-        name:        lf.name        ?? '',
-        status,
-        address:     (lf.address ?? '').split('\n').filter(Boolean),
-        description: lf.description ?? '',
-        amenities,   // icons are resolved in LocationsSection via LOCATION_ICON_MAP
-        image:       lf.image?.node?.sourceUrl ?? '',
-        videoUrl:    lf.video ?? undefined,
-        videoMime:   lf.video ? 'video/mp4' : undefined,
-      };
-    });
-  } catch (err) {
-    console.error('getLocations() failed, falling back to hardcoded data:', err);
-    const { getLocations: getFallback } = await import('./api');
-    return getFallback();
+    }>(GET_LOCATIONS_MINIMAL);
+    const nodes = data.locations.nodes ?? [];
+    if (nodes.length > 0) {
+      return nodes.map((node) =>
+        mapLocationNode({ ...node, locationStatus: null, locationMediaType: null, locationBgImage: null, locationAmenities: null })
+      );
+    }
+  } catch (minErr) {
+    console.warn('getLocations() minimal query also failed. Falling back to hardcoded data.\n', minErr);
   }
+
+  // Final fallback: hardcoded static data
+  const { getLocations: getFallback } = await import('./api');
+  return getFallback();
 }
 
 // ========================================
@@ -508,7 +585,10 @@ export async function getPriceCompareData(): Promise<{
     const features = featuresData.priceCompare.nodes[0]?.acf.features ?? [];
     return { features, plans };
   } catch (err) {
-    console.error('getPriceCompareData() failed, falling back to hardcoded data:', err);
+    console.warn(
+      'getPriceCompareData() failed — the "priceCompare" CPT may not be registered in WPGraphQL yet. ' +
+      'Falling back to hardcoded data:', err
+    );
     const { getPriceCompareData: getFallback } = await import('./api');
     return getFallback();
   }
