@@ -72,74 +72,55 @@ const FALLBACK_AMENITIES = [
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Placeholder media for the two demo locations. Used when WordPress returns no
-// per-location image/video. Files live in public/locations/.
-// Sources (Pexels — no attribution required):
-//   homebush-placeholder.jpg → photo ID 35248286 (vertical padel court)
-//   alexandria-placeholder.mp4 → video ID 34449247 (vertical 540x960 padel clip)
-const FALLBACK_LOCATIONS = [
-  {
-    id: "homebush",
-    name: "Homebush Club",
-    status: "available" as const,
-    address: ["Homebush, Sydney", "New South Wales 2140, Australia"],
-    description:
-      "Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.",
-    amenities: FALLBACK_AMENITIES,
-    // Homebush shows a still IMAGE placeholder.
-    image: "/locations/homebush-placeholder.jpg",
-    videoUrl: undefined,
-    videoMime: undefined,
-  },
+const FALLBACK_LOCATIONS: Location[] = [
   {
     id: "alexandria",
     name: "Alexandria Club",
     status: "coming_soon" as const,
-    address: ["Alexandria, Sydney", "New South Wales 2015, Australia"],
+    address: ["Alexandria,", "82-86 Bourke Rd, Alexandria NSW 2015"],
     description:
       "Our newest location coming soon to Alexandria. A world-class facility designed for serious players and casual enthusiasts alike.",
     amenities: FALLBACK_AMENITIES,
-    // Alexandria shows a vertical VIDEO placeholder.
-    // image is used as the poster while the video loads.
-    image: "/locations/homebush-placeholder.jpg",
-    videoUrl: "/locations/alexandria-placeholder.mp4",
-    videoMime: "video/mp4",
+    image: "/amenity-courts-2.jpg",
+    mediaType: "video",
+    video: "/locations/alexandria-placeholder.mp4",
+  },
+  {
+    id: "rosehill",
+    name: "Rosehill Club",
+    status: "coming_soon" as const,
+    address: ["Rosehill,", "11A Grand Ave, Camellia NSW 2142"],
+    description:
+      "Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.",
+    amenities: FALLBACK_AMENITIES,
+    image: "/amenity-coworking.jpg",
+    mediaType: "image",
+    video: undefined,
+  },
+  {
+    id: "homebush",
+    name: "Homebush Club",
+    status: "available" as const,
+    address: ["Homebush,", "10 Carter St, Lidcombe NSW 2141"],
+    description:
+      "Perfect for newcomers and those looking to refine their foundational skills, this clinic provides a supportive environment for learning and improvement.",
+    amenities: FALLBACK_AMENITIES,
+    image: "/homebush-placeholder.jpg",
+    mediaType: "image",
+    video: undefined,
   },
 ];
+
+const DEFAULT_BG =
+  "https://api.builder.io/api/v1/image/assets/TEMP/d030e821f9fa82fd99e0b0c647c0ee6763233604?width=3840";
 
 export default function LocationsSection({ content, locations: locationsProp }: LocationsSectionProps) {
   const { ctaText, ctaUrl, openBookModal } = useCta();
 
   // Use WP locations if provided; fall back to hardcoded
-  const wpLocations = (locationsProp && locationsProp.length > 0)
+  const locations = (locationsProp && locationsProp.length > 0)
     ? locationsProp
     : FALLBACK_LOCATIONS;
-
-  // Demo media fallback (per location, matched by `id`):
-  //   - If WP returns no video for this location, use the demo video (if any).
-  //   - If WP returns no image (or the legacy Builder.io stub image), use the
-  //     demo image as a poster/placeholder.
-  // This ensures Homebush shows a vertical IMAGE and Alexandria shows a
-  // vertical VIDEO until the content team uploads real per-location media in
-  // WordPress (Location → Image / Video ACF fields).
-  const LEGACY_PLACEHOLDER_PATTERNS = [
-    'api.builder.io/api/v1/image/assets/TEMP/edca0eb2',
-  ];
-  const isLegacyPlaceholder = (url?: string) =>
-    !!url && LEGACY_PLACEHOLDER_PATTERNS.some((p) => url.includes(p));
-
-  const locations = wpLocations.map((loc) => {
-    const demo = FALLBACK_LOCATIONS.find((f) => f.id === loc.id);
-    if (!demo) return loc;
-    const hasRealImage = !!loc.image && !isLegacyPlaceholder(loc.image);
-    const hasVideo = !!loc.videoUrl;
-    return {
-      ...loc,
-      image:      hasRealImage ? loc.image      : demo.image,
-      videoUrl:   hasVideo     ? loc.videoUrl   : demo.videoUrl,
-      videoMime:  hasVideo     ? loc.videoMime  : demo.videoMime,
-    };
-  });
 
   const [selectedId, setSelectedId] = useState(() => locations[0]?.id ?? "homebush");
   const selected = locations.find((l) => l.id === selectedId)!;
@@ -170,90 +151,29 @@ export default function LocationsSection({ content, locations: locationsProp }: 
     <section data-header-theme="dark" className="relative w-full h-auto lg:h-screen overflow-hidden font-['Mona_Sans',_-apple-system,_Roboto,_Helvetica,_sans-serif]">
       {/* Background image */}
       <img
-        src="https://api.builder.io/api/v1/image/assets/TEMP/d030e821f9fa82fd99e0b0c647c0ee6763233604?width=3840"
+        src={selected.bgImage || DEFAULT_BG}
         alt="Padel courts background"
-        width={1920}
-        height={1080}
         className="absolute inset-0 w-full h-full object-cover"
       />
       {/* Dark overlay for left panel */}
       <div className="absolute inset-0 bg-black/40" />
 
       {/* Main layout */}
-      <div className="relative flex flex-col xl:flex-row h-auto xl:h-screen">
+      <div className="relative flex flex-col lg:flex-row h-auto lg:h-screen">
         {/* LEFT PANEL */}
-        <div className="relative flex flex-col justify-between w-full xl:w-[34%] px-6 md:px-10 xl:px-[80px] pt-16 pb-0 xl:pt-[66px] xl:pb-[66px]">
-          {/* Header label — centered on mobile, left on desktop */}
+        <div className="relative flex flex-col justify-between w-full lg:w-[34%] px-6 md:px-10 lg:px-[80px] py-16 lg:py-[66px]">
+          {/* Header label */}
           <ScrollReveal from="bottom" delay={0}>
-            <p className="text-white text-xs font-extrabold tracking-[2.8px] uppercase mb-0 xl:text-left text-center">
+            <p className="text-white text-xs font-extrabold tracking-[2.8px] uppercase mb-0">
               {content.label}
             </p>
           </ScrollReveal>
 
-          {/* Mobile: club name + arrows + badge (above the card) */}
-          <div className="xl:hidden relative flex flex-col items-center mt-8 mb-10 w-full">
-            {/* Club name */}
-            <h2
-              className="text-white text-[20px] md:text-[24px] font-extrabold uppercase text-center leading-tight"
-              style={{ fontFamily: '"Mona Sans", sans-serif', fontStretch: '125%', letterSpacing: '0.05em' }}
-            >
-              {selected.name}
-            </h2>
-            {/* Status badge */}
-            <div className="mt-2">
-              {selected.status === "available" ? (
-                <div className="flex items-center justify-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#3AFF75] flex-shrink-0" />
-                  <span className="text-white/50 text-sm">Available now</span>
-                </div>
-              ) : (
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-[50px] rounded">
-                  <span className="w-2 h-2 rounded-full bg-[#FFDE59] flex-shrink-0" />
-                  <span className="text-white text-sm">Coming soon...</span>
-                </div>
-              )}
-            </div>
-
-            {/* Arrows */}
-            <button
-              onClick={() => {
-                const idx = locations.findIndex((l) => l.id === selectedId);
-                const prev = idx > 0 ? idx - 1 : locations.length - 1;
-                setSelectedId(locations[prev].id);
-              }}
-              aria-label="Previous location"
-              className="absolute top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-colors bg-transparent border border-white text-white w-9 h-9 md:w-12 md:h-12"
-              style={{ left: '-8px' }}
-            >
-              <span className="block w-9 h-9 md:w-12 md:h-12">
-                <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                  <path fillRule="evenodd" clipRule="evenodd" d="M38.5297 33.4606C38.6701 33.6012 38.749 33.7918 38.749 33.9906C38.749 34.1893 38.6701 34.3799 38.5297 34.5206L33.8097 39.2406H47.9997C48.1986 39.2406 48.3894 39.3196 48.53 39.4602C48.6707 39.6009 48.7497 39.7916 48.7497 39.9906C48.7497 40.1895 48.6707 40.3802 48.53 40.5209C48.3894 40.6615 48.1986 40.7406 47.9997 40.7406H33.8097L38.5297 45.4606C38.6034 45.5292 38.6625 45.612 38.7035 45.704C38.7444 45.796 38.7665 45.8953 38.7683 45.996C38.77 46.0967 38.7515 46.1968 38.7138 46.2901C38.6761 46.3835 38.6199 46.4684 38.5487 46.5396C38.4775 46.6108 38.3927 46.667 38.2993 46.7047C38.2059 46.7424 38.1059 46.7609 38.0052 46.7591C37.9045 46.7574 37.8051 46.7353 37.7131 46.6943C37.6211 46.6533 37.5383 46.5942 37.4697 46.5206L31.4697 40.5206C31.3292 40.3799 31.2503 40.1893 31.2503 39.9906C31.2503 39.7918 31.3292 39.6012 31.4697 39.4606L37.4697 33.4606C37.6103 33.3201 37.8009 33.2412 37.9997 33.2412C38.1984 33.2412 38.3891 33.3201 38.5297 33.4606Z" fill="white" />
-                </svg>
-              </span>
-            </button>
-            <button
-              onClick={() => {
-                const idx = locations.findIndex((l) => l.id === selectedId);
-                const next = idx < locations.length - 1 ? idx + 1 : 0;
-                setSelectedId(locations[next].id);
-              }}
-              aria-label="Next location"
-              className="absolute top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full transition-colors bg-transparent border border-white text-white w-9 h-9 md:w-12 md:h-12"
-              style={{ right: '-8px' }}
-            >
-              <span className="block w-9 h-9 md:w-12 md:h-12">
-                <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                  <path fillRule="evenodd" clipRule="evenodd" d="M41.4703 33.4606C41.3299 33.6012 41.251 33.7918 41.251 33.9906C41.251 34.1893 41.3299 34.3799 41.4703 34.5206L46.1903 39.2406L32.0003 39.2406C31.8014 39.2406 31.6107 39.3196 31.47 39.4602C31.3293 39.6009 31.2503 39.7916 31.2503 39.9906C31.2503 40.1895 31.3293 40.3802 31.47 40.5209C31.6107 40.6615 31.8014 40.7406 32.0003 40.7406L46.1903 40.7406L41.4703 45.4606C41.3966 45.5292 41.3375 45.612 41.2965 45.704C41.2556 45.796 41.2335 45.8953 41.2317 45.996C41.23 46.0967 41.2485 46.1968 41.2862 46.2902C41.3239 46.3835 41.3801 46.4684 41.4513 46.5396C41.5225 46.6108 41.6073 46.667 41.7007 46.7047C41.7941 46.7424 41.8941 46.7609 41.9949 46.7591C42.0956 46.7574 42.1949 46.7353 42.2869 46.6943C42.3789 46.6533 42.4617 46.5942 42.5303 46.5206L48.5303 40.5206C48.6708 40.3799 48.7497 40.1893 48.7497 39.9906C48.7497 39.7918 48.6708 39.6012 48.5303 39.4606L42.5303 33.4606C42.3897 33.3201 42.1991 33.2412 42.0003 33.2412C41.8016 33.2412 41.611 33.3201 41.4703 33.4606Z" fill="white" />
-                </svg>
-              </span>
-            </button>
-          </div>
-
-          {/* Location list — desktop only (hidden on mobile) */}
-          <div ref={containerRef} className="hidden xl:flex relative flex-col gap-10 mt-10 flex-1 justify-center">
+          {/* Location list */}
+          <div ref={containerRef} className="relative flex flex-col gap-10 mt-10 lg:mt-0 flex-1 justify-center">
             {/* Animated vertical bar indicator — flush against center panel */}
             <div
-              className="absolute w-1 bg-white transition-all duration-300 ease-out z-10"
+              className="hidden lg:block absolute w-1 bg-white transition-all duration-300 ease-out z-10"
               style={{
                 right: '-80px',
                 top: `${barStyle.top}px`,
@@ -298,11 +218,11 @@ export default function LocationsSection({ content, locations: locationsProp }: 
           </div>
 
           {/* Spacer bottom */}
-          <div className="hidden xl:block" />
+          <div className="hidden lg:block" />
         </div>
 
         {/* CENTER PANEL — details */}
-        <div className="hidden xl:flex flex-col w-[37%] h-screen px-[75px] pt-[100px] pb-[78px] bg-[#D2D4DF]/10 backdrop-blur-[100px]">
+        <div className="hidden lg:flex flex-col w-[37%] h-screen px-[75px] pt-[100px] pb-[78px] bg-[#D2D4DF]/10 backdrop-blur-[100px]">
           <div className="flex flex-col h-full">
             {/* Address + description */}
             <div className="flex flex-col gap-[40px] flex-1 min-h-0 overflow-y-auto">
@@ -357,8 +277,7 @@ export default function LocationsSection({ content, locations: locationsProp }: 
               )}
             </div>
 
-            {/* CTA Button - only show for available locations */}
-            {selected.status === "available" && (
+            {/* CTA Button */}
             <div className="mt-auto flex-shrink-0 pt-6">
               <ScrollReveal from="bottom" delay={400}>
                 <button
@@ -377,127 +296,78 @@ export default function LocationsSection({ content, locations: locationsProp }: 
                 </button>
               </ScrollReveal>
             </div>
-            )}
           </div>
         </div>
 
-        {/* RIGHT PANEL — court photo fills remaining space to right edge */}
-        <ScrollReveal from="right" delay={200} distance={40} duration={900} className="hidden xl:block flex-1 xl:h-screen">
-          {selected.videoUrl ? (
+        {/* RIGHT PANEL — court photo/video fills remaining space to right edge */}
+        <ScrollReveal from="right" delay={200} distance={40} duration={900} className="hidden lg:block flex-1 lg:h-screen">
+          {selected.mediaType === 'video' && selected.video ? (
             <video
+              key={selected.video}
+              src={selected.video}
               autoPlay
               muted
               loop
               playsInline
-              poster={selected.image}
               className="w-full h-full object-cover"
-            >
-              <source src={selected.videoUrl} type={selected.videoMime ?? 'video/mp4'} />
-              <img src={selected.image} alt="Court" width={800} height={600} loading="lazy" className="w-full h-full object-cover" />
-            </video>
+            />
           ) : (
             <img
               src={selected.image}
               alt="Court"
-              width={800}
-              height={600}
-              loading="lazy"
               className="w-full h-full object-cover"
             />
           )}
         </ScrollReveal>
       </div>
 
-      {/* MOBILE detail panel */}
-      <div className="xl:hidden mx-4 mb-8">
-        <div className="bg-white/10 backdrop-blur-[50px] rounded-sm">
-          {/* Media - full width, 260px height */}
-          <div className="w-full h-[260px] overflow-hidden rounded-sm">
-            {selected.videoUrl ? (
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                poster={selected.image}
-                className="w-full h-full object-cover"
-              >
-                <source src={selected.videoUrl} type={selected.videoMime ?? 'video/mp4'} />
-                <img src={selected.image} alt="Court" width={600} height={800} loading="lazy" className="w-full h-full object-cover" />
-              </video>
-            ) : selected.image ? (
-              <img
-                src={selected.image}
-                alt="Court"
-                width={600}
-                height={800}
-                loading="lazy"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-black/20 flex items-center justify-center">
-                <span className="text-white/40 text-sm">No media available</span>
-              </div>
-            )}
-          </div>
-
-          {/* Card content - with internal padding */}
-          <div className="p-6">
-            <p className="text-white/40 text-[11px] font-normal tracking-[1.68px] uppercase mb-4">
-              Address
+      {/* MOBILE detail panel (shown below location list on small screens) */}
+      <div className="lg:hidden relative bg-white/10 backdrop-blur-[50px] mx-4 mb-8 p-6 rounded-sm">
+        <p className="text-white/40 text-[11px] font-normal tracking-[1.68px] uppercase mb-4">
+          Address
+        </p>
+        <div className="mb-4">
+          {selected.address.map((line, i) => (
+            <p key={i} className="text-white text-2xl font-medium leading-[120%]">
+              {line}
             </p>
-            <div className="mb-4">
-              {selected.address.map((line, i) => (
-                <p key={i} className="text-white text-2xl font-medium leading-[120%]">
-                  {line}
-                </p>
+          ))}
+        </div>
+        <p className="text-white/60 text-base leading-[150%] mb-6">
+          {selected.description}
+        </p>
+
+        {selected.amenities.length > 0 && (
+          <>
+            <p className="text-white/40 text-[11px] font-normal tracking-[1.68px] uppercase mb-3">
+              Club Amenities
+            </p>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {selected.amenities.map((amenity, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 py-2"
+                >
+                  <span className="flex-shrink-0 scale-75">{resolveIcon(amenity)}</span>
+                  <span className="text-white text-sm">{amenity.label}</span>
+                </div>
               ))}
             </div>
-            <p className="text-white/60 text-base leading-[150%] mb-6">
-              {selected.description}
-            </p>
+          </>
+        )}
 
-            {selected.amenities.length > 0 && (
-              <>
-                <p className="text-white/40 text-[11px] font-normal tracking-[1.68px] uppercase mb-3">
-                  Club Amenities
-                </p>
-                <div className="grid grid-cols-2 gap-2 mb-4">
-                  {selected.amenities.map((amenity, i) => (
-                    <div key={i}>
-                      <div
-                        className="flex items-center gap-3 py-0"
-                      >
-                        <span className="flex-shrink-0 scale-75">{resolveIcon(amenity)}</span>
-                        <span className="text-white text-sm">{amenity.label}</span>
-                      </div>
-                      <div
-                        className="h-px mt-0"
-                        style={{ background: 'linear-gradient(to right, rgba(255, 255, 255, 0.2), rgba(153, 153, 153, 0))' }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {/* CTA Button - only show for available locations */}
-            {selected.status === "available" && (
-            <button
-              type="button"
-              onClick={openBookModal}
-              className="btn-cta btn-cta-white w-full flex items-center justify-center gap-3 px-10 py-4 rounded-sm transition-colors"
-            >
-              <span className="text-[#003E6B] text-sm font-bold uppercase tracking-wider">
-                {ctaText}
-              </span>
-              <svg className="btn-arrow shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M7 17L17 7M17 7L16.9993 16.0526M17 7L7 7" stroke="#003E6B" strokeWidth="2" strokeLinejoin="round"/>
-              </svg>
-            </button>
-            )}
-          </div>
-        </div>
+        <button
+          type="button"
+          onClick={openBookModal}
+          className="btn-cta btn-cta-white w-full flex items-center justify-center gap-3 px-10 py-4 rounded-sm transition-colors"
+        >
+          <span className="text-[#003E6B] text-sm font-bold uppercase tracking-wider">
+            {ctaText}
+          </span>
+          <svg className="btn-arrow shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M7 17L17 7M17 7L16.9993 16.0526M17 7L7 7" stroke="#003E6B" strokeWidth="2" strokeLinejoin="round"/>
+          </svg>
+        </button>
       </div>
     </section>
   );
