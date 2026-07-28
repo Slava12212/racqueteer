@@ -182,32 +182,57 @@ export interface WPPageData {
   blocks: WPBlock[];
 }
 
+export interface WPPageLookupResult {
+  page: WPPageData | null;
+  failed: boolean;
+}
+
+async function fetchPageBySlug(slug: string): Promise<WPPageData | null> {
+  const data = await wpGraphQL<{
+    pageBy: {
+      title: string;
+      status: string;
+      blocks: RawBlock[];
+    } | null;
+  }>(GET_PAGE_BY_SLUG, { slug });
+
+  const page = data.pageBy;
+  if (!page) return null;
+
+  return {
+    title: page.title,
+    status: page.status,
+    seoDescription: '',
+    blocks: (page.blocks ?? []).map(rawBlockToWPBlock),
+  };
+}
+
 /**
  * Fetch a page by slug with its status and blocks.
  * Draft or missing → returns null.
  */
 export async function getPageBySlug(slug: string): Promise<WPPageData | null> {
   try {
-    const data = await wpGraphQL<{
-      pageBy: {
-        title: string;
-        status: string;
-        blocks: RawBlock[];
-      } | null;
-    }>(GET_PAGE_BY_SLUG, { slug });
-
-    const page = data.pageBy;
-    if (!page) return null;
-
-    return {
-      title: page.title,
-      status: page.status,
-      seoDescription: '',
-      blocks: (page.blocks ?? []).map(rawBlockToWPBlock),
-    };
+    return await fetchPageBySlug(slug);
   } catch (err) {
     console.error(`getPageBySlug("${slug}") failed:`, err);
     return null;
+  }
+}
+
+/**
+ * Fetch a page for a first-class Next.js route.
+ *
+ * failed=false means WordPress answered, so a null/non-published page should
+ * be treated as intentionally unavailable. failed=true lets static routes keep
+ * their legacy hardcoded fallback when WP is temporarily unreachable.
+ */
+export async function getPageLookup(slug: string): Promise<WPPageLookupResult> {
+  try {
+    return { page: await fetchPageBySlug(slug), failed: false };
+  } catch (err) {
+    console.error(`getPageLookup("${slug}") failed:`, err);
+    return { page: null, failed: true };
   }
 }
 

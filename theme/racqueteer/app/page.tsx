@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import HeroSection from "@/components/HeroSection";
 import AboutSection from "@/components/AboutSection";
 import LocationsSection from "@/components/LocationsSection";
@@ -8,9 +9,8 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import EventsSection from "@/components/EventsSection";
 import { AmenitiesSection } from "@/components/amenities/AmenitiesSection";
 import BlockRenderer from "@/components/blocks/BlockRenderer";
-import { getPageBlocks, getAmenities } from "@/lib/wp-api";
+import { getPageLookup, getAmenities, getLocations } from "@/lib/wp-api";
 import { getHomepageContent } from "@/lib/api";
-import { getLocations } from "@/lib/wp-api";
 import { resolveAmenityIcon } from "@/lib/amenity-resolver";
 import type { Amenity } from "@/components/amenities/amenitiesData";
 
@@ -22,15 +22,23 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const blocks = await getPageBlocks("/");
+  const pageLookup = await getPageLookup("/");
 
   // If WP blocks available — render via BlockRenderer
-  if (blocks.length > 0) {
-    return (
-      <div className="overflow-x-hidden">
-        <BlockRenderer blocks={blocks} />
-      </div>
-    );
+  if (!pageLookup.failed) {
+    const page = pageLookup.page;
+
+    if (!page || page.status !== "publish") {
+      notFound();
+    }
+
+    if (page.blocks.length > 0) {
+      return (
+        <div className="overflow-x-hidden">
+          <BlockRenderer blocks={page.blocks} />
+        </div>
+      );
+    }
   }
 
   // Fallback — hardcoded content while WP isn't configured yet

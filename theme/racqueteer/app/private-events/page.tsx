@@ -1,9 +1,10 @@
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import HeroPrivateEvents from "@/components/private-events/HeroPrivateEvents";
 import GallerySection from "@/components/private-events/GallerySection";
 import LogoSection from "@/components/private-events/LogoSection";
 import BlockRenderer from "@/components/blocks/BlockRenderer";
-import { getPageBlocks } from "@/lib/wp-api";
+import { getPageLookup } from "@/lib/wp-api";
 import { getPrivateEventsPageContent } from "@/lib/api";
 
 export const revalidate = 3600;
@@ -14,14 +15,22 @@ export const metadata: Metadata = {
 };
 
 export default async function PrivateEventsPage() {
-  const blocks = await getPageBlocks("/private-events");
+  const pageLookup = await getPageLookup("/private-events");
 
-  if (blocks.length > 0) {
-    return (
-      <div className="overflow-x-hidden">
-        <BlockRenderer blocks={blocks} />
-      </div>
-    );
+  if (!pageLookup.failed) {
+    const page = pageLookup.page;
+
+    if (!page || page.status !== "publish") {
+      notFound();
+    }
+
+    if (page.blocks.length > 0) {
+      return (
+        <div className="overflow-x-hidden">
+          <BlockRenderer blocks={page.blocks} />
+        </div>
+      );
+    }
   }
 
   // Fallback — hardcoded content

@@ -1,11 +1,11 @@
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import HeroAbout from "@/components/about/HeroAbout";
 import MissionSection from "@/components/about/MissionSection";
 import LocationsSection from "@/components/LocationsSection";
 import ContactSection from "@/components/about/ContactSection";
 import BlockRenderer from "@/components/blocks/BlockRenderer";
-import { getLocations } from "@/lib/wp-api";
-import { getPageBlocks } from "@/lib/wp-api";
+import { getLocations, getPageLookup } from "@/lib/wp-api";
 import { getAboutPageContent, getHomepageContent } from "@/lib/api";
 
 export const revalidate = 3600;
@@ -16,14 +16,22 @@ export const metadata: Metadata = {
 };
 
 export default async function AboutPage() {
-  const blocks = await getPageBlocks("/about");
+  const pageLookup = await getPageLookup("/about");
 
-  if (blocks.length > 0) {
-    return (
-      <div className="overflow-x-hidden">
-        <BlockRenderer blocks={blocks} />
-      </div>
-    );
+  if (!pageLookup.failed) {
+    const page = pageLookup.page;
+
+    if (!page || page.status !== "publish") {
+      notFound();
+    }
+
+    if (page.blocks.length > 0) {
+      return (
+        <div className="overflow-x-hidden">
+          <BlockRenderer blocks={page.blocks} />
+        </div>
+      );
+    }
   }
 
   // Fallback — hardcoded content

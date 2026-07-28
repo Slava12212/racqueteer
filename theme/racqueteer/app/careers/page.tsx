@@ -1,9 +1,10 @@
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import HeroCareers from "@/components/careers/HeroCareers";
 import JobListingsSection from "@/components/careers/JobListingsSection";
 import CareerContactSection from "@/components/careers/CareerContactSection";
 import BlockRenderer from "@/components/blocks/BlockRenderer";
-import { getPageBlocks, getJobs } from "@/lib/wp-api";
+import { getPageLookup, getJobs } from "@/lib/wp-api";
 import { getCareersPageContent } from "@/lib/api";
 
 export const revalidate = 3600;
@@ -15,30 +16,38 @@ export const metadata: Metadata = {
 
 export default async function CareersPage() {
   // Fetch blocks and jobs in parallel — jobs pre-fetched so they are always from WP
-  const [blocks, wpJobs] = await Promise.all([
-    getPageBlocks("/careers"),
+  const [pageLookup, wpJobs] = await Promise.all([
+    getPageLookup("/careers"),
     getJobs(),
   ]);
 
-  if (blocks.length > 0) {
-    // Inject pre-fetched WP jobs into the JobListings block so it never double-fetches
-    const enrichedBlocks = blocks.map((block) => {
-      if (
-        block.name === "AcfRacqueteerJobListingsBlock" ||
-        block.name === "acf/racqueteer-job-listings"
-      ) {
-        return {
-          ...block,
-          attributes: { ...block.attributes, preloadedJobs: wpJobs },
-        };
-      }
-      return block;
-    });
-    return (
-      <div className="overflow-x-hidden">
-        <BlockRenderer blocks={enrichedBlocks} />
-      </div>
-    );
+  if (!pageLookup.failed) {
+    const page = pageLookup.page;
+
+    if (!page || page.status !== "publish") {
+      notFound();
+    }
+
+    if (page.blocks.length > 0) {
+      // Inject pre-fetched WP jobs into the JobListings block so it never double-fetches
+      const enrichedBlocks = page.blocks.map((block) => {
+        if (
+          block.name === "AcfRacqueteerJobListingsBlock" ||
+          block.name === "acf/racqueteer-job-listings"
+        ) {
+          return {
+            ...block,
+            attributes: { ...block.attributes, preloadedJobs: wpJobs },
+          };
+        }
+        return block;
+      });
+      return (
+        <div className="overflow-x-hidden">
+          <BlockRenderer blocks={enrichedBlocks} />
+        </div>
+      );
+    }
   }
 
   // Fallback — use WP jobs (not hardcoded) so the count is always correct
