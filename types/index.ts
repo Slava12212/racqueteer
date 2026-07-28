@@ -71,9 +71,13 @@ export interface Location {
   address: string[];
   description: string;
   amenities: LocationAmenity[];
-  image: string;        // keep — fallback / placeholder
-  videoUrl?: string;   // NEW — optional vertical video
-  videoMime?: string;   // NEW — for <source type="...">
+  image: string;
+  /** Background image URL for the section (changes when this location is selected) */
+  bgImage?: string;
+  /** Media type for the right panel: 'image' (default) or 'video' */
+  mediaType?: "image" | "video";
+  /** Video URL for the right panel (used when mediaType === 'video') */
+  video?: string;
 }
 
 // Programs
@@ -117,6 +121,8 @@ export interface LocationsContent {
   label: string;
   title: string;
   description: string;
+  /** @deprecated bgImage is now per-location (Location.bgImage). Kept for backward compat. */
+  bgImage?: string;
 }
 
 export interface ProgramsContent {
