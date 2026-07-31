@@ -737,7 +737,7 @@ function rq_verify_graphql(): array {
     // ── 3. CPT: Вакансії ────────────────────────────────────────────────────────
     $log[] = '';
     $log[] = '3. CPT Queries';
-    [ $ok, $data ] = $query( '{ jobs(first:3) { nodes { title jobFields { description category } } } }' );
+    [ $ok, $data ] = $query( '{ jobs(first:3) { nodes { title jobFields { description category ctaText ctaUrl } } } }' );
     if ( ! $ok ) {
         $log[] = "  ❌ Jobs: {$data}";
     } else {
@@ -1455,10 +1455,15 @@ function rq_create_jobs( array &$log ): void {
         [ 'Club Manager',         'Lead daily operations, manage staff scheduling, oversee member relations, and ensure an exceptional experience across all club facilities.',         'Manager', ],
     ];
 
-    foreach ( $jobs as [ $title, $desc, $cat ] ) {
+    foreach ( $jobs as $job ) {
+        [ $title, $desc, $cat ] = $job;
+        $cta_text = $job[3] ?? 'View Details';
+        $cta_url  = $job[4] ?? '#';
         $id = rq_upsert_cpt( 'job', $title, [
             'field_job_description' => $desc,
             'field_job_category'    => $cat,
+            'field_job_cta_text'    => $cta_text,
+            'field_job_cta_url'     => $cta_url,
         ] );
         $log[] = "  ✔ Job: {$title} (ID {$id})";
     }

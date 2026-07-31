@@ -477,10 +477,24 @@ add_action( 'acf/init', function () {
         'key'                => 'group_cpt_job',
         'title'              => 'Job Details',
         'show_in_graphql'    => true,
-        'graphql_field_name' => 'jobFields', // → jobs { nodes { jobFields { description category } } }
+        'graphql_field_name' => 'jobFields', // → jobs { nodes { jobFields { description category ctaText ctaUrl } } }
         'fields' => [
             [ 'key' => 'field_job_description', 'label' => 'Description', 'name' => 'description', 'type' => 'textarea' ],
             [ 'key' => 'field_job_category',    'label' => 'Category',    'name' => 'category',    'type' => 'text' ],
+            [
+                'key'          => 'field_job_cta_text',
+                'label'        => 'CTA Button Text',
+                'name'         => 'cta_text',
+                'type'         => 'text',
+                'instructions' => 'Leave empty to hide the button for this job.',
+            ],
+            [
+                'key'          => 'field_job_cta_url',
+                'label'        => 'CTA Button URL',
+                'name'         => 'cta_url',
+                'type'         => 'text',
+                'instructions' => 'Example: mailto:careers@racqueteer.club or https://...',
+            ],
         ],
         'location' => [ [ [ 'param' => 'post_type', 'operator' => '==', 'value' => 'job' ] ] ],
     ] );

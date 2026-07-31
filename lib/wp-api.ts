@@ -270,7 +270,19 @@ export async function getAllPageSlugs(): Promise<string[]> {
 export async function getJobs(): Promise<Job[]> {
   try {
     const data = await wpGraphQL<{
-      jobs: { nodes: Array<{ databaseId: number; title: string; jobFields: { description: string; category: string }; date: string }> };
+      jobs: {
+        nodes: Array<{
+          databaseId: number;
+          title: string;
+          jobFields: {
+            description: string;
+            category: string;
+            ctaText?: string | null;
+            ctaUrl?: string | null;
+          };
+          date: string;
+        }>;
+      };
     }>(GET_JOBS);
 
     return data.jobs.nodes.map((node) => ({
@@ -278,6 +290,8 @@ export async function getJobs(): Promise<Job[]> {
       title: node.title,
       description: node.jobFields?.description ?? '',
       category: node.jobFields?.category ?? '',
+      ctaText: node.jobFields?.ctaText ?? '',
+      ctaUrl: node.jobFields?.ctaUrl ?? '',
       date: new Date(node.date).toLocaleDateString('en-AU', {
         month: 'short',
         day: 'numeric',

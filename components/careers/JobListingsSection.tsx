@@ -6,15 +6,7 @@ import ScrollReveal from "../ScrollReveal";
 
 import ButtonArrow from "../ButtonArrow";
 import { getButtonTitle } from "@/lib/utils";
-import type { JobListingsHeaderContent } from "@/types";
-
-interface Job {
-  id: number;
-  title: string;
-  description: string;
-  category: string;
-  date: string;
-}
+import type { Job, JobListingsHeaderContent } from "@/types";
 
 interface JobListingsSectionProps {
   content: JobListingsHeaderContent;
@@ -85,8 +77,6 @@ const categories = ["All", "Manager", "Trainer", "Barista"];
 
 export default function JobListingsSection({ content, jobs: jobsProp }: JobListingsSectionProps) {
   const [jobs, setJobs] = useState<Job[]>(jobsProp && jobsProp.length > 0 ? jobsProp : FALLBACK_JOBS);
-  const ctaTitle = getButtonTitle(content.ctaText);
-  const ctaHref = content.ctaUrl || "#";
 
   // If server didn't pass jobs (old deployment / fallback path), fetch from API
   useEffect(() => {
@@ -152,16 +142,20 @@ export default function JobListingsSection({ content, jobs: jobsProp }: JobListi
 
         {/* Job cards grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
-          {filteredJobs.map((job, i) => (
-            <ScrollReveal key={job.id} from="bottom" delay={300 + i * 80}>
-              <div className="bg-white rounded-lg border border-[#E5E7EB] p-6 sm:p-8 flex flex-col h-full hover:shadow-md hover:border-[#265090]/20 transition-all duration-300">
-                {/* Top row: tag + date */}
-                <div className="flex items-center justify-between mb-4">
-                  <span className="inline-block px-3 py-1 rounded-sm text-[10px] sm:text-xs font-bold uppercase tracking-[1px] bg-[#265090]/10 text-[#265090]">
-                    {job.category}
-                  </span>
-                  <span className="text-xs text-[#6B7280]">{job.date}</span>
-                </div>
+          {filteredJobs.map((job, i) => {
+            const jobCtaTitle = getButtonTitle(job.ctaText);
+            const jobCtaHref = job.ctaUrl || "#";
+
+            return (
+              <ScrollReveal key={job.id} from="bottom" delay={300 + i * 80}>
+                <div className="bg-white rounded-lg border border-[#E5E7EB] p-6 sm:p-8 flex flex-col h-full hover:shadow-md hover:border-[#265090]/20 transition-all duration-300">
+                  {/* Top row: tag + date */}
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="inline-block px-3 py-1 rounded-sm text-[10px] sm:text-xs font-bold uppercase tracking-[1px] bg-[#265090]/10 text-[#265090]">
+                      {job.category}
+                    </span>
+                    <span className="text-xs text-[#6B7280]">{job.date}</span>
+                  </div>
 
                 {/* Title — fixed 2-line height */}
                 <h3
@@ -185,18 +179,19 @@ export default function JobListingsSection({ content, jobs: jobsProp }: JobListi
                 </p>
 
                 {/* CTA */}
-                {ctaTitle && (
+                {jobCtaTitle && (
                   <a
-                    href={ctaHref}
+                    href={jobCtaHref}
                     className="btn-cta btn-cta-blue flex items-center justify-center gap-3 w-full py-3.5 rounded-sm font-bold text-sm uppercase tracking-wider text-white transition-colors mt-auto"
                   >
-                    <span>{ctaTitle}</span>
+                    <span>{jobCtaTitle}</span>
                     <ButtonArrow color="white" />
                   </a>
                 )}
-              </div>
-            </ScrollReveal>
-          ))}
+                </div>
+              </ScrollReveal>
+            );
+          })}
         </div>
 
         {/* Empty state */}

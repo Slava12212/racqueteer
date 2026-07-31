@@ -220,6 +220,8 @@ export const GET_JOBS = `
         jobFields {
           description
           category
+          ctaText
+          ctaUrl
         }
         date
       }

@@ -7,6 +7,8 @@ export interface Job {
   description: string;
   category: string;
   date: string;
+  ctaText?: string;
+  ctaUrl?: string;
 }
 
 // Membership plans

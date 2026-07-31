@@ -201,7 +201,11 @@ function rq_export_jobs(): string {
         if ( ! $desc ) $desc = (string) get_post_meta($p->ID, 'description', true);
         $cat   = (string) rq_gf('category', $p->ID);
         if ( ! $cat ) $cat = (string) get_post_meta($p->ID, 'category', true);
-        $lines[] = '        [ ' . rq_ex($title) . ', ' . rq_ex($desc) . ', ' . rq_ex($cat) . ', ],';
+        $cta_text = (string) rq_gf('cta_text', $p->ID);
+        if ( ! $cta_text ) $cta_text = (string) get_post_meta($p->ID, 'cta_text', true);
+        $cta_url = (string) rq_gf('cta_url', $p->ID);
+        if ( ! $cta_url ) $cta_url = (string) get_post_meta($p->ID, 'cta_url', true);
+        $lines[] = '        [ ' . rq_ex($title) . ', ' . rq_ex($desc) . ', ' . rq_ex($cat) . ', ' . rq_ex($cta_text) . ', ' . rq_ex($cta_url) . ', ],';
     }
     $body = implode("\n", $lines);
     return "// ── Paste into rq_create_jobs() in demo-content.php ──────────────────────────\n"
