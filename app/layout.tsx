@@ -7,6 +7,27 @@ import { getNavbarContent, getFooterContent } from "@/lib/api";
 import type { NavbarContent, FooterContent } from "@/types";
 import { CtaProvider } from "@/lib/navbar-cta";
 
+function normalizeMenuUrl(url: string): string {
+  return url.trim().replace(/\/+$/, "") || "/";
+}
+
+function ensureHeaderMenuLink(
+  links: NavbarContent["menuLinks"],
+  requiredLink: NavbarContent["menuLinks"][number] | undefined
+): NavbarContent["menuLinks"] {
+  if (!requiredLink) return links;
+
+  const requiredUrl = normalizeMenuUrl(requiredLink.url);
+  const requiredLabel = requiredLink.label.trim().toLowerCase();
+  const alreadyExists = links.some((link) => {
+    const url = normalizeMenuUrl(link.url);
+    const label = link.label.trim().toLowerCase();
+    return url === requiredUrl || label === requiredLabel;
+  });
+
+  return alreadyExists ? links : [...links, requiredLink];
+}
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://racqueteer.vercel.app'),
   title: "Racqueteer - Premier Pickleball & Padel Club",
@@ -63,13 +84,14 @@ export default async function RootLayout({
     // Prefer WP logo URL; fall back to hardcoded logo (not the sponsor /logo2.svg)
     const wpLogoUrl = navbar.navLogo?.sourceUrl;
     const wpLogoIconUrl = navbar.navLogoIcon?.sourceUrl;
+    const careersLink = hardcodedNavbar.menuLinks.find((link) => normalizeMenuUrl(link.url) === "/careers");
     navbarContent = {
       logoUrl:     wpLogoUrl     || hardcodedNavbar.logoUrl,
       logoAlt:     navbar.navLogo?.altText ?? "Racqueteer",
       logoIconUrl: wpLogoIconUrl || hardcodedNavbar.logoIconUrl,
       ctaText:     navbar.navCtaText ?? "",
       ctaUrl:      navbar.navCtaUrl  ?? "#",
-      menuLinks:   navbar.navLinks,
+      menuLinks:   ensureHeaderMenuLink(navbar.navLinks, careersLink),
     };
   } else {
     navbarContent = hardcodedNavbar;
