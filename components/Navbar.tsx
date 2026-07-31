@@ -61,6 +61,7 @@ const NavProgressiveBlur = () => (
 export default function Navbar({ content }: NavbarProps) {
   const [visible, setVisible] = useState(true);
   const [isDark, setIsDark] = useState(true);
+  const [useRedButton, setUseRedButton] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const lastScrollY = useRef(0);
   const pathname = usePathname();
@@ -76,9 +77,6 @@ export default function Navbar({ content }: NavbarProps) {
     const isHomeLink = link.url === "/" || link.label.toLowerCase() === "home";
     return !(index === 0 && isHomeLink);
   });
-  const desktopSplitIndex = Math.ceil(desktopMenuLinks.length / 2);
-  const leftMenuLinks = desktopMenuLinks.slice(0, desktopSplitIndex);
-  const rightMenuLinks = desktopMenuLinks.slice(desktopSplitIndex);
 
   // Close menu on route change
   useEffect(() => {
@@ -112,44 +110,73 @@ export default function Navbar({ content }: NavbarProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Intersection Observer for theme detection
-  useEffect(() => {
-    const sections = document.querySelectorAll("[data-header-theme]");
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const theme = (entry.target as HTMLElement).dataset.headerTheme;
-            setIsDark(theme === "dark");
-          }
-        }
-      },
-      {
-        rootMargin: "0px 0px -95% 0px",
-        threshold: 0,
-      }
-    );
+  const navRef = useRef<HTMLElement>(null);
 
-    sections.forEach((s) => observer.observe(s));
-    return () => observer.disconnect();
-  }, []);
+  const updateTheme = () => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const navRect = nav.getBoundingClientRect();
+    const navbarBottom = navRect.top + navRect.height + 10;
+    const sections = Array.from(document.querySelectorAll("[data-header-theme]"));
+    let foundTheme = true;
+    let isGradient = false;
+
+    for (const section of sections) {
+      const rect = section.getBoundingClientRect();
+      if (navbarBottom >= rect.top && navbarBottom <= rect.bottom) {
+        const theme = (section as HTMLElement).dataset.headerTheme;
+        foundTheme = theme === "dark" || theme === "gradient";
+        isGradient = theme === "gradient";
+        break;
+      }
+    }
+
+    setIsDark(foundTheme);
+    setUseRedButton(isGradient);
+  };
+
+  useEffect(() => {
+    updateTheme();
+
+    let rafId: number;
+    const throttledUpdate = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateTheme);
+    };
+
+    window.addEventListener("scroll", throttledUpdate, { passive: true });
+    window.addEventListener("resize", throttledUpdate);
+
+    return () => {
+      window.removeEventListener("scroll", throttledUpdate);
+      window.removeEventListener("resize", throttledUpdate);
+      cancelAnimationFrame(rafId);
+    };
+  }, [pathname]);
 
   const textColor = isDark ? "text-white" : "text-black";
   const hoverClass = isDark ? "hover:opacity-70" : "hover:opacity-60";
-  const linkClasses = `${textColor} text-[11px] lg:text-[14px] font-bold uppercase tracking-[1.4px] ${hoverClass} transition-all duration-300`;
+  const baseLinkClasses = `${textColor} text-[11px] lg:text-[14px] font-bold uppercase tracking-[1.4px] ${hoverClass} transition-all duration-300`;
   
-  const ctaBg = isDark ? "btn-cta-white text-[#003E6B]" : "btn-cta-red text-white";
-  const ctaArrowColor = isDark ? "#003E6B" : "white";
+  const ctaBg = isDark && !useRedButton ? "btn-cta-white text-[#003E6B]" : "btn-cta-red text-white";
+  const ctaArrowColor = isDark && !useRedButton ? "#003E6B" : "white";
   
   const logoStyle = isDark ? {} : { filter: "brightness(0)" };
 
   // Burger/close icon color
   const iconColor = menuOpen ? "white" : (isDark ? "white" : "black");
 
+  const getLinkClasses = (url: string) => {
+    const isActive = pathname === url;
+    return `${baseLinkClasses} ${isActive ? "opacity-100" : "opacity-80"}`;
+  };
+
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 w-full transition-all duration-300 ease-in-out ${menuOpen ? "z-[60]" : "z-50"}`}
+        ref={navRef}
+        className="fixed top-0 left-0 right-0 w-full z-[999] transition-all duration-300 ease-in-out"
         style={{
           background: menuOpen ? "transparent" : "rgba(210,212,223,0.01)",
           transform: visible || menuOpen ? "translateY(0)" : "translateY(-100%)",
@@ -157,62 +184,43 @@ export default function Navbar({ content }: NavbarProps) {
       >
         {!menuOpen && <NavProgressiveBlur />}
         <div className="flex items-center justify-between max-w-[1920px] mx-auto px-6 md:px-10 lg:px-[80px] py-5 md:py-[55px] relative min-h-[80px] md:min-h-[139px]">
-          {/* Left: Logo (mobile) / nav links (desktop) */}
-          <div className="hidden md:flex items-center gap-6 lg:gap-10">
-            {leftMenuLinks.map((link) => {
+          <div className="hidden lg:flex items-center gap-6 lg:gap-10">
+            {desktopMenuLinks.map((link) => {
               const LinkEl = link.url.startsWith("#") ? "a" : Link;
               return (
-                <LinkEl key={`${link.label}-${link.url}`} href={link.url} className={linkClasses}>
+                <LinkEl key={`${link.label}-${link.url}`} href={link.url} className={getLinkClasses(link.url)}>
                   {link.label}
                 </LinkEl>
               );
             })}
           </div>
 
-          {/* Mobile: Logo icon left (provided icon, recolorable) */}
-          <Link href="/" className="md:hidden relative z-[60]" onClick={() => setMenuOpen(false)}>
+          {/* Mobile/Tablet: Logo icon left */}
+          <Link href="/" className="lg:hidden relative z-[60]" onClick={() => setMenuOpen(false)}>
             <img
               src={content.logoIconUrl}
               alt={content.logoAlt}
+              width={120}
+              height={40}
               className="h-10 w-auto transition-all duration-300"
               style={menuOpen ? {} : (isDark ? {} : { filter: "brightness(0)" })}
             />
           </Link>
 
           {/* Desktop: Center logo only on 3xl+ (1920px+) to prevent overlap at <1600px */}
-          <Link href="/" className="hidden md:block 2xl:absolute 2xl:left-1/2 2xl:-translate-x-1/2">
+          <Link href="/" className="hidden lg:block 2xl:absolute 2xl:left-1/2 2xl:-translate-x-1/2">
             <img
               src={content.logoUrl}
               alt={content.logoAlt}
+              width={150}
+              height={32}
               className="h-6 md:h-8 w-auto transition-all duration-300"
               style={logoStyle}
             />
           </Link>
 
-          {/* Mobile: Centered CTA button */}
-          <div className="md:hidden absolute left-1/2 -translate-x-1/2 z-[60]">
-            {!menuOpen && ctaTitle && (
-              <button
-                type="button"
-                onClick={openBookModal}
-                className={`btn-cta flex items-center gap-2 ${ctaBg} text-[11px] font-bold uppercase tracking-[1.4px] px-4 py-2 rounded-sm transition-all duration-300`}
-              >
-                {ctaTitle}
-                <ButtonArrow color={ctaArrowColor} />
-              </button>
-            )}
-          </div>
-
-          {/* Right nav links + CTA (desktop) */}
-          <div className="hidden md:flex items-center gap-6 lg:gap-10">
-            {rightMenuLinks.map((link) => {
-              const LinkEl = link.url.startsWith("#") ? "a" : Link;
-              return (
-                <LinkEl key={`${link.label}-${link.url}`} href={link.url} className={linkClasses}>
-                  {link.label}
-                </LinkEl>
-              );
-            })}
+          {/* Desktop: Right side - CTA button */}
+          <div className="hidden lg:flex items-center gap-6 lg:gap-10">
             {ctaTitle && (
               <button
                 type="button"
@@ -225,30 +233,42 @@ export default function Navbar({ content }: NavbarProps) {
             )}
           </div>
 
-          {/* Mobile: Burger / Close button */}
-          <button
-            className="md:hidden relative z-[60] flex items-center justify-center w-10 h-10"
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-          >
-            {menuOpen ? (
-              /* Close (X) icon */
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18M6 6L18 18" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            ) : (
-              /* Burger icon */
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 6H21M3 12H21M3 18H21" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+          {/* Mobile/Tablet: Right side - CTA button + Burger / Close */}
+          <div className="lg:hidden flex items-center gap-8">
+            {!menuOpen && ctaTitle && (
+              <button
+                type="button"
+                onClick={openBookModal}
+                className={`btn-cta flex items-center gap-2 ${ctaBg} text-[11px] font-bold uppercase tracking-[1.4px] px-4 py-2 rounded-sm transition-all duration-300`}
+              >
+                {ctaTitle}
+                <ButtonArrow color={ctaArrowColor} />
+              </button>
             )}
-          </button>
+            <button
+              className="relative z-[60] flex items-center justify-center w-10 h-10"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+            >
+              {menuOpen ? (
+                /* Close (X) icon */
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6L18 18" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              ) : (
+                /* Burger icon */
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 6H21M3 12H21M3 18H21" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
       </nav>
 
       {/* ──── Fullscreen Mobile Menu ──── */}
       <div
-        className={`fixed inset-0 z-[55] md:hidden flex flex-col transition-all duration-300 ease-in-out ${
+        className={`fixed inset-0 z-[998] lg:hidden flex flex-col transition-all duration-300 ease-in-out ${
           menuOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"

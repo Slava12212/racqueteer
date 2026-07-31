@@ -48,6 +48,8 @@ export default async function CareersPage() {
         </div>
       );
     }
+
+    return <div className="overflow-x-hidden" />;
   }
 
   // Fallback — use WP jobs (not hardcoded) so the count is always correct

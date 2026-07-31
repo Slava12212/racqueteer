@@ -31,6 +31,8 @@ export default async function PrivateEventsPage() {
         </div>
       );
     }
+
+    return <div className="overflow-x-hidden" />;
   }
 
   // Fallback — hardcoded content

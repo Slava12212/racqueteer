@@ -77,6 +77,8 @@ const categories = ["All", "Manager", "Trainer", "Barista"];
 
 export default function JobListingsSection({ content, jobs: jobsProp }: JobListingsSectionProps) {
   const [jobs, setJobs] = useState<Job[]>(jobsProp && jobsProp.length > 0 ? jobsProp : FALLBACK_JOBS);
+  const jobCardCtaTitle = getButtonTitle(content.ctaText);
+  const jobCardCtaHref = content.ctaUrl || "#";
 
   // If server didn't pass jobs (old deployment / fallback path), fetch from API
   useEffect(() => {
@@ -143,9 +145,6 @@ export default function JobListingsSection({ content, jobs: jobsProp }: JobListi
         {/* Job cards grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
           {filteredJobs.map((job, i) => {
-            const jobCtaTitle = getButtonTitle(job.ctaText);
-            const jobCtaHref = job.ctaUrl || "#";
-
             return (
               <ScrollReveal key={job.id} from="bottom" delay={300 + i * 80}>
                 <div className="bg-white rounded-lg border border-[#E5E7EB] p-6 sm:p-8 flex flex-col h-full hover:shadow-md hover:border-[#265090]/20 transition-all duration-300">
@@ -179,12 +178,12 @@ export default function JobListingsSection({ content, jobs: jobsProp }: JobListi
                 </p>
 
                 {/* CTA */}
-                {jobCtaTitle && (
+                {jobCardCtaTitle && (
                   <a
-                    href={jobCtaHref}
+                    href={jobCardCtaHref}
                     className="btn-cta btn-cta-blue flex items-center justify-center gap-3 w-full py-3.5 rounded-sm font-bold text-sm uppercase tracking-wider text-white transition-colors mt-auto"
                   >
-                    <span>{jobCtaTitle}</span>
+                    <span>{jobCardCtaTitle}</span>
                     <ButtonArrow color="white" />
                   </a>
                 )}

@@ -39,6 +39,8 @@ export default async function HomePage() {
         </div>
       );
     }
+
+    return <div className="overflow-x-hidden" />;
   }
 
   // Fallback — hardcoded content while WP isn't configured yet

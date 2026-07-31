@@ -30,6 +30,8 @@ export default async function MembershipsPage() {
         </div>
       );
     }
+
+    return <div className="overflow-x-hidden" />;
   }
 
   // Fallback — hardcoded content

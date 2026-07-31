@@ -32,6 +32,8 @@ export default async function AboutPage() {
         </div>
       );
     }
+
+    return <div className="overflow-x-hidden" />;
   }
 
   // Fallback — hardcoded content
