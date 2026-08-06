@@ -24,6 +24,7 @@ export default function HeroAbout({ content }: HeroAboutProps) {
         >
           <source src={videoUrl} />
         </video>
+        <div className="absolute inset-0" style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)' }} />
       </div>
       <h1
         className="relative z-10 text-white text-center mb-10 md:mb-14 text-[28px] sm:text-[36px] md:text-[44px] lg:text-[56px] uppercase leading-[120%] px-4 max-w-[800px] mx-auto"
