@@ -34,6 +34,7 @@ export default function HeroAbout({ content }: HeroAboutProps) {
             loop
             muted
             playsInline
+            poster="/about-hero.png"
             className="w-full h-full object-cover object-center"
             style={{ filter: 'brightness(0.8)' }}
           >
