@@ -65,7 +65,7 @@ export default function Navbar({ content }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const lastScrollY = useRef(0);
   const pathname = usePathname();
-  const { openBookModal } = useCta();
+  const { openBookModal, isBookModalOpen } = useCta();
   const ctaTitle = getButtonTitle(content.ctaText);
   const menuLinks = content.menuLinks
     .map((link) => ({
@@ -180,6 +180,8 @@ export default function Navbar({ content }: NavbarProps) {
         style={{
           background: menuOpen ? "transparent" : "rgba(210,212,223,0.01)",
           transform: visible || menuOpen ? "translateY(0)" : "translateY(-100%)",
+          visibility: isBookModalOpen ? "hidden" : "visible",
+          pointerEvents: isBookModalOpen ? "none" : "auto",
         }}
       >
         {!menuOpen && <NavProgressiveBlur />}
