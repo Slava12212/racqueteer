@@ -17,6 +17,7 @@ export default function HeroAbout({ content }: HeroAboutProps) {
     <div
       data-header-theme="dark"
       className="relative w-full h-[50vh] md:h-[55vw] md:max-h-[600px] min-h-[260px] bg-black flex items-end justify-center overflow-hidden"
+      style={{ transform: 'translate3d(0, 0, 0)', willChange: 'transform' }}
     >
       <div className="absolute inset-0">
         {isImageMedia ? (
@@ -40,16 +41,16 @@ export default function HeroAbout({ content }: HeroAboutProps) {
         )}
       </div>
       {/* Black overlay at 20% opacity — mobile & tablet only */}
-      <div className="absolute inset-0 lg:hidden" style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)' }} />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+      <div className="absolute inset-0 z-[1] lg:hidden" style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)' }} />
+      <div className="absolute inset-0 z-[1] bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
       <ScrollReveal from="bottom" delay={200}>
         <h1
           className="relative z-10 text-white text-center mb-10 md:mb-14 text-[28px] sm:text-[36px] md:text-[44px] lg:text-[56px] uppercase leading-[120%] px-4 max-w-[800px] mx-auto"
           style={{
             fontFamily: '"Mona Sans", sans-serif',
             fontWeight: 800,
-            fontStretch: '125%',
             letterSpacing: '0.05em',
+            WebkitFontSmoothing: 'antialiased',
           }}
         >
           {content.title}
