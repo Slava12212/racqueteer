@@ -40,8 +40,8 @@ export default function HeroAbout({ content }: HeroAboutProps) {
         )}
       </div>
 
-      {/* Single overlay - black at 20% opacity */}
-      <div className="absolute inset-0" style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)' }} />
+      {/* Single overlay - black at 30% opacity */}
+      <div className="absolute inset-0" style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }} />
 
       {/* White title */}
       <ScrollReveal from="bottom" delay={200}>
