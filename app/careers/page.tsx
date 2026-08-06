@@ -12,6 +12,11 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Careers - Racqueteer",
   description: "Join the Racqueteer team! Explore career opportunities in coaching, club management, hospitality, and more. Be part of Sydney's premier sports community.",
+  openGraph: {
+    title: "Careers - Racqueteer",
+    description: "Join the Racqueteer team! Explore career opportunities in coaching, club management, hospitality, and more.",
+    images: [{ url: "/og-careers.png", width: 1200, height: 630 }],
+  },
 };
 
 export default async function CareersPage() {

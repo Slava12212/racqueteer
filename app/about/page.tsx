@@ -13,6 +13,11 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "About Us - Racqueteer",
   description: "Learn about Racqueteer's mission to build a thriving pickleball and padel community in Sydney. Discover our story, values, and commitment to excellence.",
+  openGraph: {
+    title: "About Us - Racqueteer",
+    description: "Sydney's premier indoor pickleball & padel facility. 11 pickleball courts, 8+ padel courts, lounge zones, pro-shop & more.",
+    images: [{ url: "/og-about.png", width: 1200, height: 630 }],
+  },
 };
 
 export default async function AboutPage() {
