@@ -39,6 +39,8 @@ export default function HeroAbout({ content }: HeroAboutProps) {
           </video>
         )}
       </div>
+      {/* Black overlay at 20% opacity — mobile & tablet only */}
+      <div className="absolute inset-0 bg-black/20 lg:hidden" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
       <ScrollReveal from="bottom" delay={200}>
         <h1
