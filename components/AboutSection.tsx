@@ -58,7 +58,7 @@ export default function AboutSection({ content }: AboutSectionProps) {
       </div>
 
       {/* 3-column layout: image | content | image */}
-      <div className="relative flex w-full min-h-[100dvh] lg:min-h-screen max-w-[1920px] mx-auto">
+      <div className="relative flex w-full lg:min-h-screen max-w-[1920px] mx-auto">
         {/* Left: Pickleball paddle — pinned to left edge and bottom, scales with screen */}
         <div className="hidden lg:block w-[35%] xl:w-[33%] flex-shrink-0 relative">
           <div className="absolute left-0 bottom-0 w-full h-full flex items-end justify-start">

@@ -12,6 +12,7 @@ import { getButtonTitle } from "@/lib/utils";
 
 /**
  * "Book a Court" modal - appears when user clicks any Book CTA.
+ * Full-screen on mobile, centered on desktop.
  * Content (texts, images, booking URLs) is controlled via WordPress
  * Site Options → Book Modal page (acfOptionsBookModal).
  * Falls back to hardcoded values when WordPress options are not set.
@@ -45,9 +46,9 @@ export default function BookModal() {
       <DialogContent
         hideClose
         onOpenAutoFocus={(e) => e.preventDefault()}
-        className="max-w-[95vw] sm:max-w-[777px] p-0 bg-white border-none sm:rounded-none max-h-[90dvh] overflow-y-auto"
+        className="inset-0 translate-x-0 translate-y-0 w-full h-full sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:w-auto sm:h-auto sm:max-w-[777px] p-0 bg-white border-none sm:rounded-none flex flex-col"
       >
-        {/* Close button - prominent white circle with shadow */}
+        {/* Close button - white circle with shadow */}
         <button
           type="button"
           onClick={() => closeBookModal()}
@@ -63,77 +64,80 @@ export default function BookModal() {
         <DialogTitle className="sr-only">{modalTitle}</DialogTitle>
         <DialogDescription className="sr-only">{modalSubtitle}</DialogDescription>
 
-        {/* Header */}
-        <div className="pt-14 pb-6 px-6 text-center">
-          <h1 className="text-[#2B2B2B] font-extrabold text-3xl sm:text-[44px] leading-tight uppercase tracking-wide">
-            {modalTitle}
-          </h1>
-          <p className="mt-3 text-[#6B7280] text-base font-normal">
-            {modalSubtitle}
-          </p>
-        </div>
-
-        {/* Cards - vertical stacked on mobile, side-by-side on desktop */}
-        <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 px-6 sm:px-10 pb-10 items-stretch">
-          {/* Sport 1 Card (Padel) */}
-          <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden rounded-lg">
-            <div className="flex items-center justify-center p-3 sm:p-5 w-full">
-              <img
-                src={sport1Image}
-                alt={sport1Title}
-                className="w-full max-w-[180px] sm:max-w-[287px] h-auto object-contain"
-              />
-            </div>
-            <div className="pb-5 sm:pb-6 text-center w-full px-6">
-              <h2 className="text-[#D2352B] font-extrabold text-2xl sm:text-[36px] uppercase text-center mb-4 sm:mb-6">
-                {sport1Title}
-              </h2>
-              {sport1ButtonTitle && (
-                <div className="flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenBooking(sport1Url)}
-                    aria-label={`${sport1ButtonTitle} ${sport1Title} (opens in new tab)`}
-                    className="flex items-center gap-3 px-8 py-4 border border-[#D2352B] rounded-sm text-[#D2352B] font-bold text-sm uppercase tracking-wide hover:bg-[#D2352B]/5 transition-colors w-full max-w-[260px] justify-center cursor-pointer"
-                  >
-                    {sport1ButtonTitle}
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M7 17L17 7M7 7L17 7L16.9993 16.0526" stroke="#D2352B" strokeWidth="2" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
-              )}
-            </div>
+        {/* Content wrapper - fills screen, compact on mobile */}
+        <div className="flex flex-col justify-center flex-1 overflow-y-auto px-4 sm:px-0 py-6 sm:py-0">
+          {/* Header */}
+          <div className="text-center mb-4 sm:mb-0 sm:pt-14 sm:pb-6 sm:px-6">
+            <h1 className="text-[#2B2B2B] font-extrabold text-2xl sm:text-[44px] leading-tight uppercase tracking-wide">
+              {modalTitle}
+            </h1>
+            <p className="mt-1 sm:mt-3 text-[#6B7280] text-sm sm:text-base font-normal">
+              {modalSubtitle}
+            </p>
           </div>
 
-          {/* Sport 2 Card (Pickleball) */}
-          <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden rounded-lg">
-            <div className="flex items-center justify-center p-3 sm:p-5 w-full">
-              <img
-                src={sport2Image}
-                alt={sport2Title}
-                className="w-full max-w-[180px] sm:max-w-[287px] h-auto object-contain"
-              />
+          {/* Cards */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-8 px-0 sm:px-10 pb-0 sm:pb-10 items-stretch">
+            {/* Sport 1 Card (Padel) */}
+            <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden rounded-lg">
+              <div className="flex items-center justify-center pt-2 sm:pt-5 pb-1 sm:pb-0 w-full">
+                <img
+                  src={sport1Image}
+                  alt={sport1Title}
+                  className="w-full max-w-[120px] sm:max-w-[287px] h-auto object-contain"
+                />
+              </div>
+              <div className="text-center w-full px-4 sm:px-6 pb-3 sm:pb-6">
+                <h2 className="text-[#D2352B] font-extrabold text-lg sm:text-[36px] uppercase text-center mb-1 sm:mb-6">
+                  {sport1Title}
+                </h2>
+                {sport1ButtonTitle && (
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenBooking(sport1Url)}
+                      aria-label={`${sport1ButtonTitle} ${sport1Title} (opens in new tab)`}
+                      className="flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-2 sm:py-4 border border-[#D2352B] rounded-sm text-[#D2352B] font-bold text-xs sm:text-sm uppercase tracking-wide hover:bg-[#D2352B]/5 transition-colors w-full max-w-[200px] sm:max-w-[260px] justify-center cursor-pointer"
+                    >
+                      {sport1ButtonTitle}
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="sm:w-6 sm:h-6">
+                        <path d="M7 17L17 7M7 7L17 7L16.9993 16.0526" stroke="#D2352B" strokeWidth="2" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="pb-5 sm:pb-6 text-center w-full px-6">
-              <h2 className="text-[#003E6B] font-extrabold text-2xl sm:text-[36px] uppercase text-center mb-4 sm:mb-6">
-                {sport2Title}
-              </h2>
-              {sport2ButtonTitle && (
-                <div className="flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenBooking(sport2Url)}
-                    aria-label={`${sport2ButtonTitle} ${sport2Title} (opens in new tab)`}
-                    className="flex items-center gap-3 px-8 py-4 border border-[#003E6B] rounded-sm text-[#003E6B] font-bold text-sm uppercase tracking-wide hover:bg-[#003E6B]/5 transition-colors w-full max-w-[260px] justify-center cursor-pointer"
-                  >
-                    {sport2ButtonTitle}
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M7 17L17 7M7 7L17 7L16.9993 16.0526" stroke="#003E6B" strokeWidth="2" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
-              )}
+
+            {/* Sport 2 Card (Pickleball) */}
+            <div className="flex-1 bg-[#F3F3F3] flex flex-col items-center overflow-hidden rounded-lg">
+              <div className="flex items-center justify-center pt-2 sm:pt-5 pb-1 sm:pb-0 w-full">
+                <img
+                  src={sport2Image}
+                  alt={sport2Title}
+                  className="w-full max-w-[120px] sm:max-w-[287px] h-auto object-contain"
+                />
+              </div>
+              <div className="text-center w-full px-4 sm:px-6 pb-3 sm:pb-6">
+                <h2 className="text-[#003E6B] font-extrabold text-lg sm:text-[36px] uppercase text-center mb-1 sm:mb-6">
+                  {sport2Title}
+                </h2>
+                {sport2ButtonTitle && (
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenBooking(sport2Url)}
+                      aria-label={`${sport2ButtonTitle} ${sport2Title} (opens in new tab)`}
+                      className="flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-2 sm:py-4 border border-[#003E6B] rounded-sm text-[#003E6B] font-bold text-xs sm:text-sm uppercase tracking-wide hover:bg-[#003E6B]/5 transition-colors w-full max-w-[200px] sm:max-w-[260px] justify-center cursor-pointer"
+                    >
+                      {sport2ButtonTitle}
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="sm:w-6 sm:h-6">
+                        <path d="M7 17L17 7M7 7L17 7L16.9993 16.0526" stroke="#003E6B" strokeWidth="2" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
