@@ -15,9 +15,9 @@ export default function HeroAbout({ content }: HeroAboutProps) {
   return (
     <div
       data-header-theme="dark"
-      className="relative w-full h-[50vh] md:h-[55vw] md:max-h-[600px] min-h-[260px] bg-black flex items-end justify-center overflow-hidden"
+      className="relative w-full h-[50vh] md:h-[55vw] md:max-h-[600px] min-h-[260px] flex items-end justify-center overflow-hidden"
     >
-      {/* Background video */}
+      {/* Background media with brightness filter for dark overlay effect */}
       <div className="absolute inset-0">
         {isImageMedia ? (
           <img
@@ -25,6 +25,7 @@ export default function HeroAbout({ content }: HeroAboutProps) {
             alt=""
             aria-hidden="true"
             className="w-full h-full object-cover object-center"
+            style={{ filter: 'brightness(0.8)' }}
           />
         ) : (
           <video
@@ -34,16 +35,13 @@ export default function HeroAbout({ content }: HeroAboutProps) {
             muted
             playsInline
             className="w-full h-full object-cover object-center"
+            style={{ filter: 'brightness(0.8)' }}
           >
-            <source src={mediaUrl} type="video/mp4" />
+            <source src={mediaUrl} />
           </video>
         )}
       </div>
 
-      {/* Single overlay - black at 30% opacity */}
-      <div className="absolute inset-0" style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }} />
-
-      {/* White title */}
       <ScrollReveal from="bottom" delay={200}>
         <h1
           className="relative z-10 text-white text-center mb-10 md:mb-14 text-[28px] sm:text-[36px] md:text-[44px] lg:text-[56px] uppercase leading-[120%] px-4 max-w-[800px] mx-auto"
