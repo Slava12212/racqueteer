@@ -13,7 +13,7 @@ export default function CareerContactSection({ content }: CareerContactSectionPr
 
   return (
     <div
-      data-header-theme="dark"
+      data-header-theme="light"
       className="min-h-screen w-full relative overflow-hidden flex items-center"
     >
       {/* Background image */}
