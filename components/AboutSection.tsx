@@ -192,16 +192,31 @@ export default function AboutSection({ content }: AboutSectionProps) {
         </div>
       </div>
 
-      {/* Mobile: show single centered padel racket below content */}
-      <div className="lg:hidden relative flex justify-center mt-0 overflow-visible -mb-[60px] z-10">
-        <img
-          src={content.mobileImageUrl}
-          alt="Racqueteer Padel & Pickleball"
-          className="w-[65%] sm:w-[75%] max-w-[320px] h-auto object-contain"
-          style={{
-            filter: "drop-shadow(-8px 16px 40px rgba(0,0,0,0.10)) drop-shadow(0px 4px 20px rgba(0,0,0,0.06))",
-          }}
-        />
+      {/* Mobile: show both rackets side by side below content */}
+      <div className="lg:hidden relative flex flex-row items-end justify-between mt-0 overflow-visible -mb-[60px] z-10 px-4">
+        {/* Left: Pickleball paddle */}
+        <div className="w-1/2 flex justify-start">
+          <img
+            src={content.leftImageUrl}
+            alt="Pickleball Paddle"
+            className="w-[75%] max-w-[200px] h-auto object-contain"
+            style={{
+              filter: "drop-shadow(8px 16px 40px rgba(0,0,0,0.10)) drop-shadow(0px 4px 20px rgba(0,0,0,0.06))",
+            }}
+          />
+        </div>
+
+        {/* Right: Padel racket */}
+        <div className="w-1/2 flex justify-end">
+          <img
+            src={content.rightImageUrl}
+            alt="Padel Racket"
+            className="w-[75%] max-w-[200px] h-auto object-contain"
+            style={{
+              filter: "drop-shadow(-8px 16px 40px rgba(0,0,0,0.10)) drop-shadow(0px 4px 20px rgba(0,0,0,0.06))",
+            }}
+          />
+        </div>
       </div>
     </section>
   );
