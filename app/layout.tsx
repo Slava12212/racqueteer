@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Racqueteer - Premier Pickleball & Padel Club",
     description: "Experience world-class pickleball and padel at Racqueteer. Premium courts, expert coaching, luxury amenities, and vibrant community.",
-    url: "https://racqueteer.com",
+    url: "https://racqueteer.vercel.app",
     siteName: "Racqueteer",
     images: [
       {
