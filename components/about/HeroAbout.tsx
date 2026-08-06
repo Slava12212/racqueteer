@@ -40,7 +40,7 @@ export default function HeroAbout({ content }: HeroAboutProps) {
         )}
       </div>
       {/* Black overlay at 20% opacity — mobile & tablet only */}
-      <div className="absolute inset-0 bg-black/20 lg:hidden" />
+      <div className="absolute inset-0 lg:hidden" style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)' }} />
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
       <ScrollReveal from="bottom" delay={200}>
         <h1
