@@ -1,4 +1,3 @@
-
 import ScrollReveal from "../ScrollReveal";
 import type { AboutHeroContent } from "@/types";
 import { isImageMediaUrl } from "@/lib/utils";
@@ -18,6 +17,7 @@ export default function HeroAbout({ content }: HeroAboutProps) {
       data-header-theme="dark"
       className="relative w-full h-[50vh] md:h-[55vw] md:max-h-[600px] min-h-[260px] bg-black flex items-end justify-center overflow-hidden"
     >
+      {/* Background video */}
       <div className="absolute inset-0">
         {isImageMedia ? (
           <img
@@ -39,8 +39,11 @@ export default function HeroAbout({ content }: HeroAboutProps) {
           </video>
         )}
       </div>
-      {/* Single gradient: darker on mobile/tablet (20% extra black), original on desktop */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20 lg:from-black/50 lg:via-black/10 lg:to-transparent" />
+
+      {/* Single overlay - black at 20% opacity */}
+      <div className="absolute inset-0" style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)' }} />
+
+      {/* White title */}
       <ScrollReveal from="bottom" delay={200}>
         <h1
           className="relative z-10 text-white text-center mb-10 md:mb-14 text-[28px] sm:text-[36px] md:text-[44px] lg:text-[56px] uppercase leading-[120%] px-4 max-w-[800px] mx-auto"
@@ -48,7 +51,6 @@ export default function HeroAbout({ content }: HeroAboutProps) {
             fontFamily: '"Mona Sans", sans-serif',
             fontWeight: 800,
             letterSpacing: '0.05em',
-            WebkitFontSmoothing: 'antialiased',
           }}
         >
           {content.title}
