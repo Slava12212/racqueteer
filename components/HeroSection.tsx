@@ -65,7 +65,7 @@ export default function HeroSection({ content }: HeroSectionProps) {
   const hasCtaButtons = Boolean(primaryCtaTitle || secondaryCtaTitle);
 
   return (
-    <section data-header-theme="dark" className="relative w-full min-h-screen overflow-hidden font-mona-sans flex flex-col">
+    <section data-header-theme="dark" className="relative w-full min-h-screen hero-min-h-screen overflow-hidden font-mona-sans flex flex-col">
       {/* Background Video */}
       <div className="absolute inset-0 bg-black">
         <video

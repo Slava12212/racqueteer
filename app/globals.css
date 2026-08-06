@@ -345,8 +345,14 @@
 }
 
 /* Responsive: Remove min-h-screen below 1024px (lg breakpoint) */
+/* ⚠️ IMPORTANT: Hero section uses .hero-min-h-screen below which is NOT affected by this rule */
 @media (max-width: 1023px) {
   .min-h-screen {
     min-height: auto !important;
+  }
+  /* Hero section must ALWAYS be full-screen — immune to the override above */
+  .hero-min-h-screen {
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
   }
 }
