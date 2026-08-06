@@ -125,11 +125,8 @@ export default function ContactSection({ content }: ContactSectionProps) {
                 <div className="flex flex-col items-center gap-3 sm:gap-4">
                   <a
                     href={`mailto:${content.email}`}
-                    className="flex items-center gap-3 sm:gap-4 group"
+                    className="flex items-center justify-center gap-3 sm:gap-4 group text-center"
                   >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 w-5 h-5 sm:w-6 sm:h-6">
-                      <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22H17V20H12C7.66 20 4 16.34 4 12C4 7.66 7.66 4 12 4C16.34 4 20 7.66 20 12V13.43C20 14.22 19.29 15 18.5 15C17.71 15 17 14.22 17 13.43V12C17 9.24 14.76 7 12 7C9.24 7 7 9.24 7 12C7 14.76 9.24 17 12 17C13.38 17 14.64 16.44 15.54 15.53C16.19 16.42 17.31 17 18.5 17C20.47 17 22 15.4 22 13.43V12C22 6.48 17.52 2 12 2ZM12 15C10.34 15 9 13.66 9 12C9 10.34 10.34 9 12 9C13.66 9 15 10.34 15 12C15 13.66 13.66 15 12 15Z" fill="#B40023"/>
-                    </svg>
                     <span
                       className="text-sm sm:text-xl md:text-2xl text-[#B40023] group-hover:underline break-all sm:break-normal text-center"
                       style={{ fontFamily: '"Mona Sans", sans-serif', fontWeight: 500, fontStretch: '125%', lineHeight: '120%', letterSpacing: '0' }}
