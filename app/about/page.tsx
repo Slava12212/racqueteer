@@ -18,6 +18,12 @@ export const metadata: Metadata = {
     description: "Sydney's premier indoor pickleball & padel facility. 11 pickleball courts, 8+ padel courts, lounge zones, pro-shop & more.",
     images: [{ url: "/og-about.png", width: 1200, height: 630 }],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "About Us - Racqueteer",
+    description: "Sydney's premier indoor pickleball & padel facility. 11 pickleball courts, 8+ padel courts, lounge zones, pro-shop & more.",
+    images: ["/og-about.png"],
+  },
 };
 
 export default async function AboutPage() {

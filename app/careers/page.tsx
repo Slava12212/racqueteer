@@ -17,6 +17,12 @@ export const metadata: Metadata = {
     description: "Join the Racqueteer team! Explore career opportunities in coaching, club management, hospitality, and more.",
     images: [{ url: "/og-careers.png", width: 1200, height: 630 }],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Careers - Racqueteer",
+    description: "Join the Racqueteer team! Explore career opportunities in coaching, club management, hospitality, and more.",
+    images: ["/og-careers.png"],
+  },
 };
 
 export default async function CareersPage() {
