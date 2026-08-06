@@ -9,7 +9,7 @@ export default function AboutSection({ content }: AboutSectionProps) {
   return (
     <section
       data-header-theme="light"
-      className="relative min-h-screen overflow-visible"
+      className="relative min-h-[100dvh] lg:min-h-screen overflow-hidden"
       style={{
         background:
           "linear-gradient(0deg, rgba(38, 80, 144, 0.05) 0%, rgba(38, 80, 144, 0.05) 100%), #ffffff",
@@ -58,7 +58,7 @@ export default function AboutSection({ content }: AboutSectionProps) {
       </div>
 
       {/* 3-column layout: image | content | image */}
-      <div className="relative flex w-full min-h-screen max-w-[1920px] mx-auto">
+      <div className="relative flex w-full min-h-[100dvh] lg:min-h-screen max-w-[1920px] mx-auto">
         {/* Left: Pickleball paddle — pinned to left edge and bottom, scales with screen */}
         <div className="hidden lg:block w-[35%] xl:w-[33%] flex-shrink-0 relative">
           <div className="absolute left-0 bottom-0 w-full h-full flex items-end justify-start">
@@ -77,7 +77,7 @@ export default function AboutSection({ content }: AboutSectionProps) {
         </div>
 
         {/* Center: Content */}
-        <div className="flex-1 flex items-center justify-center px-8 md:px-12 lg:px-16 xl:px-20 py-16 lg:py-24 relative z-10">
+        <div className="flex-1 flex items-center justify-center px-8 md:px-12 lg:px-16 xl:px-20 py-8 sm:py-12 lg:py-24 relative z-10">
           <div className="w-full max-w-[520px]">
             <div className="flex flex-col gap-10">
               {/* Label + Heading + Body */}
@@ -193,11 +193,11 @@ export default function AboutSection({ content }: AboutSectionProps) {
       </div>
 
       {/* Mobile: show single centered padel racket below content */}
-      <div className="lg:hidden relative flex justify-center mt-8 overflow-hidden pb-0" style={{ marginBottom: '-40px' }}>
+      <div className="lg:hidden relative flex justify-center mt-0 overflow-visible -mb-[60px] z-10">
         <img
           src={content.mobileImageUrl}
           alt="Racqueteer Padel & Pickleball"
-          className="w-[85%] max-w-[380px] h-auto object-contain"
+          className="w-[65%] sm:w-[75%] max-w-[320px] h-auto object-contain"
           style={{
             filter: "drop-shadow(-8px 16px 40px rgba(0,0,0,0.10)) drop-shadow(0px 4px 20px rgba(0,0,0,0.06))",
           }}
