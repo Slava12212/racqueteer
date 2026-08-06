@@ -46,7 +46,7 @@ export default function BookModal() {
       <DialogContent
         hideClose
         onOpenAutoFocus={(e) => e.preventDefault()}
-        className="inset-0 translate-x-0 translate-y-0 w-full h-full sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:w-auto sm:h-auto sm:max-w-[777px] p-0 bg-white border-none sm:rounded-none flex flex-col"
+        className="inset-0 translate-x-0 translate-y-0 w-full h-full sm:left-[50%] sm:top-[50%] sm:right-auto sm:bottom-auto sm:translate-x-[-50%] sm:translate-y-[-50%] sm:w-auto sm:h-auto sm:max-w-[777px] p-0 bg-white border-none sm:rounded-none flex flex-col"
       >
         {/* Close button - white circle with shadow */}
         <button
