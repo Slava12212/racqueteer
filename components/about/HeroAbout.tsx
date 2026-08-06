@@ -1,6 +1,5 @@
 "use client";
 
-import ScrollReveal from "../ScrollReveal";
 import type { AboutHeroContent } from "@/types";
 
 interface HeroAboutProps {
@@ -13,11 +12,7 @@ export default function HeroAbout({ content }: HeroAboutProps) {
     : "/about-hero.png";
 
   return (
-    <div
-      data-header-theme="dark"
-      className="relative w-full h-[50vh] md:h-[55vw] md:max-h-[600px] min-h-[260px] flex items-end justify-center overflow-hidden bg-black"
-    >
-      {/* Background video */}
+    <div data-header-theme="dark" className="relative w-full h-[50vh] md:h-[55vw] md:max-h-[600px] min-h-[260px] flex items-end justify-center overflow-hidden bg-black">
       <div className="absolute inset-0">
         <video
           preload="metadata"
@@ -25,28 +20,21 @@ export default function HeroAbout({ content }: HeroAboutProps) {
           loop
           muted
           playsInline
-          poster="/about-hero.png"
           className="w-full h-full object-cover object-center"
         >
           <source src={videoUrl} />
         </video>
       </div>
-
-      {/* Black overlay at 20% opacity — covers entire hero */}
-      <div className="absolute inset-0" style={{ backgroundColor: "rgba(0, 0, 0, 0.2)" }} />
-
-      <ScrollReveal from="bottom" delay={200}>
-        <h1
-          className="relative z-10 text-white text-center mb-10 md:mb-14 text-[28px] sm:text-[36px] md:text-[44px] lg:text-[56px] uppercase leading-[120%] px-4 max-w-[800px] mx-auto"
-          style={{
-            fontFamily: '"Mona Sans", sans-serif',
-            fontWeight: 800,
-            letterSpacing: "0.05em",
-          }}
-        >
-          {content.title}
-        </h1>
-      </ScrollReveal>
+      <h1
+        className="relative z-10 text-white text-center mb-10 md:mb-14 text-[28px] sm:text-[36px] md:text-[44px] lg:text-[56px] uppercase leading-[120%] px-4 max-w-[800px] mx-auto"
+        style={{
+          fontFamily: '"Mona Sans", sans-serif',
+          fontWeight: 800,
+          letterSpacing: "0.05em",
+        }}
+      >
+        {content.title}
+      </h1>
     </div>
   );
 }
