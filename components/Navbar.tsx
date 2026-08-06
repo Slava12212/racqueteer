@@ -77,6 +77,11 @@ export default function Navbar({ content }: NavbarProps) {
     const isHomeLink = link.url === "/" || link.label.toLowerCase() === "home";
     return !(index === 0 && isHomeLink);
   });
+  // Mobile menu always includes Home link + WP links
+  const mobileMenuLinks = [
+    { label: "Home", url: "/" },
+    ...menuLinks.filter((link) => link.url !== "/" && link.label.toLowerCase() !== "home"),
+  ];
 
   // Close menu on route change
   useEffect(() => {
@@ -286,7 +291,7 @@ export default function Navbar({ content }: NavbarProps) {
 
         {/* Full logo + Links — centered in remaining space */}
         <div className="flex-1 flex flex-col items-center justify-center gap-5 px-6">
-          {menuLinks.map((link) => {
+          {mobileMenuLinks.map((link) => {
             const isActive = pathname === link.url;
             const LinkEl = link.url.startsWith("#") ? "a" : Link;
             const props = link.url.startsWith("#")
