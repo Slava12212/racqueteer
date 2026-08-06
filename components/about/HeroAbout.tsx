@@ -30,6 +30,9 @@ export default function HeroAbout({ content }: HeroAboutProps) {
         </video>
       </div>
 
+      {/* Separate semi-transparent overlay — replaces filter: brightness() */}
+      <div className="absolute inset-0" style={{ backgroundColor: "rgba(0, 0, 0, 0.2)" }} />
+
       {/* Title with independent stacking context */}
       <div className="relative" style={{ zIndex: 10, isolation: "isolate" }}>
         <h1
