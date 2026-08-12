@@ -3,13 +3,56 @@ import ScrollReveal from "../ScrollReveal";
 import ButtonArrow from "../ButtonArrow";
 import type { CareerContactContent } from "@/types";
 import { getButtonTitle } from "@/lib/utils";
+import { Headphones, MessageCircle, Send, Smartphone } from "lucide-react";
+import type { SVGProps } from "react";
 
 interface CareerContactSectionProps {
   content: CareerContactContent;
 }
 
+const DEFAULT_CAREERS_EMAIL = "careers@racqueteer.club";
+const DEFAULT_CAREERS_PHONE = "+61 4 8123 4567";
+
+function DefaultEmailIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22H17V20H12C7.66 20 4 16.34 4 12C4 7.66 7.66 4 12 4C16.34 4 20 7.66 20 12V13.43C20 14.22 19.29 15 18.5 15C17.71 15 17 14.22 17 13.43V12C17 9.24 14.76 7 12 7C9.24 7 7 9.24 7 12C7 14.76 9.24 17 12 17C13.38 17 14.64 16.44 15.54 15.53C16.19 16.42 17.31 17 18.5 17C20.47 17 22 15.4 22 13.43V12C22 6.48 17.52 2 12 2ZM12 15C10.34 15 9 13.66 9 12C9 10.34 10.34 9 12 9C13.66 9 15 10.34 15 12C15 13.66 13.66 15 12 15Z" fill="#B40023" />
+    </svg>
+  );
+}
+
+function DefaultPhoneIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path d="M3 5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H8.28C8.48979 3.00016 8.69422 3.0663 8.86436 3.18905C9.03449 3.3118 9.1617 3.48496 9.228 3.684L10.726 8.177C10.8019 8.40534 10.7929 8.65339 10.7007 8.87564C10.6085 9.0979 10.4393 9.27945 10.224 9.387L7.967 10.517C9.07341 12.9658 11.035 14.927 13.484 16.033L14.612 13.776C14.7195 13.5607 14.9011 13.3915 15.1234 13.2993C15.3456 13.2071 15.5937 13.1981 15.822 13.274L20.316 14.772C20.5152 14.8383 20.6885 14.9657 20.8112 15.136C20.934 15.3064 21.0001 15.511 21 15.721V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H18C9.716 21 3 14.284 3 6V5Z" stroke="#B40023" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+const CONTACT_ICONS = {
+  mail: DefaultEmailIcon,
+  phone: DefaultPhoneIcon,
+  smartphone: Smartphone,
+  message: MessageCircle,
+  send: Send,
+  support: Headphones,
+};
+
+function getTelHref(phone: string) {
+  return `tel:${phone.replace(/[^\d+]/g, "")}`;
+}
+
+function getContactIcon(iconName: string | undefined, fallback: keyof typeof CONTACT_ICONS) {
+  if (iconName === "none") return null;
+  return CONTACT_ICONS[(iconName || fallback) as keyof typeof CONTACT_ICONS] ?? CONTACT_ICONS[fallback];
+}
+
 export default function CareerContactSection({ content }: CareerContactSectionProps) {
   const ctaTitle = getButtonTitle(content.ctaText);
+  const email = content.email?.trim() || DEFAULT_CAREERS_EMAIL;
+  const phone = content.phone?.trim() || DEFAULT_CAREERS_PHONE;
+  const EmailIcon = getContactIcon(content.emailIcon, "mail");
+  const PhoneIcon = getContactIcon(content.phoneIcon, "phone");
 
   return (
     <div
@@ -129,29 +172,29 @@ export default function CareerContactSection({ content }: CareerContactSectionPr
                 {/* Contact details */}
                 <div className="flex flex-col items-center gap-3 sm:gap-4">
                   <a
-                    href="mailto:careers@racqueteer.club"
+                    href={`mailto:${email}`}
                     className="flex items-center gap-3 sm:gap-4 group"
                   >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 w-5 h-5 sm:w-6 sm:h-6">
-                      <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22H17V20H12C7.66 20 4 16.34 4 12C4 7.66 7.66 4 12 4C16.34 4 20 7.66 20 12V13.43C20 14.22 19.29 15 18.5 15C17.71 15 17 14.22 17 13.43V12C17 9.24 14.76 7 12 7C9.24 7 7 9.24 7 12C7 14.76 9.24 17 12 17C13.38 17 14.64 16.44 15.54 15.53C16.19 16.42 17.31 17 18.5 17C20.47 17 22 15.4 22 13.43V12C22 6.48 17.52 2 12 2ZM12 15C10.34 15 9 13.66 9 12C9 10.34 10.34 9 12 9C13.66 9 15 10.34 15 12C15 13.66 13.66 15 12 15Z" fill="#B40023"/>
-                    </svg>
+                    {EmailIcon && (
+                      <EmailIcon className="shrink-0 w-5 h-5 sm:w-6 sm:h-6 text-[#B40023]" aria-hidden="true" strokeWidth={2} />
+                    )}
                     <span
                       className="text-sm sm:text-xl md:text-2xl text-[#B40023] group-hover:underline break-all sm:break-normal"
                       style={{ fontFamily: '"Mona Sans", sans-serif', fontWeight: 500, fontStretch: "125%", lineHeight: "120%", letterSpacing: "0" }}
                     >
-                      careers@racqueteer.club
+                      {email}
                     </span>
                   </a>
 
-                  <a href="tel:+61481234567" className="flex items-center gap-3 sm:gap-4 group">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 w-5 h-5 sm:w-6 sm:h-6">
-                      <path d="M3 5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H8.28C8.48979 3.00016 8.69422 3.0663 8.86436 3.18905C9.03449 3.3118 9.1617 3.48496 9.228 3.684L10.726 8.177C10.8019 8.40534 10.7929 8.65339 10.7007 8.87564C10.6085 9.0979 10.4393 9.27945 10.224 9.387L7.967 10.517C9.07341 12.9658 11.035 14.927 13.484 16.033L14.612 13.776C14.7195 13.5607 14.9011 13.3915 15.1234 13.2993C15.3456 13.2071 15.5937 13.1981 15.822 13.274L20.316 14.772C20.5152 14.8383 20.6885 14.9657 20.8112 15.136C20.934 15.3064 21.0001 15.511 21 15.721V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H18C9.716 21 3 14.284 3 6V5Z" stroke="#B40023" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+                  <a href={getTelHref(phone)} className="flex items-center gap-3 sm:gap-4 group">
+                    {PhoneIcon && (
+                      <PhoneIcon className="shrink-0 w-5 h-5 sm:w-6 sm:h-6 text-[#B40023]" aria-hidden="true" strokeWidth={2} />
+                    )}
                     <span
                       className="text-sm sm:text-xl md:text-2xl text-[#B40023] group-hover:underline"
                       style={{ fontFamily: '"Mona Sans", sans-serif', fontWeight: 500, fontStretch: "125%", lineHeight: "120%", letterSpacing: "0" }}
                     >
-                      +61 4 8123 4567
+                      {phone}
                     </span>
                   </a>
                 </div>

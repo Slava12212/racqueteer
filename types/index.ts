@@ -315,6 +315,10 @@ export interface CareerContactContent {
   label: string;
   title: string;
   description: string;
+  email?: string;
+  emailIcon?: string;
+  phone?: string;
+  phoneIcon?: string;
   ctaText: string;
   ctaUrl: string;
   imageUrl: string;

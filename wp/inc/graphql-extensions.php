@@ -899,7 +899,7 @@ add_action( 'graphql_register_types', function () {
         'RqRacqueteerContactFields'             => array( 'label', 'title', 'description', 'email', 'phone', 'ctaText', 'ctaUrl' ),
         'RqRacqueteerCareersHeroFields'         => array( 'label', 'title', 'description', 'ctaText', 'ctaUrl', 'videoUrl' ),
         'RqRacqueteerJobListingsFields'         => array( 'label', 'title', 'description', 'ctaText', 'ctaUrl' ),
-        'RqRacqueteerCareerContactFields'       => array( 'label', 'title', 'description', 'ctaText', 'ctaUrl', 'image' ),
+        'RqRacqueteerCareerContactFields'       => array( 'label', 'title', 'description', 'email', 'emailIcon', 'phone', 'phoneIcon', 'ctaText', 'ctaUrl', 'image' ),
     );
 
     foreach ( $all_fields as $fields_type => $fields ) {

@@ -7,6 +7,21 @@ if ( ! function_exists( 'acf_register_block_type' ) ) {
     return;
 }
 
+if ( ! function_exists( 'racqueteer_preview_dashicon_class' ) ) {
+    function racqueteer_preview_dashicon_class( string $icon ): string {
+        $icons = [
+            'mail'       => 'dashicons-email-alt2',
+            'phone'      => 'dashicons-phone',
+            'smartphone' => 'dashicons-smartphone',
+            'message'    => 'dashicons-format-chat',
+            'send'       => 'dashicons-share-alt2',
+            'support'    => 'dashicons-businessperson',
+        ];
+
+        return $icons[ $icon ] ?? '';
+    }
+}
+
 /**
  * Headless render callback — виводить мінімальний плейсхолдер в редакторі, щоб ACF
  * міг коректно ініціалізуватися та зберігати значення полів. На фронтенді
@@ -21,7 +36,28 @@ function racqueteer_block_render_callback( array $block ): void {
     $title  = esc_html( $block['title'] ?? $block['name'] );
     $name   = esc_attr( $block['name'] );
     $fields = get_fields();
-    $has_data = ! empty( $fields ) && is_array( $fields );
+    if ( ! is_array( $fields ) ) {
+        $fields = [];
+    }
+
+    $raw_data = isset( $block['data'] ) && is_array( $block['data'] ) ? $block['data'] : [];
+    foreach ( [ 'email', 'email_icon', 'phone', 'phone_icon' ] as $contact_key ) {
+        if ( ! empty( $raw_data[ $contact_key ] ) ) {
+            $fields[ $contact_key ] = $raw_data[ $contact_key ];
+        }
+    }
+
+    if ( 'acf/racqueteer-career-contact' === ( $block['name'] ?? '' ) ) {
+        $ordered = [];
+        foreach ( [ 'label', 'title', 'description', 'email', 'email_icon', 'phone', 'phone_icon', 'cta_text', 'cta_url', 'image' ] as $field_key ) {
+            if ( array_key_exists( $field_key, $fields ) ) {
+                $ordered[ $field_key ] = $fields[ $field_key ];
+            }
+        }
+        $fields = array_merge( $ordered, $fields );
+    }
+
+    $has_data = ! empty( $fields );
     ?>
     <div data-block="<?php echo $name; ?>" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;border:2px solid #2271b1;border-radius:4px;overflow:hidden;background:#fff;">
 
@@ -33,6 +69,7 @@ function racqueteer_block_render_callback( array $block ): void {
         <?php if ( $has_data ) : ?>
             <table style="width:100%;border-collapse:collapse;">
                 <?php foreach ( $fields as $key => $val ) :
+                    if ( in_array( $key, [ 'email_icon', 'phone_icon' ], true ) ) continue;
                     if ( ! is_scalar( $val ) || $val === '' ) continue;
                     $display = mb_strlen( (string) $val ) > 140
                         ? esc_html( mb_substr( (string) $val, 0, 140 ) ) . '…'
@@ -42,7 +79,22 @@ function racqueteer_block_render_callback( array $block ): void {
                     <td style="padding:6px 14px;color:#50575e;font-size:11px;white-space:nowrap;width:160px;background:#f9f9f9;vertical-align:top;">
                         <?php echo esc_html( ucwords( str_replace( '_', ' ', $key ) ) ); ?>
                     </td>
-                    <td style="padding:6px 14px;font-size:12px;color:#1e1e1e;"><?php echo $display; ?></td>
+                    <td style="padding:6px 14px;font-size:12px;color:#1e1e1e;">
+                        <?php
+                        if ( 'email' === $key ) {
+                            $icon_class = racqueteer_preview_dashicon_class( (string) ( $fields['email_icon'] ?? 'mail' ) );
+                            if ( $icon_class ) {
+                                echo '<span class="dashicons ' . esc_attr( $icon_class ) . '" style="font-size:14px;width:16px;height:16px;color:#b40023;vertical-align:-2px;margin-right:6px;"></span>';
+                            }
+                        } elseif ( 'phone' === $key ) {
+                            $icon_class = racqueteer_preview_dashicon_class( (string) ( $fields['phone_icon'] ?? 'phone' ) );
+                            if ( $icon_class ) {
+                                echo '<span class="dashicons ' . esc_attr( $icon_class ) . '" style="font-size:14px;width:16px;height:16px;color:#b40023;vertical-align:-2px;margin-right:6px;"></span>';
+                            }
+                        }
+                        echo $display;
+                        ?>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
             </table>
@@ -209,6 +261,10 @@ add_action( 'acf/init', function () {
             ['key'=>'field_cc_label','label'=>'Label','name'=>'label','type'=>'text'],
             ['key'=>'field_cc_title','label'=>'Title','name'=>'title','type'=>'text'],
             ['key'=>'field_cc_description','label'=>'Description','name'=>'description','type'=>'textarea'],
+            ['key'=>'field_cc_email','label'=>'Email','name'=>'email','type'=>'email','default_value'=>'careers@racqueteer.club'],
+            ['key'=>'field_cc_email_icon','label'=>'Email Icon','name'=>'email_icon','type'=>'select','choices'=>['mail'=>'Mail','phone'=>'Phone','smartphone'=>'Mobile','message'=>'Message','send'=>'Send','support'=>'Support','none'=>'None'],'default_value'=>'mail','return_format'=>'value'],
+            ['key'=>'field_cc_phone','label'=>'Phone','name'=>'phone','type'=>'text','default_value'=>'+61 4 8123 4567'],
+            ['key'=>'field_cc_phone_icon','label'=>'Phone Icon','name'=>'phone_icon','type'=>'select','choices'=>['phone'=>'Phone','mail'=>'Mail','smartphone'=>'Mobile','message'=>'Message','send'=>'Send','support'=>'Support','none'=>'None'],'default_value'=>'phone','return_format'=>'value'],
             ['key'=>'field_cc_cta_text','label'=>'CTA Text','name'=>'cta_text','type'=>'text'],
             ['key'=>'field_cc_cta_url','label'=>'CTA URL','name'=>'cta_url','type'=>'text','instructions'=>'e.g. /careers'],
             ['key'=>'field_cc_image','label'=>'Image','name'=>'image','type'=>'image','return_format'=>'url'],

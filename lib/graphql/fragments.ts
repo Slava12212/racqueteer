@@ -178,6 +178,10 @@ export const CAREER_CONTACT_FIELDS = `
     label
     title
     description
+    email
+    emailIcon: email_icon
+    phone
+    phoneIcon: phone_icon
     ctaText: cta_text
     ctaUrl: cta_url
     image { sourceUrl }

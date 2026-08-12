@@ -201,6 +201,10 @@ export const GET_PAGE_BY_SLUG = `
             label
             title
             description
+            email
+            emailIcon
+            phone
+            phoneIcon
             ctaText
             ctaUrl
             image
